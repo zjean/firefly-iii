@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -29,6 +29,7 @@ use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountMeta;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Category;
+use FireflyIII\Models\Note;
 use FireflyIII\Models\Tag;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
@@ -46,10 +47,14 @@ class AccountRepository implements AccountRepositoryInterface
 
     /** @var User */
     private $user;
+    /** @var array */
+    private $validAssetFields = ['accountRole', 'accountNumber', 'currency_id', 'BIC'];
 
     use FindAccountsTrait;
     /** @var array */
-    private $validFields = ['accountRole', 'ccMonthlyPaymentDate', 'ccType', 'accountNumber', 'currency_id', 'BIC'];
+    private $validCCFields = ['accountRole', 'ccMonthlyPaymentDate', 'ccType', 'accountNumber', 'currency_id', 'BIC'];
+    /** @var array */
+    private $validFields = ['accountNumber', 'currency_id', 'BIC'];
 
     /**
      * Moved here from account CRUD.
@@ -72,6 +77,8 @@ class AccountRepository implements AccountRepositoryInterface
      * @param Account $moveTo
      *
      * @return bool
+     *
+     * @throws \Exception
      */
     public function destroy(Account $account, Account $moveTo): bool
     {
@@ -83,6 +90,81 @@ class AccountRepository implements AccountRepositoryInterface
         }
 
         return true;
+    }
+
+    /**
+     * @param int $accountId
+     *
+     * @return Account|null
+     */
+    public function findNull(int $accountId): ?Account
+    {
+        return $this->user->accounts()->find($accountId);
+    }
+
+    /**
+     * Return account type by string.
+     *
+     * @param string $type
+     *
+     * @return AccountType|null
+     */
+    public function getAccountType(string $type): ?AccountType
+    {
+        return AccountType::whereType($type)->first();
+    }
+
+    /**
+     * @param Account $account
+     *
+     * @return Note|null
+     */
+    public function getNote(Account $account): ?Note
+    {
+        return $account->notes()->first();
+    }
+
+    /**
+     * Returns the amount of the opening balance for this account.
+     *
+     * @return string
+     */
+    public function getOpeningBalanceAmount(Account $account): ?string
+    {
+
+        $journal = TransactionJournal::leftJoin('transactions', 'transactions.transaction_journal_id', '=', 'transaction_journals.id')
+                                     ->where('transactions.account_id', $account->id)
+                                     ->transactionTypes([TransactionType::OPENING_BALANCE])
+                                     ->first(['transaction_journals.*']);
+        if (null === $journal) {
+            return null;
+        }
+        $transaction = $journal->transactions()->where('account_id', $account->id)->first();
+        if (null === $transaction) {
+            return null;
+        }
+
+        return strval($transaction->amount);
+    }
+
+    /**
+     * Return date of opening balance as string or null.
+     *
+     * @param Account $account
+     *
+     * @return null|string
+     */
+    public function getOpeningBalanceDate(Account $account): ?string
+    {
+        $journal = TransactionJournal::leftJoin('transactions', 'transactions.transaction_journal_id', '=', 'transaction_journals.id')
+                                     ->where('transactions.account_id', $account->id)
+                                     ->transactionTypes([TransactionType::OPENING_BALANCE])
+                                     ->first(['transaction_journals.*']);
+        if (null === $journal) {
+            return null;
+        }
+
+        return $journal->date->format('Y-m-d');
     }
 
     /**
@@ -160,6 +242,8 @@ class AccountRepository implements AccountRepositoryInterface
      * @param array $data
      *
      * @return Account
+     *
+     * @throws FireflyException
      */
     public function store(array $data): Account
     {
@@ -169,9 +253,19 @@ class AccountRepository implements AccountRepositoryInterface
         if ($this->validOpeningBalanceData($data)) {
             $this->updateInitialBalance($newAccount, $data);
 
+            // update note:
+            if (isset($data['notes'])) {
+                $this->updateNote($newAccount, $data['notes']);
+            }
+
             return $newAccount;
         }
         $this->deleteInitialBalance($newAccount);
+
+        // update note:
+        if (isset($data['notes'])) {
+            $this->updateNote($newAccount, $data['notes']);
+        }
 
         return $newAccount;
     }
@@ -187,7 +281,7 @@ class AccountRepository implements AccountRepositoryInterface
         // update the account:
         $account->name            = $data['name'];
         $account->active          = $data['active'];
-        $account->virtual_balance = $data['virtualBalance'];
+        $account->virtual_balance = trim($data['virtualBalance']) === '' ? '0' : $data['virtualBalance'];
         $account->iban            = $data['iban'];
         $account->save();
 
@@ -195,6 +289,12 @@ class AccountRepository implements AccountRepositoryInterface
         if ($this->validOpeningBalanceData($data)) {
             $this->updateInitialBalance($account, $data);
         }
+
+        // update note:
+        if (isset($data['notes']) && null !== $data['notes']) {
+            $this->updateNote($account, strval($data['notes']));
+        }
+
 
         return $account;
     }
@@ -220,7 +320,7 @@ class AccountRepository implements AccountRepositoryInterface
         /** @var Transaction $transaction */
         foreach ($journal->transactions as $transaction) {
             $transaction->amount = bcmul($data['amount'], '-1');
-            if ($transaction->account->accountType->type === AccountType::ASSET) {
+            if (AccountType::ASSET === $transaction->account->accountType->type) {
                 $transaction->amount = $data['amount'];
             }
             $transaction->save();
@@ -238,6 +338,8 @@ class AccountRepository implements AccountRepositoryInterface
 
     /**
      * @param Account $account
+     *
+     * @throws \Exception
      */
     protected function deleteInitialBalance(Account $account)
     {
@@ -288,7 +390,7 @@ class AccountRepository implements AccountRepositoryInterface
 
         // account may exist already:
         $existingAccount = $this->findByName($data['name'], [$type]);
-        if (null !== $existingAccount->id) {
+        if (null !== $existingAccount) {
             Log::warning(sprintf('There already is an account named "%s" of type "%s".', $data['name'], $type));
 
             return $existingAccount;
@@ -296,14 +398,20 @@ class AccountRepository implements AccountRepositoryInterface
 
         // create it:
         $databaseData
-                    = [
+            = [
             'user_id'         => $this->user->id,
             'account_type_id' => $accountType->id,
             'name'            => $data['name'],
-            'virtual_balance' => $data['virtualBalance'],
+            'virtual_balance' => strlen(strval($data['virtualBalance'])) === 0 ? '0' : $data['virtualBalance'],
             'active'          => true === $data['active'] ? true : false,
             'iban'            => $data['iban'],
         ];
+
+        // remove virtual balance when not an asset account:
+        if ($accountType->type !== AccountType::ASSET) {
+            $databaseData['virtual_balance'] = '0';
+        }
+
         $newAccount = new Account($databaseData);
         Log::debug('Final account creation dataset', $databaseData);
         $newAccount->save();
@@ -359,18 +467,18 @@ class AccountRepository implements AccountRepositoryInterface
                 'user_id'                 => $this->user->id,
                 'transaction_type_id'     => $transactionType->id,
                 'transaction_currency_id' => $currencyId,
-                'description'             => 'Initial balance for "' . $account->name . '"',
+                'description'             => strval(trans('firefly.initial_balance_description', ['account' => $account->name])),
                 'completed'               => true,
                 'date'                    => $data['openingBalanceDate'],
             ]
         );
-        Log::debug(sprintf('Created new opening balance journal: #%d', $journal->id));
+        Log::notice(sprintf('Created new opening balance journal: #%d', $journal->id));
 
         $firstAccount  = $account;
         $secondAccount = $opposing;
         $firstAmount   = $amount;
         $secondAmount  = bcmul($amount, '-1');
-        Log::debug(sprintf('First amount is %s, second amount is %s', $firstAmount, $secondAmount));
+        Log::notice(sprintf('First amount is %s, second amount is %s', $firstAmount, $secondAmount));
 
         if (bccomp($amount, '0') === -1) {
             Log::debug(sprintf('%s is a negative number.', $amount));
@@ -378,7 +486,7 @@ class AccountRepository implements AccountRepositoryInterface
             $secondAccount = $account;
             $firstAmount   = bcmul($amount, '-1');
             $secondAmount  = $amount;
-            Log::debug(sprintf('First amount is %s, second amount is %s', $firstAmount, $secondAmount));
+            Log::notice(sprintf('First amount is %s, second amount is %s', $firstAmount, $secondAmount));
         }
 
         $one = new Transaction(
@@ -400,7 +508,7 @@ class AccountRepository implements AccountRepositoryInterface
         );
         $two->save(); // second transaction: to
 
-        Log::debug(sprintf('Stored two transactions, #%d and #%d', $one->id, $two->id));
+        Log::notice(sprintf('Stored two transactions for new account, #%d and #%d', $one->id, $two->id));
 
         return $journal;
     }
@@ -409,6 +517,8 @@ class AccountRepository implements AccountRepositoryInterface
      * @param string $name
      *
      * @return Account
+     *
+     * @throws FireflyException
      */
     protected function storeOpposingAccount(string $name): Account
     {
@@ -417,7 +527,7 @@ class AccountRepository implements AccountRepositoryInterface
             'name'           => $name . ' initial balance',
             'active'         => false,
             'iban'           => '',
-            'virtualBalance' => 0,
+            'virtualBalance' => '0',
         ];
         Log::debug('Going to create an opening balance opposing account.');
 
@@ -459,7 +569,16 @@ class AccountRepository implements AccountRepositoryInterface
      */
     protected function updateMetadata(Account $account, array $data)
     {
-        foreach ($this->validFields as $field) {
+        $fields = $this->validFields;
+
+        if ($account->accountType->type === AccountType::ASSET) {
+            $fields = $this->validAssetFields;
+        }
+        if ($account->accountType->type === AccountType::ASSET && $data['accountRole'] === 'ccAsset') {
+            $fields = $this->validCCFields;
+        }
+
+        foreach ($fields as $field) {
             /** @var AccountMeta $entry */
             $entry = $account->accountMeta()->where('name', $field)->first();
 
@@ -501,21 +620,52 @@ class AccountRepository implements AccountRepositoryInterface
     }
 
     /**
+     * @param Account $account
+     * @param string  $note
+     *
+     * @return bool
+     */
+    protected function updateNote(Account $account, string $note): bool
+    {
+        if (0 === strlen($note)) {
+            $dbNote = $account->notes()->first();
+            if (null !== $dbNote) {
+                $dbNote->delete();
+            }
+
+            return true;
+        }
+        $dbNote = $account->notes()->first();
+        if (null === $dbNote) {
+            $dbNote = new Note();
+            $dbNote->noteable()->associate($account);
+        }
+        $dbNote->text = trim($note);
+        $dbNote->save();
+
+        return true;
+    }
+
+    /**
      * @param Account            $account
      * @param TransactionJournal $journal
      * @param array              $data
      *
      * @return bool
+     *
+     * @throws \Exception
      */
     protected function updateOpeningBalanceJournal(Account $account, TransactionJournal $journal, array $data): bool
     {
-        $date       = $data['openingBalanceDate'];
-        $amount     = strval($data['openingBalance']);
-        $currencyId = intval($data['currency_id']);
+        $date           = $data['openingBalanceDate'];
+        $amount         = strval($data['openingBalance']);
+        $negativeAmount = bcmul($amount, '-1');
+        $currencyId     = intval($data['currency_id']);
 
-        Log::debug(sprintf('Submitted amount for opening balance to update is %s', $amount));
+        Log::debug(sprintf('Submitted amount for opening balance to update is "%s"', $amount));
 
         if (0 === bccomp($amount, '0')) {
+            Log::notice(sprintf('Amount "%s" is zero, delete opening balance.', $amount));
             $journal->delete();
 
             return true;
@@ -525,18 +675,18 @@ class AccountRepository implements AccountRepositoryInterface
         $journal->date                    = $date;
         $journal->transaction_currency_id = $currencyId;
         $journal->save();
+
         // update transactions:
         /** @var Transaction $transaction */
         foreach ($journal->transactions()->get() as $transaction) {
-            if ($account->id === $transaction->account_id) {
-                Log::debug(sprintf('Will change transaction #%d amount from %s to %s', $transaction->id, $transaction->amount, $amount));
+            if (intval($account->id) === intval($transaction->account_id)) {
+                Log::debug(sprintf('Will (eq) change transaction #%d amount from "%s" to "%s"', $transaction->id, $transaction->amount, $amount));
                 $transaction->amount                  = $amount;
                 $transaction->transaction_currency_id = $currencyId;
                 $transaction->save();
             }
-            if ($account->id !== $transaction->account_id) {
-                $negativeAmount = bcmul($amount, '-1');
-                Log::debug(sprintf('Will change transaction #%d amount from %s to %s', $transaction->id, $transaction->amount, $negativeAmount));
+            if (!(intval($account->id) === intval($transaction->account_id))) {
+                Log::debug(sprintf('Will (neq) change transaction #%d amount from "%s" to "%s"', $transaction->id, $transaction->amount, $negativeAmount));
                 $transaction->amount                  = $negativeAmount;
                 $transaction->transaction_currency_id = $currencyId;
                 $transaction->save();
@@ -626,6 +776,7 @@ class AccountRepository implements AccountRepositoryInterface
 
             return null;
         }
+
 
         return $iban;
     }

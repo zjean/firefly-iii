@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -41,7 +41,7 @@ class ForgotPasswordControllerTest extends TestCase
     public function testSendResetLinkEmail()
     {
         $repository = $this->mock(UserRepositoryInterface::class);
-        $repository->shouldReceive('hasRole')->andReturn(false);
+        $repository->shouldReceive('hasRole')->andReturn(false)->once();
         $data = [
             'email' => 'thegrumpydictator@gmail.com',
         ];
@@ -57,7 +57,7 @@ class ForgotPasswordControllerTest extends TestCase
     public function testSendResetLinkEmailDemo()
     {
         $repository = $this->mock(UserRepositoryInterface::class);
-        $repository->shouldReceive('hasRole')->andReturn(true);
+        $repository->shouldReceive('hasRole')->andReturn(true)->once();
         $data = [
             'email' => 'thegrumpydictator@gmail.com',
         ];

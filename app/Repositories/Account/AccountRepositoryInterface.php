@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -24,6 +24,8 @@ namespace FireflyIII\Repositories\Account;
 
 use Carbon\Carbon;
 use FireflyIII\Models\Account;
+use FireflyIII\Models\AccountType;
+use FireflyIII\Models\Note;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\User;
 use Illuminate\Support\Collection;
@@ -33,7 +35,6 @@ use Illuminate\Support\Collection;
  */
 interface AccountRepositoryInterface
 {
-
     /**
      * Moved here from account CRUD.
      *
@@ -56,6 +57,7 @@ interface AccountRepositoryInterface
     /**
      * @param int $accountId
      *
+     * @deprecated
      * @return Account
      */
     public function find(int $accountId): Account;
@@ -80,9 +82,25 @@ interface AccountRepositoryInterface
      * @param string $name
      * @param array  $types
      *
-     * @return Account
+     * @return Account|null
      */
-    public function findByName(string $name, array $types): Account;
+    public function findByName(string $name, array $types): ?Account;
+
+    /**
+     * @param int $accountId
+     *
+     * @return Account|null
+     */
+    public function findNull(int $accountId): ?Account;
+
+    /**
+     * Return account type by string.
+     *
+     * @param string $type
+     *
+     * @return AccountType|null
+     */
+    public function getAccountType(string $type): ?AccountType;
 
     /**
      * @param array $accountIds
@@ -109,6 +127,32 @@ interface AccountRepositoryInterface
      * @return Account
      */
     public function getCashAccount(): Account;
+
+    /**
+     * @param Account $account
+     *
+     * @return Note|null
+     */
+    public function getNote(Account $account): ?Note;
+
+    /**
+     * Returns the amount of the opening balance for this account.
+     *
+     * @param Account $account
+     *
+     * @return string
+     */
+    public function getOpeningBalanceAmount(Account $account): ?string;
+
+
+    /**
+     * Return date of opening balance as string or null.
+     *
+     * @param Account $account
+     *
+     * @return null|string
+     */
+    public function getOpeningBalanceDate(Account $account): ?string;
 
     /**
      * Find or create the opposing reconciliation account.

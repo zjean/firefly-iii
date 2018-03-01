@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * validation.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'iban'                           => 'Este no es un IBAN válido.',
@@ -18,8 +27,8 @@ return [
     'rule_trigger_value'             => 'Este valor es incorrecto para el disparador seleccionado.',
     'rule_action_value'              => 'Este valor es incorrecto para la acción seleccionada.',
     'file_already_attached'          => 'El archivo ":name" ya ha sido añadido a este objeto.',
-    'file_attached'                  => 'Archivo subido correctamente ": nombre".',
-    'file_invalid_mime'              => 'El archivo ":name" es de tipo ": mime", el cual no se acepta.',
+    'file_attached'                  => 'Archivo cargado con exito ":name".',
+    'file_invalid_mime'              => 'El archivo ":name" es de tipo ":mime", el cual no se acepta.',
     'file_too_large'                 => 'El archivo ":name" es demasiado grande.',
     'belongs_to_user'                => 'El valor de :attribute es desconocido',
     'accepted'                       => 'El :attribute debe ser aceptado.',
@@ -79,7 +88,7 @@ return [
     'size.string'                    => 'El campo :attribute debe tener :size caracteres.',
     'size.array'                     => 'El campo :attribute debe contener :size elementos.',
     'unique'                         => 'El elemento :attribute ya está en uso.',
-    'string'                         => 'El campo :atribute debe ser un texto.',
+    'string'                         => 'El :attribute debería ser una cadena de caracteres.',
     'url'                            => 'El formato del campo :attribute no es válido.',
     'timezone'                       => 'El campo :attribute debe contener una zona válida.',
     '2fa_code'                       => 'El campo :attribute no es válido.',
@@ -90,4 +99,38 @@ return [
     'present'                        => 'El campo :attribute debe estar presente.',
     'amount_zero'                    => 'La cantidad total no puede ser cero',
     'secure_password'                => 'Esta contraseña no es segura. Por favor inténtalo de nuevo. Para más información, visita https://goo.gl/NCh2tN',
+    'attributes'                     => [
+        'email'                => 'dirección de correo electrónico',
+        'description'          => 'descripcion',
+        'amount'               => 'monto',
+        'name'                 => 'nombre',
+        'targetamount'         => 'monto objetivo',
+        'openingBalanceDate'   => 'fecha de balance de apertura',
+        'openingBalance'       => 'balance de apertura',
+        'match'                => 'emparejar',
+        'amount_min'           => 'monto minimo',
+        'amount_max'           => 'monto maximo',
+        'title'                => 'titulo',
+        'tag'                  => 'etiqueta',
+        'rule-action-value.1'  => 'valor de acción de la regla #1',
+        'rule-action-value.2'  => 'valor de acción de regla # 2',
+        'rule-action-value.3'  => 'valor de acción de regla # 3',
+        'rule-action-value.4'  => 'valor de acción de regla # 4',
+        'rule-action-value.5'  => 'valor de accion de regla # 5',
+        'rule-action.1'        => 'acción de regla # 1',
+        'rule-action.2'        => 'acción de regla # 2',
+        'rule-action.3'        => 'acción de regla # 3',
+        'rule-action.4'        => 'acción de regla # 4',
+        'rule-action.5'        => 'acción de regla # 5',
+        'rule-trigger-value.1' => 'valor de disparo de regla #1',
+        'rule-trigger-value.2' => 'valor de disparo de regla # 2',
+        'rule-trigger-value.3' => 'valor de disparo de regla # 3',
+        'rule-trigger-value.4' => 'valor de disparo de regla # 4',
+        'rule-trigger-value.5' => 'valor de disparo de regla #5',
+        'rule-trigger.1'       => 'disparo de regla # 1',
+        'rule-trigger.2'       => 'disparo de regla #2',
+        'rule-trigger.3'       => 'disparo de regla #3',
+        'rule-trigger.4'       => 'disparo de regla #4',
+        'rule-trigger.5'       => 'disparo de regla#5',
+    ],
 ];

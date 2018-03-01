@@ -1,13 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * intro.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the Creative Commons Attribution-ShareAlike 4.0 International License.
  *
- * See the LICENSE file for details.
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     // index
@@ -20,13 +31,13 @@ return [
 
     // create account:
     'accounts_create_iban'                  => 'Geef je rekeningen een geldige IBAN. Dat scheelt met importeren van data.',
-    'accounts_create_asset_opening_balance' => 'Betaalrekeningen kunnen een startsaldo hebben, waarmee het begin van deze rekening in Firefly wordt aangegeven.',
+    'accounts_create_asset_opening_balance' => 'Betaalrekeningen kunnen een startsaldo hebben, waarmee het begin van deze rekening in Firefly III wordt aangegeven.',
     'accounts_create_asset_currency'        => 'Firefly III ondersteunt meerdere valuta. Hier stel je de valuta in van je betaalrekening.',
     'accounts_create_asset_virtual'         => 'Soms is het handig om je betaalrekening een virtueel saldo te geven: een extra bedrag dat altijd bij het daadwerkelijke saldo wordt opgeteld.',
 
     // budgets index
     'budgets_index_intro'                   => 'Budgetten worden gebruikt om je financiën te beheren en vormen een van de kernfuncties van Firefly III.',
-    'budgets_index_set_budget'              => 'Stel je totale budget voor elke periode in, zodat Firefly je kan vertellen of je alle beschikbare geld hebt gebudgetteerd.',
+    'budgets_index_set_budget'              => 'Stel je totale budget voor elke periode in, zodat Firefly III je kan vertellen of je alle beschikbare geld hebt gebudgetteerd.',
     'budgets_index_see_expenses_bar'        => 'Het besteden van geld zal deze balk langzaam vullen.',
     'budgets_index_navigate_periods'        => 'Navigeer door periodes heen om je budget vooraf te bepalen.',
     'budgets_index_new_budget'              => 'Maak nieuwe budgetten naar wens.',

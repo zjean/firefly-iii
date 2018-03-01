@@ -16,17 +16,22 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
 namespace FireflyIII\Repositories\Journal;
 
+use Carbon\Carbon;
+use DB;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
+use FireflyIII\Models\Note;
+use FireflyIII\Models\Tag;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
+use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use FireflyIII\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
@@ -99,8 +104,10 @@ class JournalRepository implements JournalRepositoryInterface
      * @param TransactionJournal $journal
      *
      * @return bool
+     *
+     * @throws \Exception
      */
-    public function delete(TransactionJournal $journal): bool
+    public function destroy(TransactionJournal $journal): bool
     {
         $journal->delete();
 
@@ -179,12 +186,22 @@ class JournalRepository implements JournalRepositoryInterface
     {
         /** @var Transaction $transaction */
         foreach ($journal->transactions as $transaction) {
-            if ($transaction->account->accountType->type === AccountType::ASSET) {
+            if (AccountType::ASSET === $transaction->account->accountType->type) {
                 return $transaction;
             }
         }
 
         return null;
+    }
+
+    /**
+     * @param TransactionJournal $journal
+     *
+     * @return Note|null
+     */
+    public function getNote(TransactionJournal $journal): ?Note
+    {
+        return $journal->notes()->first();
     }
 
     /**
@@ -220,6 +237,21 @@ class JournalRepository implements JournalRepositoryInterface
     public function isTransfer(TransactionJournal $journal): bool
     {
         return TransactionType::TRANSFER === $journal->transactionType->type;
+    }
+
+    /**
+     * Mark journal as completed and return it.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return TransactionJournal
+     */
+    public function markCompleted(TransactionJournal $journal): TransactionJournal
+    {
+        $journal->completed = true;
+        $journal->save();
+
+        return $journal;
     }
 
     /**
@@ -273,6 +305,9 @@ class JournalRepository implements JournalRepositoryInterface
      * @param array $data
      *
      * @return TransactionJournal
+     *
+     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function store(array $data): TransactionJournal
     {
@@ -282,14 +317,18 @@ class JournalRepository implements JournalRepositoryInterface
         $accounts        = $this->storeAccounts($this->user, $transactionType, $data);
         $data            = $this->verifyNativeAmount($data, $accounts);
         $amount          = strval($data['amount']);
-        $journal         = new TransactionJournal(
+        $dateString      = $data['date'];
+        if ($data['date'] instanceof Carbon) {
+            $dateString = $data['date']->format('Y-m-d 00:00:00');
+        }
+        $journal = new TransactionJournal(
             [
                 'user_id'                 => $this->user->id,
                 'transaction_type_id'     => $transactionType->id,
                 'transaction_currency_id' => $data['currency_id'], // no longer used.
                 'description'             => $data['description'],
                 'completed'               => 0,
-                'date'                    => $data['date'],
+                'date'                    => $dateString,
             ]
         );
         $journal->save();
@@ -354,10 +393,39 @@ class JournalRepository implements JournalRepositoryInterface
     }
 
     /**
+     * Store a new transaction journal based on the values given.
+     *
+     * @param array $values
+     *
+     * @return TransactionJournal
+     */
+    public function storeBasic(array $values): TransactionJournal
+    {
+        return TransactionJournal::create($values);
+    }
+
+    /**
+     * Store a new transaction based on the values given.
+     *
+     * @param array $values
+     *
+     * @return Transaction
+     */
+    public function storeBasicTransaction(array $values): Transaction
+    {
+        return Transaction::create($values);
+    }
+
+    /**
      * @param TransactionJournal $journal
      * @param array              $data
      *
      * @return TransactionJournal
+     *
+     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function update(TransactionJournal $journal, array $data): TransactionJournal
     {
@@ -411,6 +479,42 @@ class JournalRepository implements JournalRepositoryInterface
         return $journal;
     }
 
+    /**
+     * @param TransactionJournal $journal
+     * @param int                $budgetId
+     *
+     * @return TransactionJournal
+     */
+    public function updateBudget(TransactionJournal $journal, int $budgetId): TransactionJournal
+    {
+        if ($budgetId === 0) {
+            $journal->budgets()->detach();
+            $journal->save();
+
+            return $journal;
+        }
+        $this->storeBudgetWithJournal($journal, $budgetId);
+
+        return $journal;
+    }
+
+    /**
+     * @param TransactionJournal $journal
+     * @param string             $category
+     *
+     * @return TransactionJournal
+     */
+    public function updateCategory(TransactionJournal $journal, string $category): TransactionJournal
+    {
+        Log::debug(sprintf('In updateCategory("%s")', $category));
+        $journal->categories()->detach();
+        if (strlen($category) === 0) {
+            return $journal;
+        }
+        $this->storeCategoryWithJournal($journal, $category);
+
+        return $journal;
+    }
 
     /**
      * Same as above but for transaction journal with multiple transactions.
@@ -471,5 +575,49 @@ class JournalRepository implements JournalRepositoryInterface
         $journal->save();
 
         return $journal;
+    }
+
+    /**
+     * Update tags.
+     *
+     * @param TransactionJournal $journal
+     * @param array              $array
+     *
+     * @return bool
+     */
+    public function updateTags(TransactionJournal $journal, array $array): bool
+    {
+        // create tag repository
+        /** @var TagRepositoryInterface $tagRepository */
+        $tagRepository = app(TagRepositoryInterface::class);
+
+        // find or create all tags:
+        $tags = [];
+        $ids  = [];
+        foreach ($array as $name) {
+            if (strlen(trim($name)) > 0) {
+                $tag    = Tag::firstOrCreateEncrypted(['tag' => $name, 'user_id' => $journal->user_id]);
+                $tags[] = $tag;
+                $ids[]  = $tag->id;
+            }
+        }
+
+        // delete all tags connected to journal not in this array:
+        if (count($ids) > 0) {
+            DB::table('tag_transaction_journal')->where('transaction_journal_id', $journal->id)->whereNotIn('tag_id', $ids)->delete();
+        }
+        // if count is zero, delete them all:
+        if (0 === count($ids)) {
+            DB::table('tag_transaction_journal')->where('transaction_journal_id', $journal->id)->delete();
+        }
+
+        // connect each tag to journal (if not yet connected):
+        /** @var Tag $tag */
+        foreach ($tags as $tag) {
+            Log::debug(sprintf('Will try to connect tag #%d to journal #%d.', $tag->id, $journal->id));
+            $tagRepository->connect($journal, $tag);
+        }
+
+        return true;
     }
 }

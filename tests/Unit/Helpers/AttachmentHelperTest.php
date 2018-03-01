@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -111,6 +111,22 @@ class AttachmentHelperTest extends TestCase
         // Assert the file was stored...
         Storage::disk('upload')->assertExists(sprintf('at-%d.data', $attachments->first()->id));
     }
+
+    /**
+     * Test double file upload. Needs to be after testSave.
+     *
+     * @covers  \FireflyIII\Helpers\Attachments\AttachmentHelper::__construct
+     * @covers  \FireflyIII\Helpers\Attachments\AttachmentHelper::saveAttachmentsForModel
+     */
+    public function testSaveEmpty()
+    {
+        $journal = TransactionJournal::first();
+        $helper  = new AttachmentHelper;
+
+        $res = $helper->saveAttachmentsForModel($journal, null);
+        $this->assertTrue($res);
+    }
+
 
     /**
      * Test double file upload. Needs to be after testSave.

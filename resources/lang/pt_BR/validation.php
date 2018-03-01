@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * validation.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'iban'                           => 'Este não é um válido IBAN.',
@@ -24,7 +33,7 @@ return [
     'belongs_to_user'                => 'O valor de :attribute é desconhecido',
     'accepted'                       => 'O campo :attribute deve ser aceito.',
     'bic'                            => 'Este não é um BIC válido.',
-    'more'                           => ':attribute must be larger than zero.',
+    'more'                           => ':attribute deve ser maior que zero.',
     'active_url'                     => 'O campo :attribute não contém um URL válido.',
     'after'                          => 'O campo :attribute deverá conter uma data posterior a :date.',
     'alpha'                          => 'O campo :attribute deverá conter apenas letras.',
@@ -89,5 +98,39 @@ return [
     'in_array'                       => 'O campo :attribute não existe em :other.',
     'present'                        => 'O campo :attribute deve estar presente.',
     'amount_zero'                    => 'A quantidade total não pode ser zero',
-    'secure_password'                => 'This is not a secure password. Please try again. For more information, visit https://goo.gl/NCh2tN',
+    'secure_password'                => 'Esta não é uma senha segura. Por favor, tente novamente. Para mais informações, visite https://goo.gl/NCh2tN',
+    'attributes'                     => [
+        'email'                => 'endereço de e-mail',
+        'description'          => 'descrição',
+        'amount'               => 'quantidade',
+        'name'                 => 'nome',
+        'targetamount'         => 'quantidade alvo',
+        'openingBalanceDate'   => 'data do Saldo inicial',
+        'openingBalance'       => 'saldo inicial',
+        'match'                => 'coincidente',
+        'amount_min'           => 'valor mínimo',
+        'amount_max'           => 'valor máximo',
+        'title'                => 'título',
+        'tag'                  => 'identificador',
+        'rule-action-value.1'  => 'valor de ação de regra #1',
+        'rule-action-value.2'  => 'valor de ação de regra #2',
+        'rule-action-value.3'  => 'valor de ação de regra #3',
+        'rule-action-value.4'  => 'valor de ação de regra #4',
+        'rule-action-value.5'  => 'valor de ação de regra #5',
+        'rule-action.1'        => 'regra de ação #1',
+        'rule-action.2'        => 'regra de ação #2',
+        'rule-action.3'        => 'regra de ação #3',
+        'rule-action.4'        => 'regra de ação #4',
+        'rule-action.5'        => 'regra de ação #5',
+        'rule-trigger-value.1' => 'valor do disparador da regra #1',
+        'rule-trigger-value.2' => 'valor do disparador da regra #2',
+        'rule-trigger-value.3' => 'valor do disparador da regra #3',
+        'rule-trigger-value.4' => 'valor do disparador da regra #4',
+        'rule-trigger-value.5' => 'valor do disparador da regra #5',
+        'rule-trigger.1'       => 'disparador da regra #1',
+        'rule-trigger.2'       => 'disparador da regra #2',
+        'rule-trigger.3'       => 'disparador da regra #3',
+        'rule-trigger.4'       => 'disparador da regra #4',
+        'rule-trigger.5'       => 'disparador da regra #5',
+    ],
 ];

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -27,16 +27,20 @@ use FireflyIII\Models\CurrencyExchangeRate;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\HasApiTokens;
+use Log;
 use Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Class User.
  */
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -59,6 +63,25 @@ class User extends Authenticatable
     protected $table = 'users';
 
     /**
+     * @param        $guard
+     * @param string $value
+     *
+     * @return User
+     */
+    public static function routeBinder(string $value): User
+    {
+        if (auth()->check()) {
+            $userId = intval($value);
+            $user   = self::find($userId);
+            if (!is_null($user)) {
+                return $user;
+            }
+        }
+        throw new NotFoundHttpException;
+    }
+
+    /**
+     * @codeCoverageIgnore
      * Link to accounts.
      *
      * @return HasMany
@@ -84,11 +107,16 @@ class User extends Authenticatable
         if (is_array($role)) {
             $role = $role['id'];
         }
-
-        $this->roles()->attach($role);
+        try {
+            $this->roles()->attach($role);
+        } catch (QueryException $e) {
+            // don't care
+            Log::info(sprintf('Query exception when giving user a role: %s', $e->getMessage()));
+        }
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to attachments
      *
      * @return HasMany
@@ -99,6 +127,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to available budgets
      *
      * @return HasMany
@@ -109,6 +138,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to bills.
      *
      * @return HasMany
@@ -119,6 +149,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to budgets.
      *
      * @return HasMany
@@ -129,6 +160,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to categories
      *
      * @return HasMany
@@ -139,6 +171,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to currency exchange rates
      *
      * @return HasMany
@@ -149,6 +182,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to export jobs
      *
      * @return HasMany
@@ -159,6 +193,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Generates access token.
      *
      * @return string
@@ -171,6 +206,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Checks if the user has a role by its name.
      *
      * Full credit goes to: https://github.com/Zizaco/entrust
@@ -191,6 +227,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to import jobs.
      *
      * @return HasMany
@@ -201,6 +238,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to piggy banks.
      *
      * @return HasManyThrough
@@ -211,6 +249,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to preferences.
      *
      * @return HasMany
@@ -221,6 +260,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to roles.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -231,6 +271,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to rule groups.
      *
      * @return HasMany
@@ -241,6 +282,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to rules.
      *
      * @return HasMany
@@ -251,6 +293,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Send the password reset notification.
      *
      * @param string $token
@@ -263,6 +306,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to tags.
      *
      * @return HasMany
@@ -273,6 +317,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to transaction journals.
      *
      * @return HasMany
@@ -283,6 +328,7 @@ class User extends Authenticatable
     }
 
     /**
+     * @codeCoverageIgnore
      * Link to transactions.
      *
      * @return HasManyThrough

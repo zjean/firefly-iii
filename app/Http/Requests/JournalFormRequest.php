@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -84,38 +84,40 @@ class JournalFormRequest extends Request
 
     /**
      * @return array
+     *
+     * @throws FireflyException
      */
     public function rules()
     {
         $what  = $this->get('what');
         $rules = [
-            'what'                     => 'required|in:withdrawal,deposit,transfer',
-            'date'                     => 'required|date',
-
+            'what'                      => 'required|in:withdrawal,deposit,transfer',
+            'date'                      => 'required|date',
+            'amount_currency_id_amount' => 'exists:transaction_currencies,id|required',
             // then, custom fields:
-            'interest_date'            => 'date|nullable',
-            'book_date'                => 'date|nullable',
-            'process_date'             => 'date|nullable',
-            'due_date'                 => 'date|nullable',
-            'payment_date'             => 'date|nullable',
-            'invoice_date'             => 'date|nullable',
-            'internal_reference'       => 'min:1,max:255|nullable',
-            'notes'                    => 'min:1,max:50000|nullable',
+            'interest_date'             => 'date|nullable',
+            'book_date'                 => 'date|nullable',
+            'process_date'              => 'date|nullable',
+            'due_date'                  => 'date|nullable',
+            'payment_date'              => 'date|nullable',
+            'invoice_date'              => 'date|nullable',
+            'internal_reference'        => 'min:1,max:255|nullable',
+            'notes'                     => 'min:1,max:50000|nullable',
             // and then transaction rules:
-            'description'              => 'required|between:1,255',
-            'amount'                   => 'numeric|required|more:0',
-            'budget_id'                => 'mustExist:budgets,id|belongsToUser:budgets,id|nullable',
-            'category'                 => 'between:1,255|nullable',
-            'source_account_id'        => 'numeric|belongsToUser:accounts,id|nullable',
-            'source_account_name'      => 'between:1,255|nullable',
-            'destination_account_id'   => 'numeric|belongsToUser:accounts,id|nullable',
-            'destination_account_name' => 'between:1,255|nullable',
-            'piggy_bank_id'            => 'between:1,255|nullable',
+            'description'               => 'required|between:1,255',
+            'amount'                    => 'numeric|required|more:0',
+            'budget_id'                 => 'mustExist:budgets,id|belongsToUser:budgets,id|nullable',
+            'category'                  => 'between:1,255|nullable',
+            'source_account_id'         => 'numeric|belongsToUser:accounts,id|nullable',
+            'source_account_name'       => 'between:1,255|nullable',
+            'destination_account_id'    => 'numeric|belongsToUser:accounts,id|nullable',
+            'destination_account_name'  => 'between:1,255|nullable',
+            'piggy_bank_id'             => 'between:1,255|nullable',
 
             // foreign currency amounts
-            'native_amount'            => 'numeric|more:0|nullable',
-            'source_amount'            => 'numeric|more:0|nullable',
-            'destination_amount'       => 'numeric|more:0|nullable',
+            'native_amount'             => 'numeric|more:0|nullable',
+            'source_amount'             => 'numeric|more:0|nullable',
+            'destination_amount'        => 'numeric|more:0|nullable',
         ];
 
         // some rules get an upgrade depending on the type of data:

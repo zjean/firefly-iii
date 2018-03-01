@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -38,6 +38,16 @@ class Request extends FormRequest
     public function boolean(string $field): bool
     {
         return 1 === intval($this->input($field));
+    }
+
+    /**
+     * @param string $field
+     *
+     * @return int
+     */
+    public function integer(string $field): int
+    {
+        return intval($this->get($field));
     }
 
     /**
@@ -136,15 +146,5 @@ class Request extends FormRequest
         }
 
         return $return;
-    }
-
-    /**
-     * @param string $field
-     *
-     * @return int
-     */
-    protected function integer(string $field): int
-    {
-        return intval($this->get($field));
     }
 }

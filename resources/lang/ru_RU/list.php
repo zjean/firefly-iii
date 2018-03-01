@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * list.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'buttons'                 => 'Кнопки',
@@ -17,7 +26,7 @@ return [
     'id'                      => 'ID',
     'create_date'             => 'Создан',
     'update_date'             => 'Обновлён',
-    'updated_at'              => 'Updated at',
+    'updated_at'              => 'Последнее изменение',
     'balance_before'          => 'Баланс до',
     'balance_after'           => 'Баланс после',
     'name'                    => 'Имя',
@@ -25,29 +34,29 @@ return [
     'currentBalance'          => 'Текущий баланс',
     'active'                  => 'Активен?',
     'lastActivity'            => 'Последняя активность',
-    'balanceDiff'             => 'Разница баланса между :start и :end',
-    'matchesOn'               => 'Matched on',
+    'balanceDiff'             => 'Разность баланса',
+    'matchesOn'               => 'Совпадает на',
     'account_type'            => 'Тип профиля',
-    'created_at'              => 'Created at',
-    'account'                 => 'Account',
-    'matchingAmount'          => 'Amount',
-    'split_number'            => 'Split #',
-    'destination'             => 'Destination',
-    'source'                  => 'Source',
-    'next_expected_match'     => 'Next expected match',
-    'automatch'               => 'Auto match?',
-    'repeat_freq'             => 'Repeats',
+    'created_at'              => 'Создан',
+    'account'                 => 'Счёт',
+    'matchingAmount'          => 'Сумма',
+    'split_number'            => 'Часть №',
+    'destination'             => 'Получатель',
+    'source'                  => 'Источник',
+    'next_expected_match'     => 'Следующий ожидаемый результат',
+    'automatch'               => 'Автоподбор?',
+    'repeat_freq'             => 'Повторы',
     'description'             => 'Описание',
     'amount'                  => 'Сумма',
-    'internal_reference'      => 'Internal reference',
+    'internal_reference'      => 'Внутренняя ссылка',
     'date'                    => 'Дата',
-    'interest_date'           => 'Interest date',
-    'book_date'               => 'Book date',
-    'process_date'            => 'Processing date',
-    'due_date'                => 'Due date',
-    'payment_date'            => 'Payment date',
-    'invoice_date'            => 'Invoice date',
-    'interal_reference'       => 'Internal reference',
+    'interest_date'           => 'Проценты',
+    'book_date'               => 'Забронировать',
+    'process_date'            => 'Дата открытия',
+    'due_date'                => 'Срок',
+    'payment_date'            => 'Дата платежа',
+    'invoice_date'            => 'Дата выставления счёта',
+    'interal_reference'       => 'Внутренняя ссылка',
     'notes'                   => 'Заметки',
     'from'                    => 'Откуда',
     'piggy_bank'              => 'Копилка',
@@ -58,18 +67,18 @@ return [
     'withdrawal'              => 'Расход',
     'deposit'                 => 'Доход',
     'transfer'                => 'Перевод',
-    'type'                    => 'Type',
-    'completed'               => 'Completed',
+    'type'                    => 'Тип',
+    'completed'               => 'Завершено',
     'iban'                    => 'IBAN',
-    'paid_current_period'     => 'Paid this period',
+    'paid_current_period'     => 'Оплатить в указанный период',
     'email'                   => 'E-mail',
     'registered_at'           => 'Дата регистрации',
     'is_blocked'              => 'Заблокирован?',
     'is_admin'                => 'Администратор?',
     'has_two_factor'          => 'Защита (2FA)?',
-    'blocked_code'            => 'Block code',
-    'source_account'          => 'Source account',
-    'destination_account'     => 'Destination account',
+    'blocked_code'            => 'Код блокировки',
+    'source_account'          => 'Исходный счет',
+    'destination_account'     => 'Счет назначения',
     'accounts_count'          => 'Всего счетов',
     'journals_count'          => 'Всего транзакций',
     'attachments_count'       => 'Всего вложений',
@@ -80,14 +89,17 @@ return [
     'budget_count'            => 'Всего категорий бюджета',
     'rule_and_groups_count'   => 'Всего правил и групп правил',
     'tags_count'              => 'Всего меток',
-    'inward'                  => 'Inward description',
-    'outward'                 => 'Outward description',
-    'number_of_transactions'  => 'Number of transactions',
-    'total_amount'            => 'Total amount',
-    'sum'                     => 'Sum',
-    'sum_excluding_transfers' => 'Sum (excluding transfers)',
-    'sum_withdrawals'         => 'Sum of withdrawals',
-    'sum_deposits'            => 'Sum of deposits',
-    'sum_transfers'           => 'Sum of transfers',
-    'reconcile'               => 'Reconcile',
+    'tags'                    => 'Метки',
+    'inward'                  => 'Внутреннее описание',
+    'outward'                 => 'Внешнее описание',
+    'number_of_transactions'  => 'Всего транзакций',
+    'total_amount'            => 'Итого',
+    'sum'                     => 'Сумма',
+    'sum_excluding_transfers' => 'Сумма (без учета переводов)',
+    'sum_withdrawals'         => 'Сумма расходов',
+    'sum_deposits'            => 'Сумма доходов',
+    'sum_transfers'           => 'Сумма переводов',
+    'reconcile'               => 'Сверка',
+    'account_on_spectre'      => 'Счёт (Spectre)',
+    'do_import'               => 'Импортировать с этого счёта',
 ];

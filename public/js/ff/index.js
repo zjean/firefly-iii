@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: accountFrontpageUri, today, piggyInfoUri, token, billCount, accountExpenseUri, accountRevenueUri */
@@ -67,7 +67,7 @@ function getPiggyBanks() {
 function getNetWorthBox() {
     // box-net-worth
     $.getJSON('json/box/net-worth').done(function (data) {
-        $('#box-net-worth').html(data.net_worth);
+        $('#box-net-worth').html(data.net_worths.join(', '));
     });
 }
 

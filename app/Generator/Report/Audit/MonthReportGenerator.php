@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use FireflyIII\Generator\Report\ReportGeneratorInterface;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Models\Account;
+use FireflyIII\Models\Transaction;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use Illuminate\Support\Collection;
 use Steam;
@@ -120,6 +121,16 @@ class MonthReportGenerator implements ReportGeneratorInterface
     }
 
     /**
+     * @param Collection $expense
+     *
+     * @return ReportGeneratorInterface
+     */
+    public function setExpense(Collection $expense): ReportGeneratorInterface
+    {
+        return $this;
+    }
+
+    /**
      * @param Carbon $date
      *
      * @return ReportGeneratorInterface
@@ -163,7 +174,7 @@ class MonthReportGenerator implements ReportGeneratorInterface
         $startBalance     = $dayBeforeBalance;
         $currency         = $currencyRepos->find(intval($account->getMeta('currency_id')));
 
-        // @var Transaction $journal
+        /** @var Transaction $transaction */
         foreach ($journals as $transaction) {
             $transaction->before = $startBalance;
             $transactionAmount   = $transaction->transaction_amount;

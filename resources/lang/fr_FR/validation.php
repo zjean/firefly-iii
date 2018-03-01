@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * validation.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'iban'                           => 'Il ne s\'agit pas d\'un IBAN valide.',
@@ -90,4 +99,38 @@ return [
     'present'                        => 'Le champs :attribute doit être rempli.',
     'amount_zero'                    => 'Le montant total ne peut pas être zéro',
     'secure_password'                => 'Ce n’est pas un mot de passe sécurisé. S’il vous plaît essayer de nouveau. Pour plus d’informations, visitez https://goo.gl/NCh2tN',
+    'attributes'                     => [
+        'email'                => 'adresse email',
+        'description'          => 'description',
+        'amount'               => 'montant',
+        'name'                 => 'nom',
+        'targetamount'         => 'montant cible',
+        'openingBalanceDate'   => 'date du solde initial',
+        'openingBalance'       => 'solde initial',
+        'match'                => 'correspondance',
+        'amount_min'           => 'montant minimum',
+        'amount_max'           => 'montant maximum',
+        'title'                => 'titre',
+        'tag'                  => 'tag',
+        'rule-action-value.1'  => 'valeur d\'action de la règle #1',
+        'rule-action-value.2'  => 'valeur d\'action de la règle #2',
+        'rule-action-value.3'  => 'valeur d\'action de la règle #3',
+        'rule-action-value.4'  => 'valeur d\'action de la règle #4',
+        'rule-action-value.5'  => 'valeur d\'action de la règle #5',
+        'rule-action.1'        => 'action de règle #1',
+        'rule-action.2'        => 'action de règle #2',
+        'rule-action.3'        => 'action de règle #3',
+        'rule-action.4'        => 'action de règle #4',
+        'rule-action.5'        => 'action de règle #5',
+        'rule-trigger-value.1' => 'valeur seuil de déclenchement de la règle #1',
+        'rule-trigger-value.2' => 'valeur seuil de déclenchement de la règle #2',
+        'rule-trigger-value.3' => 'valeur seuil de déclenchement de la règle #3',
+        'rule-trigger-value.4' => 'valeur seuil de déclenchement de la règle #4',
+        'rule-trigger-value.5' => 'valeur seuil de déclenchement de la règle #5',
+        'rule-trigger.1'       => 'déclencheur de règle #1',
+        'rule-trigger.2'       => 'déclencheur de règle #2',
+        'rule-trigger.3'       => 'déclencheur de règle #3',
+        'rule-trigger.4'       => 'déclencheur de règle #4',
+        'rule-trigger.5'       => 'déclencheur de règle #4',
+    ],
 ];

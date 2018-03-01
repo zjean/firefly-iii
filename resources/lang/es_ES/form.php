@@ -1,18 +1,26 @@
 <?php
-declare(strict_types=1);
-
 /**
  * form.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
-
     // new user:
     'bank_name'                      => 'Banco',
     'bank_balance'                   => 'Saldo',
@@ -24,7 +32,7 @@ return [
     'active'                         => 'Activo',
     'amount_min'                     => 'Importe mínimo',
     'amount_max'                     => 'Importe máximo',
-    'match'                          => 'Matches on',
+    'match'                          => 'Encuentros en',
     'repeat_freq'                    => 'Repetición',
     'journal_currency_id'            => 'Divisa',
     'currency_id'                    => 'Divisa',
@@ -66,10 +74,11 @@ return [
     'exchange_rate_instruction'      => 'Monedas extranjeras',
     'source_amount'                  => 'Importe (origen)',
     'destination_amount'             => 'Importe (destino)',
-    'native_amount'                  => 'Native amount',
+    'native_amount'                  => 'Cantidad nativa',
     'new_email_address'              => 'Nueva dirección de email',
     'verification'                   => 'Verificación',
     'api_key'                        => 'Clave de API',
+    'remember_me'                    => 'Recordarme',
 
     'source_account_asset'        => 'Cuenta de origen (cuenta de activos)',
     'destination_account_expense' => 'Cuenta de destino (cuenta de gastos)',
@@ -79,7 +88,6 @@ return [
     'convert_Withdrawal'          => 'Convertir extracción',
     'convert_Deposit'             => 'Convertir depósito',
     'convert_Transfer'            => 'Convertir transferencia',
-
 
     'amount'                     => 'Importe',
     'date'                       => 'Fecha',
@@ -91,9 +99,9 @@ return [
     'deletePermanently'          => 'Borrar permanentemente',
     'cancel'                     => 'Cancelar',
     'targetdate'                 => 'Fecha tope',
-    'startdate'                  => 'Start date',
+    'startdate'                  => 'Fecha de inicio',
     'tag'                        => 'Etiqueta',
-    'under'                      => 'Under',
+    'under'                      => 'Debajo',
     'symbol'                     => 'Símbolo',
     'code'                       => 'Código',
     'iban'                       => 'IBAN',
@@ -101,7 +109,7 @@ return [
     'creditCardNumber'           => 'Número de la tarjeta de crédito',
     'has_headers'                => 'Encabezados',
     'date_format'                => 'Formato de fecha',
-    'specifix'                   => 'Bank- or file specific fixes',
+    'specifix'                   => 'Banco- o archivo de soluciones especificas',
     'attachments[]'              => 'Adjuntos',
     'store_new_withdrawal'       => 'Guardar rueva retirada de efectivo',
     'store_new_deposit'          => 'Guardar nuevo depósito',
@@ -146,11 +154,11 @@ return [
     'currency_areYouSure'        => '¿Está seguro que desea eliminar la moneda denominada ":name"?',
     'piggyBank_areYouSure'       => '¿Está seguro que desea eliminar la hucha llamada ":name"?',
     'journal_areYouSure'         => '¿Estás seguro de que deseas eliminar la transacción descrita ":description"?',
-    'mass_journal_are_you_sure'  => 'Are you sure you want to delete these transactions?',
+    'mass_journal_are_you_sure'  => '¿Usted esta seguro de querer eliminar estas transacciones?',
     'tag_areYouSure'             => '¿Seguro que quieres eliminar la etiqueta ":tag"?',
     'journal_link_areYouSure'    => '¿Seguro que quieres eliminar el vínculo entre <a href=":source_link">:source</a> y <a href=":destination_link">:destination</a>?',
     'linkType_areYouSure'        => '¿Estás seguro de que deseas eliminar el tipo de vínculo ":name" (":inward" / ":outward")?',
-    'permDeleteWarning'          => 'Eliminar cosas de Firely es permanente y no se puede deshacer.',
+    'permDeleteWarning'          => 'Deleting stuff from Firefly III is permanent and cannot be undone.',
     'mass_make_selection'        => 'Aún puede evitar que se eliminen elementos quitando la casilla de verificación.',
     'delete_all_permanently'     => 'Eliminar selección permanentemente',
     'update_all_journals'        => 'Actualiza estas transacciones',
@@ -162,6 +170,7 @@ return [
     'budget_keep_transactions'   => 'La única transacción conectada a este presupuesto no se eliminará. | Todas las :count transacciones conectadas a este presupuesto evitarán la eliminación.',
     'category_keep_transactions' => 'La única transacción conectada a esta categoría no se eliminará. | Todas las :count transacciones conectadas a esta categoría evitarán la eliminación.',
     'tag_keep_transactions'      => 'La única transacción conectada a esta etiqueta no se eliminará. | Todas las :count transacciones conectadas a esta etiqueta evitarán la eliminación.',
+    'check_for_updates'          => 'Ver actualizaciones',
 
     'email'                 => 'Correo electrónico',
     'password'              => 'Contraseña',
@@ -169,12 +178,10 @@ return [
     'blocked'               => '¿Está bloqueado?',
     'blocked_code'          => 'Razón del bloqueo',
 
-
     // admin
     'domain'                => 'Dominio',
     'single_user_mode'      => 'Deshabilitar registro de usuario',
     'is_demo_site'          => 'Está en modo demostración',
-
 
     // import
     'import_file'           => 'Importar archivo',
@@ -186,7 +193,12 @@ return [
     'csv_delimiter'         => 'Delimitador de campo CSV',
     'csv_import_account'    => 'Cuenta de importación predeterminada',
     'csv_config'            => 'Configuración de importación de CSV',
-
+    'client_id'             => 'Identificación del cliente',
+    'service_secret'        => 'Servicio secreto',
+    'app_secret'            => 'Secreto de aplicación',
+    'public_key'            => 'Llave pública',
+    'country_code'          => 'Código del país',
+    'provider_code'         => 'Banco o proveedor de datos',
 
     'due_date'           => 'Fecha de vencimiento',
     'payment_date'       => 'Fecha de pago',

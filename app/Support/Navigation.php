@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -24,6 +24,7 @@ namespace FireflyIII\Support;
 
 use Carbon\Carbon;
 use FireflyIII\Exceptions\FireflyException;
+use Log;
 
 /**
  * Class Navigation.
@@ -37,7 +38,7 @@ class Navigation
      *
      * @return \Carbon\Carbon
      *
-     * @throws FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function addPeriod(Carbon $theDate, string $repeatFreq, int $skip): Carbon
     {
@@ -80,12 +81,79 @@ class Navigation
     }
 
     /**
+     * @param \Carbon\Carbon $start
+     * @param \Carbon\Carbon $end
+     * @param string         $range
+     *
+     * @return array
+     * @throws \FireflyIII\Exceptions\FireflyException
+     */
+    public function blockPeriods(\Carbon\Carbon $start, \Carbon\Carbon $end, string $range): array
+    {
+        if ($end < $start) {
+            list($start, $end) = [$end, $start];
+        }
+        $periods = [];
+        /*
+         * Start looping per months for 1 year + the rest of the year:
+         */
+        $perMonthEnd   = clone $end;
+        $perMonthStart = clone $end;
+        $perMonthStart->startOfyear()->subYear();
+        $perMonthStart = $start->lt($perMonthStart) ? $perMonthStart : $start;
+
+        // loop first set:
+        while ($perMonthEnd >= $perMonthStart) {
+            $perMonthEnd = $this->startOfPeriod($perMonthEnd, $range);
+            $currentEnd  = $this->endOfPeriod($perMonthEnd, $range);
+            if ($currentEnd->gt($start)) {
+                $periods[] = [
+                    'start'  => $perMonthEnd,
+                    'end'    => $currentEnd,
+                    'period' => $range,
+                ];
+            }
+            $perMonthEnd = $this->subtractPeriod($perMonthEnd, $range, 1);
+        }
+
+        // do not continue if date is already less
+        if ($perMonthEnd->lt($start)) {
+            return $periods;
+        }
+
+        // per year variables:
+        $perYearEnd   = clone $perMonthStart;
+        $perYearStart = clone $perMonthStart;
+        unset($perMonthEnd, $currentEnd, $perMonthStart);
+        $perYearEnd->subYear();
+        $perYearStart->subYears(50);
+        $perYearStart = $start->lt($perYearStart) ? $perYearStart : $start;
+        $perYearStart->startOfYear();
+
+        // per year
+        while ($perYearEnd >= $perYearStart) {
+            $perYearEnd = $this->startOfPeriod($perYearEnd, '1Y');
+            $currentEnd = $this->endOfPeriod($perYearEnd, '1Y')->subDay()->endOfDay();
+            if ($currentEnd->gt($start)) {
+                $periods[] = [
+                    'start'  => $perYearEnd,
+                    'end'    => $currentEnd,
+                    'period' => '1Y',
+                ];
+            }
+            $perYearEnd = $this->subtractPeriod($perYearEnd, '1Y', 1);
+        }
+
+        return $periods;
+    }
+
+    /**
      * @param \Carbon\Carbon $end
      * @param                $repeatFreq
      *
      * @return \Carbon\Carbon
      *
-     * @throws FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function endOfPeriod(\Carbon\Carbon $end, string $repeatFreq): Carbon
     {
@@ -148,7 +216,7 @@ class Navigation
      * @param string              $repeatFreq
      * @param \Carbon\Carbon|null $maxDate
      *
-     * @return Carbon
+     * @return \Carbon\Carbon
      */
     public function endOfX(Carbon $theCurrentEnd, string $repeatFreq, ?Carbon $maxDate): Carbon
     {
@@ -193,7 +261,7 @@ class Navigation
     {
         // define period to increment
         $increment     = 'addDay';
-        $format        = self::preferredCarbonFormat($start, $end);
+        $format        = $this->preferredCarbonFormat($start, $end);
         $displayFormat = strval(trans('config.month_and_day'));
         // increment by month (for year)
         if ($start->diffInMonths($end) > 1) {
@@ -222,11 +290,11 @@ class Navigation
 
     /**
      * @param \Carbon\Carbon $theDate
-     * @param                $repeatFrequency
+     * @param  string        $repeatFrequency
      *
      * @return string
      *
-     * @throws FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function periodShow(Carbon $theDate, string $repeatFrequency): string
     {
@@ -381,7 +449,7 @@ class Navigation
      *
      * @return \Carbon\Carbon
      *
-     * @throws FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function startOfPeriod(Carbon $theDate, string $repeatFreq): Carbon
     {
@@ -418,6 +486,7 @@ class Navigation
 
             return $date;
         }
+
         if ('custom' === $repeatFreq) {
             return $date; // the date is already at the start.
         }
@@ -432,12 +501,13 @@ class Navigation
      *
      * @return \Carbon\Carbon
      *
-     * @throws FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function subtractPeriod(Carbon $theDate, string $repeatFreq, int $subtract = 1): Carbon
     {
         $date = clone $theDate;
         // 1D 1W 1M 3M 6M 1Y
+        Log::debug(sprintf('subtractPeriod: date is %s', $date->format('Y-m-d')));
         $functionMap = [
             '1D'      => 'subDays',
             'daily'   => 'subDays',
@@ -461,12 +531,16 @@ class Navigation
         if (isset($functionMap[$repeatFreq])) {
             $function = $functionMap[$repeatFreq];
             $date->$function($subtract);
+            Log::debug(sprintf('%s is in function map, execute %s with argument %d', $repeatFreq, $function, $subtract));
+            Log::debug(sprintf('subtractPeriod: resulting date is %s', $date->format('Y-m-d')));
 
             return $date;
         }
         if (isset($modifierMap[$repeatFreq])) {
             $subtract = $subtract * $modifierMap[$repeatFreq];
             $date->subMonths($subtract);
+            Log::debug(sprintf('%s is in modifier map with value %d, execute subMonths with argument %d', $repeatFreq, $modifierMap[$repeatFreq], $subtract));
+            Log::debug(sprintf('subtractPeriod: resulting date is %s', $date->format('Y-m-d')));
 
             return $date;
         }
@@ -479,7 +553,10 @@ class Navigation
             /** @var Carbon $tEnd */
             $tEnd       = session('end', Carbon::now()->endOfMonth());
             $diffInDays = $tStart->diffInDays($tEnd);
+            Log::debug(sprintf('repeatFreq is %s, start is %s and end is %s (session data).', $repeatFreq, $tStart->format('Y-m-d'), $tEnd->format('Y-m-d')));
+            Log::debug(sprintf('Diff in days is %d', $diffInDays));
             $date->subDays($diffInDays * $subtract);
+            Log::debug(sprintf('subtractPeriod: resulting date is %s', $date->format('Y-m-d')));
 
             return $date;
         }
@@ -493,7 +570,7 @@ class Navigation
      *
      * @return \Carbon\Carbon
      *
-     * @throws FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function updateEndDate(string $range, Carbon $start): Carbon
     {
@@ -532,7 +609,7 @@ class Navigation
      *
      * @return \Carbon\Carbon
      *
-     * @throws FireflyException
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function updateStartDate(string $range, Carbon $start): Carbon
     {

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -73,7 +73,6 @@ class HelpController extends Controller
     private function getHelpText(string $route, string $language): string
     {
         // get language and default variables.
-
         $content = '<p>' . strval(trans('firefly.route_has_no_help')) . '</p>';
 
         // if no such route, log error and return default text.

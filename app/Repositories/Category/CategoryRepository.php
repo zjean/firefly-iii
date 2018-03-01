@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -44,6 +44,8 @@ class CategoryRepository implements CategoryRepositoryInterface
      * @param Category $category
      *
      * @return bool
+     *
+     * @throws \Exception
      */
     public function destroy(Category $category): bool
     {
@@ -94,9 +96,9 @@ class CategoryRepository implements CategoryRepositoryInterface
      *
      * @param string $name
      *
-     * @return Category
+     * @return Category|null
      */
-    public function findByName(string $name): Category
+    public function findByName(string $name): ?Category
     {
         $categories = $this->user->categories()->get(['categories.*']);
         foreach ($categories as $category) {
@@ -105,7 +107,19 @@ class CategoryRepository implements CategoryRepositoryInterface
             }
         }
 
-        return new Category;
+        return null;
+    }
+
+    /**
+     * Find a category or return NULL
+     *
+     * @param int $categoryId
+     *
+     * @return Category|null
+     */
+    public function findNull(int $categoryId): ?Category
+    {
+        return $this->user->categories()->find($categoryId);
     }
 
     /**

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 declare(strict_types=1);
@@ -76,11 +76,9 @@ return [
         FireflyIII\Providers\RouteServiceProvider::class,
 
         // own stuff:
-        //Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
-        //Barryvdh\Debugbar\ServiceProvider::class,
-        DaveJamesMiller\Breadcrumbs\ServiceProvider::class,
         TwigBridge\ServiceProvider::class,
-        PragmaRX\Google2FA\Vendor\Laravel\ServiceProvider::class,
+        PragmaRX\Google2FALaravel\ServiceProvider::class,
+
 
         /*
          * More service providers.
@@ -104,7 +102,6 @@ return [
 
     ],
     'aliases'         => [
-
         'App'           => Illuminate\Support\Facades\App::class,
         'Artisan'       => Illuminate\Support\Facades\Artisan::class,
         'Auth'          => Illuminate\Support\Facades\Auth::class,
@@ -141,14 +138,14 @@ return [
         'Twig'          => TwigBridge\Facade\Twig::class,
         'Form'          => Collective\Html\FormFacade::class,
         'Html'          => Collective\Html\HtmlFacade::class,
-        'Breadcrumbs'   => DaveJamesMiller\Breadcrumbs\Facade::class,
         'Preferences'   => \FireflyIII\Support\Facades\Preferences::class,
         'FireflyConfig' => \FireflyIII\Support\Facades\FireflyConfig::class,
         'Navigation'    => \FireflyIII\Support\Facades\Navigation::class,
         'Amount'        => \FireflyIII\Support\Facades\Amount::class,
         'Steam'         => \FireflyIII\Support\Facades\Steam::class,
         'ExpandedForm'  => \FireflyIII\Support\Facades\ExpandedForm::class,
-        'Google2FA'     => PragmaRX\Google2FA\Vendor\Laravel\Facade::class,
+        'Google2FA'     => PragmaRX\Google2FALaravel\Facade::class,
+
     ],
 
 ];

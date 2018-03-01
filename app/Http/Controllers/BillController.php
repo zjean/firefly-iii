@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -30,9 +30,14 @@ use FireflyIII\Models\Bill;
 use FireflyIII\Models\Note;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
+use FireflyIII\Transformers\BillTransformer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use League\Fractal\Manager;
+use League\Fractal\Resource\Item;
+use League\Fractal\Serializer\DataArraySerializer;
 use Preferences;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use URL;
 use View;
 
@@ -58,8 +63,8 @@ class BillController extends Controller
 
         $this->middleware(
             function ($request, $next) {
-                View::share('title', trans('firefly.bills'));
-                View::share('mainTitleIcon', 'fa-calendar-o');
+                app('view')->share('title', trans('firefly.bills'));
+                app('view')->share('mainTitleIcon', 'fa-calendar-o');
                 $this->attachments = app(AttachmentHelperInterface::class);
 
                 return $next($request);
@@ -85,24 +90,19 @@ class BillController extends Controller
             $this->rememberPreviousUri('bills.create.uri');
         }
         $request->session()->forget('bills.create.fromStore');
-        $request->session()->flash('gaEventCategory', 'bills');
-        $request->session()->flash('gaEventAction', 'create');
 
         return view('bills.create', compact('periods', 'subTitle'));
     }
 
     /**
-     * @param Request $request
-     * @param Bill    $bill
+     * @param Bill $bill
      *
      * @return View
      */
-    public function delete(Request $request, Bill $bill)
+    public function delete(Bill $bill)
     {
         // put previous url in session
         $this->rememberPreviousUri('bills.delete.uri');
-        $request->session()->flash('gaEventCategory', 'bills');
-        $request->session()->flash('gaEventAction', 'delete');
         $subTitle = trans('firefly.delete_bill', ['name' => $bill->name]);
 
         return view('bills.delete', compact('bill', 'subTitle'));
@@ -162,8 +162,6 @@ class BillController extends Controller
         $request->session()->flash('preFilled', $preFilled);
 
         $request->session()->forget('bills.edit.fromUpdate');
-        $request->session()->flash('gaEventCategory', 'bills');
-        $request->session()->flash('gaEventAction', 'edit');
 
         return view('bills.edit', compact('subTitle', 'periods', 'bill'));
     }
@@ -175,26 +173,24 @@ class BillController extends Controller
      */
     public function index(BillRepositoryInterface $repository)
     {
-        /** @var Carbon $start */
-        $start = session('start');
-        /** @var Carbon $end */
-        $end = session('end');
-
-        $bills = $repository->getBills();
-        $bills->each(
-            function (Bill $bill) use ($repository, $start, $end) {
-                // paid in this period?
-                $bill->paidDates = $repository->getPaidDatesInRange($bill, $start, $end);
-                $bill->payDates  = $repository->getPayDatesInRange($bill, $start, $end);
-                $lastDate        = clone $start;
-                if ($bill->paidDates->count() >= $bill->payDates->count()) {
-                    $lastDate = $end;
-                }
-                $bill->nextExpectedMatch = $repository->nextExpectedMatch($bill, $lastDate);
+        $start      = session('start');
+        $end        = session('end');
+        $pageSize   = intval(Preferences::get('listPageSize', 50)->data);
+        $paginator  = $repository->getPaginator($pageSize);
+        $parameters = new ParameterBag();
+        $parameters->set('start', $start);
+        $parameters->set('end', $end);
+        $transformer = new BillTransformer($parameters);
+        /** @var Collection $bills */
+        $bills = $paginator->getCollection()->map(
+            function (Bill $bill) use ($transformer) {
+                return $transformer->transform($bill);
             }
         );
 
-        return view('bills.index', compact('bills'));
+        $paginator->setPath(route('bills.index'));
+
+        return view('bills.index', compact('bills', 'paginator'));
     }
 
     /**
@@ -233,13 +229,24 @@ class BillController extends Controller
      */
     public function show(Request $request, BillRepositoryInterface $repository, Bill $bill)
     {
-        /** @var Carbon $date */
-        $date           = session('start');
-        $year           = $date->year;
+        $subTitle       = $bill->name;
+        $start          = session('start');
+        $end            = session('end');
+        $year           = $start->year;
         $page           = intval($request->get('page'));
-        $pageSize       = intval(Preferences::get('transactionPageSize', 50)->data);
-        $yearAverage    = $repository->getYearAverage($bill, $date);
+        $pageSize       = intval(Preferences::get('listPageSize', 50)->data);
+        $yearAverage    = $repository->getYearAverage($bill, $start);
         $overallAverage = $repository->getOverallAverage($bill);
+        $manager        = new Manager();
+        $manager->setSerializer(new DataArraySerializer());
+        $manager->parseIncludes(['attachments']);
+
+        // Make a resource out of the data and
+        $parameters = new ParameterBag();
+        $parameters->set('start', $start);
+        $parameters->set('end', $end);
+        $resource = new Item($bill, new BillTransformer($parameters), 'bill');
+        $object   = $manager->createData($resource)->toArray();
 
         // use collector:
         /** @var JournalCollectorInterface $collector */
@@ -249,11 +256,8 @@ class BillController extends Controller
         $transactions = $collector->getPaginatedJournals();
         $transactions->setPath(route('bills.show', [$bill->id]));
 
-        $bill->nextExpectedMatch = $repository->nextExpectedMatch($bill, new Carbon);
-        $hideBill                = true;
-        $subTitle                = e($bill->name);
 
-        return view('bills.show', compact('transactions', 'yearAverage', 'overallAverage', 'year', 'hideBill', 'bill', 'subTitle'));
+        return view('bills.show', compact('transactions', 'yearAverage', 'overallAverage', 'year', 'object', 'bill', 'subTitle'));
     }
 
     /**
@@ -269,14 +273,13 @@ class BillController extends Controller
         $request->session()->flash('success', strval(trans('firefly.stored_new_bill', ['name' => $bill->name])));
         Preferences::mark();
 
-
         /** @var array $files */
         $files = $request->hasFile('attachments') ? $request->file('attachments') : null;
         $this->attachments->saveAttachmentsForModel($bill, $files);
 
         // flash messages
         if (count($this->attachments->getMessages()->get('attachments')) > 0) {
-            $request->session()->flash('info', $this->attachments->getMessages()->get('attachments'));
+            $request->session()->flash('info', $this->attachments->getMessages()->get('attachments')); // @codeCoverageIgnore
         }
 
         if (1 === intval($request->get('create_another'))) {
@@ -312,7 +315,7 @@ class BillController extends Controller
 
         // flash messages
         if (count($this->attachments->getMessages()->get('attachments')) > 0) {
-            $request->session()->flash('info', $this->attachments->getMessages()->get('attachments'));
+            $request->session()->flash('info', $this->attachments->getMessages()->get('attachments')); // @codeCoverageIgnore
         }
 
         if (1 === intval($request->get('return_to_edit'))) {
@@ -324,5 +327,29 @@ class BillController extends Controller
         }
 
         return redirect($this->getPreviousUri('bills.edit.uri'));
+    }
+
+    /**
+     * Returns the latest date in the set, or start when set is empty.
+     *
+     * @param Collection $dates
+     * @param Carbon     $default
+     *
+     * @return Carbon
+     */
+    private function lastPaidDate(Collection $dates, Carbon $default): Carbon
+    {
+        if (0 === $dates->count()) {
+            return $default; // @codeCoverageIgnore
+        }
+        $latest = $dates->first();
+        /** @var Carbon $date */
+        foreach ($dates as $date) {
+            if ($date->gte($latest)) {
+                $latest = $date;
+            }
+        }
+
+        return $latest;
     }
 }

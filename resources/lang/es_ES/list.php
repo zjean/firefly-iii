@@ -1,23 +1,32 @@
 <?php
-declare(strict_types=1);
-
 /**
  * list.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'buttons'                 => 'Botones',
     'icon'                    => 'Icono',
-    'id'                      => 'ID',
+    'id'                      => 'Identificación',
     'create_date'             => 'Fecha de creación',
     'update_date'             => 'Fecha de modificación',
-    'updated_at'              => 'Updated at',
+    'updated_at'              => 'Actualizado en',
     'balance_before'          => 'Balance antes de ',
     'balance_after'           => 'Balance después de la',
     'name'                    => 'Nombre',
@@ -25,7 +34,7 @@ return [
     'currentBalance'          => 'Balance actual',
     'active'                  => '¿Está Activo?',
     'lastActivity'            => 'Actividad más reciente',
-    'balanceDiff'             => 'Diferencia de saldo entre :start y :end',
+    'balanceDiff'             => 'Diferencia de equilibrio',
     'matchesOn'               => 'Encontrado en',
     'account_type'            => 'Tipo de cuenta',
     'created_at'              => 'Fecha de creación',
@@ -62,7 +71,7 @@ return [
     'completed'               => 'Completado',
     'iban'                    => 'IBAN',
     'paid_current_period'     => 'Pagado este período',
-    'email'                   => 'Email',
+    'email'                   => 'Correo electrónico',
     'registered_at'           => 'Registrado el',
     'is_blocked'              => 'Está bloqueado',
     'is_admin'                => '¿Es el administrador?',
@@ -80,14 +89,17 @@ return [
     'budget_count'            => 'Número de presupuestos',
     'rule_and_groups_count'   => 'Número de reglas y grupos de reglas',
     'tags_count'              => 'Número de etiquetas',
+    'tags'                    => 'Etiquetas',
     'inward'                  => 'Descripción interna',
     'outward'                 => 'Descripción externa',
     'number_of_transactions'  => 'Número de transacciones',
     'total_amount'            => 'Total',
     'sum'                     => 'Suma',
-    'sum_excluding_transfers' => 'Sum (excluding transfers)',
-    'sum_withdrawals'         => 'Sum of withdrawals',
-    'sum_deposits'            => 'Sum of deposits',
+    'sum_excluding_transfers' => 'Suma (excluyendo transferencias)',
+    'sum_withdrawals'         => 'Suma de retiros',
+    'sum_deposits'            => 'Suma de depositos',
     'sum_transfers'           => 'Suma de transferencias',
-    'reconcile'               => 'Reconcile',
+    'reconcile'               => 'Reconciliar',
+    'account_on_spectre'      => 'Cuenta (espectro)',
+    'do_import'               => 'Importar desde esta cuenta',
 ];

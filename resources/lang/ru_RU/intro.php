@@ -1,122 +1,133 @@
 <?php
-declare(strict_types=1);
-
 /**
  * intro.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the Creative Commons Attribution-ShareAlike 4.0 International License.
  *
- * See the LICENSE file for details.
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     // index
-    'index_intro'                           => 'Welcome to the index page of Firefly III. Please take the time to walk through this intro to get a feeling of how Firefly III works.',
-    'index_accounts-chart'                  => 'This chart shows the current balance of your asset accounts. You can select the accounts visible here in your preferences.',
-    'index_box_out_holder'                  => 'This little box and the boxes next to this one will give you a quick overview of your financial situation.',
-    'index_help'                            => 'If you ever need help with a page or a form, press this button.',
-    'index_outro'                           => 'Most pages of Firefly III will start with a little tour like this one. Please contact me when you have questions or comments. Enjoy!',
-    'index_sidebar-toggle'                  => 'To create new transactions, accounts or other things, use the menu under this icon.',
+    'index_intro'                           => 'Добро пожаловать на стартовую страницу Firefly III. Пожалуйста, найдите время, чтобы ознакомиться с этим кратким введением в возможности Firefly III.',
+    'index_accounts-chart'                  => 'Эта диаграмма показывает текущий баланс ваших счетов. Вы можете выбрать счета, видимые здесь, в настройках.',
+    'index_box_out_holder'                  => 'Небольшие блоки, собранные на этой странице, показывают общее положение дел с вашими финансами.',
+    'index_help'                            => 'Если вам нужна помощь со страницей или формой - нажмите эту кнопку.',
+    'index_outro'                           => 'Большинство страниц Firefly III начнутся с небольшого тура, подобного этому. Пожалуйста, свяжитесь со мной, если у вас возникнут вопросы или комментарии. Наслаждайтесь!',
+    'index_sidebar-toggle'                  => 'Для создания новый транзакций, счётов или другие элементов, используйте меню под этим значком.',
 
     // create account:
-    'accounts_create_iban'                  => 'Give your accounts a valid IBAN. This could make a data import very easy in the future.',
-    'accounts_create_asset_opening_balance' => 'Assets accounts may have an "opening balance", indicating the start of this account\'s history in Firefly.',
-    'accounts_create_asset_currency'        => 'Firefly III supports multiple currencies. Asset accounts have one main currency, which you must set here.',
-    'accounts_create_asset_virtual'         => 'It can sometimes help to give your account a virtual balance: an extra amount always added to or removed from the actual balance.',
+    'accounts_create_iban'                  => 'Задайте вашим счетам действующий IBAN. В будущем это может сделать импорт данных очень простым.',
+    'accounts_create_asset_opening_balance' => 'У счёта активов всегда есть «начальный баланс», показывающий, какая сумма была на этом счету, когда вы начали работать с ним в Firefly III.',
+    'accounts_create_asset_currency'        => 'Firefly III поддерживает несколько валют. Каждый счёт связан с одной основной валютой, которую вы должны указать здесь.',
+    'accounts_create_asset_virtual'         => 'Иногда бывает удобно предоставить вашему счёту виртуальный баланс: дополнительная сумма, всегда добавленная или выведенная из фактического баланса.',
 
     // budgets index
-    'budgets_index_intro'                   => 'Budgets are used to manage your finances and form one of the core functions of Firefly III.',
-    'budgets_index_set_budget'              => 'Set your total budget for every period so Firefly can tell you if you have budgeted all available money.',
-    'budgets_index_see_expenses_bar'        => 'Spending money will slowly fill this bar.',
-    'budgets_index_navigate_periods'        => 'Navigate through periods to easily set budgets ahead of time.',
-    'budgets_index_new_budget'              => 'Create new budgets as you see fit.',
-    'budgets_index_list_of_budgets'         => 'Use this table to set the amounts for each budget and see how you are doing.',
-    'budgets_index_outro'                   => 'To learn more about budgeting, checkout the help icon in the top right corner.',
+    'budgets_index_intro'                   => 'Бюджеты используются для управления финансами и являются одной из основных функций Firefly III.',
+    'budgets_index_set_budget'              => 'Установите свой общий бюджет на каждый период, чтобы Firefly III мог подсказать вам, если вы потратите все запланированные деньги.',
+    'budgets_index_see_expenses_bar'        => 'По мере того, как вы будете тратить деньги, эта диаграмма будет заполняться.',
+    'budgets_index_navigate_periods'        => 'Перемещайтесь между периодами, чтобы планировать бюджеты заранее.',
+    'budgets_index_new_budget'              => 'Создавайте новые бюджеты по своему усмотрению.',
+    'budgets_index_list_of_budgets'         => 'Используйте эту таблицу, чтобы установить суммы для каждого бюджета и посмотреть, как у вас дела.',
+    'budgets_index_outro'                   => 'Чтобы узнать больше о бюджете, воспользуйтесь значком справки в верхнем правом углу.',
 
     // reports (index)
-    'reports_index_intro'                   => 'Use these reports to get detailed insights in your finances.',
-    'reports_index_inputReportType'         => 'Pick a report type. Check out the help pages to see what each report shows you.',
-    'reports_index_inputAccountsSelect'     => 'You can exclude or include asset accounts as you see fit.',
-    'reports_index_inputDateRange'          => 'The selected date range is entirely up to you: from one day to 10 years.',
-    'reports_index_extra-options-box'       => 'Depending on the report you have selected, you can select extra filters and options here. Watch this box when you change report types.',
+    'reports_index_intro'                   => 'Используйте эти отчеты, чтобы получить подробные сведения о ваших финансах.',
+    'reports_index_inputReportType'         => 'Выберите тип отчета. Просмотрите страницу справки, чтобы узнать, что показывает каждый отчёт.',
+    'reports_index_inputAccountsSelect'     => 'Вы можете исключить или включить основные счета по своему усмотрению.',
+    'reports_index_inputDateRange'          => 'Выбранный диапазон дат зависит от вас: от одного дня до 10 лет.',
+    'reports_index_extra-options-box'       => 'В зависимости от выбранного вами отчёта вы можете выбрать здесь дополнительные фильтры и параметры. Посмотрите этот блок, когда вы меняете типы отчётов.',
 
     // reports (reports)
-    'reports_report_default_intro'          => 'This report will give you a quick and comprehensive overview of your finances. If you wish to see anything else, please don\'t hestitate to contact me!',
-    'reports_report_audit_intro'            => 'This report will give you detailed insights in your asset accounts.',
-    'reports_report_audit_optionsBox'       => 'Use these check boxes to show or hide the columns you are interested in.',
+    'reports_report_default_intro'          => 'В этом отчёте вы получите быстрый и исчерпывающий обзор ваших финансов. Если вы хотите увидеть что-нибудь ещё, пожалуйста, не стесняйтесь обращаться ко мне!',
+    'reports_report_audit_intro'            => 'Этот отчёт покажет вам подробную информацию о ваших активах.',
+    'reports_report_audit_optionsBox'       => 'Используйте эти флажки, чтобы показать или скрыть интересующие вас столбцы.',
 
-    'reports_report_category_intro'                  => 'This report will give you insight in one or multiple categories.',
-    'reports_report_category_pieCharts'              => 'These charts will give you insight in expenses and income per category or per account.',
-    'reports_report_category_incomeAndExpensesChart' => 'This chart shows your expenses and income per category.',
+    'reports_report_category_intro'                  => 'Этот отчёт даст вам представление об одной или нескольких категориях.',
+    'reports_report_category_pieCharts'              => 'Эти диаграммы дадут вам представление о расходах и доходах по категориям или счетам.',
+    'reports_report_category_incomeAndExpensesChart' => 'На этой диаграмме показаны ваши расходы и доход по каждой категории.',
 
-    'reports_report_tag_intro'                  => 'This report will give you insight in one or multiple tags.',
-    'reports_report_tag_pieCharts'              => 'These charts will give you insight in expenses and income per tag, account, category or budget.',
-    'reports_report_tag_incomeAndExpensesChart' => 'This chart shows your expenses and income per tag.',
+    'reports_report_tag_intro'                  => 'Этот отчёт даст вам представление об одной или нескольких метках.',
+    'reports_report_tag_pieCharts'              => 'Эти диаграммы дадут вам представление о расходах и доходах по меткам, счетам, категориям или бюджетам.',
+    'reports_report_tag_incomeAndExpensesChart' => 'На этой диаграмме показаны ваши расходы и доходы с определенной меткой.',
 
-    'reports_report_budget_intro'                             => 'This report will give you insight in one or multiple budgets.',
-    'reports_report_budget_pieCharts'                         => 'These charts will give you insight in expenses per budget or per account.',
-    'reports_report_budget_incomeAndExpensesChart'            => 'This chart shows your expenses per budget.',
+    'reports_report_budget_intro'                             => 'Этот отчёт даст вам представление об одном или нескольких бюджетах.',
+    'reports_report_budget_pieCharts'                         => 'Эти диаграммы дадут вам представление о расходах по выбранному бюджету или счёту.',
+    'reports_report_budget_incomeAndExpensesChart'            => 'Эта диаграмма показывает ваши расходы с учётом бюджета.',
 
     // create transaction
-    'transactions_create_switch_box'                          => 'Use these buttons to quickly switch the type of transaction you wish to save.',
-    'transactions_create_ffInput_category'                    => 'You can freely type in this field. Previously created categories will be suggested.',
-    'transactions_create_withdrawal_ffInput_budget'           => 'Link your withdrawal to a budget for better financial control.',
-    'transactions_create_withdrawal_currency_dropdown_amount' => 'Use this dropdown when your withdrawal is in another currency.',
-    'transactions_create_deposit_currency_dropdown_amount'    => 'Use this dropdown when your deposit is in another currency.',
-    'transactions_create_transfer_ffInput_piggy_bank_id'      => 'Select a piggy bank and link this transfer to your savings.',
+    'transactions_create_switch_box'                          => 'Используйте эти кнопки для быстрого переключения типа транзакции, которую вы хотите сохранить.',
+    'transactions_create_ffInput_category'                    => 'Вы можете свободно вводить название категории в это поле. Вам будут предложены ранее созданные категории.',
+    'transactions_create_withdrawal_ffInput_budget'           => 'Свяжите ваш расход с одной из статей бюджета для большего контроля над финансами.',
+    'transactions_create_withdrawal_currency_dropdown_amount' => 'Используйте этот выпадающий список, если ваш расход был произведён в другой валюте.',
+    'transactions_create_deposit_currency_dropdown_amount'    => 'Используйте этот выпадающий список, если ваш доход получен в другой валюте.',
+    'transactions_create_transfer_ffInput_piggy_bank_id'      => 'Выберите копилку и привяжите этот перевод к вашим сбережениям.',
 
     // piggy banks index:
-    'piggy-banks_index_saved'                                 => 'This field shows you how much you\'ve saved in each piggy bank.',
-    'piggy-banks_index_button'                                => 'Next to this progress bar are two buttons (+ and -) to add or remove money from each piggy bank.',
-    'piggy-banks_index_accountStatus'                         => 'For each asset account with at least one piggy bank the status is listed in this table.',
+    'piggy-banks_index_saved'                                 => 'Это поле показывает, сколько вы сохранили в каждой копилке.',
+    'piggy-banks_index_button'                                => 'Рядом с этим индикатором выполнения находятся две кнопки (+ и -) для добавления или удаления денег из каждой копилки.',
+    'piggy-banks_index_accountStatus'                         => 'Для каждого основного счёта, связанного хотя бы с одной копилкой, статус указан в этой таблице.',
 
     // create piggy
-    'piggy-banks_create_name'                                 => 'What is your goal? A new couch, a camera, money for emergencies?',
-    'piggy-banks_create_date'                                 => 'You can set a target date or a deadline for your piggy bank.',
+    'piggy-banks_create_name'                                 => 'Какова ваша цель? Новый диван, камера, деньги на "чёрный день"?',
+    'piggy-banks_create_date'                                 => 'Вы можете конкретную дату или крайний срок для наполнения своей копилки.',
 
     // show piggy
-    'piggy-banks_show_piggyChart'                             => 'This chart will show the history of this piggy bank.',
-    'piggy-banks_show_piggyDetails'                           => 'Some details about your piggy bank',
-    'piggy-banks_show_piggyEvents'                            => 'Any additions or removals are also listed here.',
+    'piggy-banks_show_piggyChart'                             => 'Диаграмма показывает историю этой копилки.',
+    'piggy-banks_show_piggyDetails'                           => 'Некоторые подробности о вашей копилке',
+    'piggy-banks_show_piggyEvents'                            => 'Все добавления или изъятия денег из копилки показаны здесь.',
 
     // bill index
-    'bills_index_paid_in_period'                              => 'This field indicates when the bill was last paid.',
-    'bills_index_expected_in_period'                          => 'This field indicates for each bill if and when the next bill is expected to hit.',
+    'bills_index_paid_in_period'                              => 'Это поле показывает, когда счёт был оплачен в последний раз.',
+    'bills_index_expected_in_period'                          => 'Это поле указывает для каждого счета, когда ожидается следующая оплата по нему.',
 
     // show bill
-    'bills_show_billInfo'                                     => 'This table shows some general information about this bill.',
-    'bills_show_billButtons'                                  => 'Use this button to re-scan old transactions so they will be matched to this bill.',
-    'bills_show_billChart'                                    => 'This chart shows the transactions linked to this bill.',
+    'bills_show_billInfo'                                     => 'В этой таблице приведена общая информация об данном счёте.',
+    'bills_show_billButtons'                                  => 'Используйте эту кнопку для повторной проверки старых транзакций, чтобы убедиться, что они соответствуют этому счёту.',
+    'bills_show_billChart'                                    => 'Эта диаграмма отражает все операции по текущему счёту.',
 
     // create bill
-    'bills_create_name'                                       => 'Use a descriptive name such as "Rent" or "Health insurance".',
-    'bills_create_match'                                      => 'To match transactions, use terms from those transactions or the expense account involved. All words must match.',
-    'bills_create_amount_min_holder'                          => 'Select a minimum and maximum amount for this bill.',
-    'bills_create_repeat_freq_holder'                         => 'Most bills repeat monthly, but you can set another frequency here.',
-    'bills_create_skip_holder'                                => 'If a bill repeats every 2 weeks for example, the "skip"-field should be set to "1" to skip every other week.',
+    'bills_create_name'                                       => 'Используйте понятные названия, например «Аренда» или «Расходы на лечение».',
+    'bills_create_match'                                      => 'Чтобы сопоставлять транзакции, используйте поля этих транзакций или счета расходов. Все слова должны совпадать.',
+    'bills_create_amount_min_holder'                          => 'Выберите минимальную и максимальную сумму для этого счета.',
+    'bills_create_repeat_freq_holder'                         => 'Обычно счета к оплате выставляются раз в месяц, но здесь вы можете указать другую периодичность.',
+    'bills_create_skip_holder'                                => 'Если счёт выставляется, например, каждые 2 недели, в поле "пропустить" нужно поставить "1", чтобы пропускать все прочие недели.',
 
     // rules index
-    'rules_index_intro'                                       => 'Firefly III allows you to manage rules, that will automagically be applied to any transaction you create or edit.',
-    'rules_index_new_rule_group'                              => 'You can combine rules in groups for easier management.',
-    'rules_index_new_rule'                                    => 'Create as many rules as you like.',
-    'rules_index_prio_buttons'                                => 'Order them any way you see fit.',
-    'rules_index_test_buttons'                                => 'You can test your rules or apply them to existing transactions.',
-    'rules_index_rule-triggers'                               => 'Rules have "triggers" and "actions" that you can order by drag-and-drop.',
-    'rules_index_outro'                                       => 'Be sure to check out the help pages using the (?) icon in the top right!',
+    'rules_index_intro'                                       => 'Firefly III позволяет вам использовать правилами, которые автоматически применяются к любой транзакции, которую вы создаёте или редактируете.',
+    'rules_index_new_rule_group'                              => 'Вы можете комбинировать правила в группы, чтобы упростить управление ими.',
+    'rules_index_new_rule'                                    => 'Создайте столько правил, сколько захотите.',
+    'rules_index_prio_buttons'                                => 'Упорядочивайте их так, как вы считаете нужным.',
+    'rules_index_test_buttons'                                => 'Вы можете проверить свои правила или применить их к существующим транзакциям.',
+    'rules_index_rule-triggers'                               => 'Правила имеют «условия» и «действия», которые вы можете упорядочивать путём перетаскивания.',
+    'rules_index_outro'                                       => 'Не забудьте ознакомиться со страницами справки, используя значок (?) В правом верхнем углу!',
 
     // create rule:
-    'rules_create_mandatory'                                  => 'Choose a descriptive title, and set when the rule should be fired.',
-    'rules_create_ruletriggerholder'                          => 'Add as many triggers as you like, but remember that ALL triggers must match before any actions are fired.',
-    'rules_create_test_rule_triggers'                         => 'Use this button to see which transactions would match your rule.',
-    'rules_create_actions'                                    => 'Set as many actions as you like.',
+    'rules_create_mandatory'                                  => 'Дайте правилу понятное название и укажите, когда оно должно использоваться.',
+    'rules_create_ruletriggerholder'                          => 'Добавьте столько условий, сколько хотите, но помните, что для выполнения действий, должны выполниться ВСЕ условия.',
+    'rules_create_test_rule_triggers'                         => 'Используйте эту кнопку, чтобы узнать, какие транзакции будут соответствовать вашему правилу.',
+    'rules_create_actions'                                    => 'Установите столько действий, сколько хотите.',
 
     // preferences
-    'preferences_index_tabs'                                  => 'More options are available behind these tabs.',
+    'preferences_index_tabs'                                  => 'На этих вкладках доступны дополнительные параметры.',
 
     // currencies
-    'currencies_index_intro'                                  => 'Firefly III supports multiple currencies, which you can change on this page.',
-    'currencies_index_default'                                => 'Firefly III has one default currency. You can always switch of course using these buttons.',
+    'currencies_index_intro'                                  => 'Firefly III поддерживает несколько валют, которые вы можете изменить на этой странице.',
+    'currencies_index_default'                                => 'Firefly III использует одну валюту по умолчанию. Вы всегда можете изменить её, используя эти кнопки.',
 
     // create currency
-    'currencies_create_code'                                  => 'This code should be ISO compliant (Google it for your new currency).',
+    'currencies_create_code'                                  => 'Код должен соответствовать требованиям ISO (для новых валют вы можете найти код с помощью Google).',
 ];

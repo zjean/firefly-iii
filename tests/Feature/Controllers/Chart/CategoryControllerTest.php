@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -50,13 +50,16 @@ class CategoryControllerTest extends TestCase
      */
     public function testAll(string $range)
     {
+
         $repository   = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $generator    = $this->mock(GeneratorInterface::class);
+        $firstUse = new Carbon;
+        $firstUse->subDays(3);
 
         $repository->shouldReceive('spentInPeriod')->andReturn('0');
         $repository->shouldReceive('earnedInPeriod')->andReturn('0');
-        $repository->shouldReceive('firstUseDate')->andReturn(new Carbon('1900-01-01'))->once();
+        $repository->shouldReceive('firstUseDate')->andReturn($firstUse)->once();
         $accountRepos->shouldReceive('getAccountsByType')->withArgs([[AccountType::DEFAULT, AccountType::ASSET]])->andReturn(new Collection)->once();
         $generator->shouldReceive('multiSet')->once()->andReturn([]);
 

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -32,13 +32,17 @@ use Log;
 use Preferences;
 use Session;
 use URL;
-use View;
 
 /**
  * Class LinkController.
  */
 class LinkController extends Controller
 {
+    /** @var JournalRepositoryInterface */
+    private $journalRepository;
+    /** @var LinkTypeRepositoryInterface */
+    private $repository;
+
     /**
      *
      */
@@ -48,8 +52,11 @@ class LinkController extends Controller
         // some useful repositories:
         $this->middleware(
             function ($request, $next) {
-                View::share('title', trans('firefly.transactions'));
-                View::share('mainTitleIcon', 'fa-repeat');
+                app('view')->share('title', trans('firefly.transactions'));
+                app('view')->share('mainTitleIcon', 'fa-repeat');
+
+                $this->journalRepository = app(JournalRepositoryInterface::class);
+                $this->repository        = app(LinkTypeRepositoryInterface::class);
 
                 return $next($request);
             }
@@ -71,14 +78,13 @@ class LinkController extends Controller
     }
 
     /**
-     * @param LinkTypeRepositoryInterface $repository
-     * @param TransactionJournalLink      $link
+     * @param TransactionJournalLink $link
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function destroy(LinkTypeRepositoryInterface $repository, TransactionJournalLink $link)
+    public function destroy(TransactionJournalLink $link)
     {
-        $repository->destroyLink($link);
+        $this->repository->destroyLink($link);
 
         Session::flash('success', strval(trans('firefly.deleted_link')));
         Preferences::mark();
@@ -87,65 +93,43 @@ class LinkController extends Controller
     }
 
     /**
-     * @param JournalLinkRequest          $request
-     * @param LinkTypeRepositoryInterface $repository
-     * @param JournalRepositoryInterface  $journalRepository
-     * @param TransactionJournal          $journal
+     * @param JournalLinkRequest $request
+     * @param TransactionJournal $journal
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function store(
-        JournalLinkRequest $request,
-        LinkTypeRepositoryInterface $repository,
-        JournalRepositoryInterface $journalRepository,
-        TransactionJournal $journal
-    ) {
+    public function store(JournalLinkRequest $request, TransactionJournal $journal)
+    {
+
+        Log::debug('We are here (store)');
         $linkInfo = $request->getLinkInfo();
         if (0 === $linkInfo['transaction_journal_id']) {
             Session::flash('error', trans('firefly.invalid_link_selection'));
 
             return redirect(route('transactions.show', [$journal->id]));
         }
-        $linkType      = $repository->find($linkInfo['link_type_id']);
-        $other         = $journalRepository->find($linkInfo['transaction_journal_id']);
-        $alreadyLinked = $repository->findLink($journal, $other);
+        $other         = $this->journalRepository->find($linkInfo['transaction_journal_id']);
+        $alreadyLinked = $this->repository->findLink($journal, $other);
         if ($alreadyLinked) {
             Session::flash('error', trans('firefly.journals_error_linked'));
 
             return redirect(route('transactions.show', [$journal->id]));
         }
         Log::debug(sprintf('Journal is %d, opposing is %d', $journal->id, $other->id));
-
-        $journalLink = new TransactionJournalLink;
-        $journalLink->linkType()->associate($linkType);
-        if ('inward' === $linkInfo['direction']) {
-            Log::debug(sprintf('Link type is inwards ("%s"), so %d is source and %d is destination.', $linkType->inward, $other->id, $journal->id));
-            $journalLink->source()->associate($other);
-            $journalLink->destination()->associate($journal);
-        }
-
-        if ('outward' === $linkInfo['direction']) {
-            Log::debug(sprintf('Link type is inwards ("%s"), so %d is source and %d is destination.', $linkType->outward, $journal->id, $other->id));
-            $journalLink->source()->associate($journal);
-            $journalLink->destination()->associate($other);
-        }
-
-        $journalLink->comment = $linkInfo['comments'];
-        $journalLink->save();
+        $this->repository->storeLink($linkInfo, $other, $journal);
         Session::flash('success', trans('firefly.journals_linked'));
 
         return redirect(route('transactions.show', [$journal->id]));
     }
 
     /**
-     * @param LinkTypeRepositoryInterface $repository
-     * @param TransactionJournalLink      $link
+     * @param TransactionJournalLink $link
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function switchLink(LinkTypeRepositoryInterface $repository, TransactionJournalLink $link)
+    public function switchLink(TransactionJournalLink $link)
     {
-        $repository->switchLink($link);
+        $this->repository->switchLink($link);
 
         return redirect(URL::previous());
     }

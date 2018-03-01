@@ -1,26 +1,35 @@
 <?php
-declare(strict_types=1);
-
 /**
  * demo.php
- * Copyright (c) 2016 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the Creative Commons Attribution-ShareAlike 4.0 International License.
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * See the LICENSE file for details.
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
-    'no_demo_text'                   => 'Sorry, there is no extra demo-explanation text for <abbr title=":route">this page</abbr>.',
-    'see_help_icon'                  => 'However, the <i class="fa fa-question-circle"></i>-icon in the top right corner may tell you more.',
+    'no_demo_text'                   => 'Извините, но для <abbr title=":route">этой страницы</abbr> нет дополнительного пояснения.',
+    'see_help_icon'                  => 'Воспользуйтесь значком <i class="fa fa-question-circle"></i> в правом верхнем углу, чтобы узнать больше.',
     'index'                          => 'Добро пожаловать в <strong>Firefly III</strong>! На этой странице вы видите вашу финансовую ситуацию в общих чертах. Более подробная информация доступна на страницах &rarr; <a href=":asset">Активные счета</a> <a href=":budgets">Бюджет</a> и <a href=":reports">Отчёты</a>. Или просто внимательно оглядитесь и изучите всё вокруг.',
-    'accounts-index'                 => 'Asset accounts are your personal bank accounts. Expense accounts are the accounts you spend money at, such as stores and friends. Revenue accounts are accounts you receive money from, such as your job, the government or other sources of income. On this page you can edit or remove them.',
-    'budgets-index'                  => 'This page shows you an overview of your budgets. The top bar shows the amount that is available to be budgeted. This can be customized for any period by clicking the amount on the right. The amount you\'ve actually spent is shown in the bar below. Below that are the expenses per budget and what you\'ve budgeted for them.',
-    'reports-index-start'            => 'Firefly III supports four types of reports. Read about them by clicking on the <i class="fa fa-question-circle"></i>-icon in the top right corner.',
-    'reports-index-examples'         => 'Be sure to check out these examples: <a href=":one">a monthly financial overview</a>, <a href=":two">a yearly financial overview</a> and <a href=":three">a budget overview</a>.',
-    'currencies-index'               => 'Firefly III supports multiple currencies. Although it defaults to the Euro it can be set to the US Dollar and many other currencies. As you can see a small selection of currencies has been included but you can add your own if you wish to. Changing the default currency will not change the currency of existing transactions however: Firefly III supports the use of multiple currencies at the same time.',
-    'transactions-index'             => 'These expenses, deposits and transfers are not particularly imaginative. They have been generated automatically.',
-    'piggy-banks-index'              => 'As you can see, there are three piggy banks. Use the plus and minus buttons to influence the amount of money in each piggy bank. Click the name of the piggy bank to see the administration for each piggy bank.',
-    'import-index'                   => 'Of course, any CSV file can be imported into Firefly III',
-    'import-configure-security'      => 'По соображениям безопасности, загружаемый вами файл был заменен локальным.',
-    'import-configure-configuration' => 'The configuration you see below is correct for the local file.',
+    'accounts-index'                 => 'Основные счета - это ваши личные банковские счета или другие денежные активы. Счёта расходов - это счета, на которые вы тратите деньги, например, магазины и друзья. Счета доходов - это счета, с которых вы получаете деньги, например, ваша работа, правительство или другие источники дохода. На этой странице вы можете редактировать или удалять их.',
+    'budgets-index'                  => 'На этой странице вы видите все свои бюджеты. На верхней панели показана сумма, доступная в рамках бюджета. Бюджет можно настроить на любой период, щёлкнув сумму справа. Сумма, которую вы фактически потратили, показана на диаграмме внизу. Ещё ниже показаны в сравнении ваши фактически расходы и запланированный бюджет.',
+    'reports-index-start'            => 'Firefly III поддерживает несколько типов отчетов. Вы можете узнать про них, нажав на значок <i class="fa fa-question-circle"></i> в правом верхнем углу.',
+    'reports-index-examples'         => 'Обязательно ознакомьтесь с этими примерами: <a href=":one">a ежемесячный финансовый обзор</a>, <a href=":two">a годовой финансовый обзор</a> и <a href=":three">a обзор бюджета</a>.',
+    'currencies-index'               => 'Firefly III поддерживает несколько валют. Хотя по умолчанию используется Евро, вы можете сделать основной валютой доллары США или любую другую валюту. Как вы видите, несколько валют уже есть в списке, но вы можете добавить любую другую, если это требуется. Обратите внимание, что выбор новой валюты по умолчанию не повлияет на уже существующие транзакции: Firefly III поддерживает одновременное использование нескольких валют.',
+    'transactions-index'             => 'Эти расходы, доходы и переводы не очень интересны. Они были созданы автоматически.',
+    'piggy-banks-index'              => 'Как вы можете видеть, здесь есть три копилки. Используйте кнопки «плюс» и «минус», чтобы влиять на количество денег в каждой копилке. Нажмите название копилки, чтобы увидеть её настройки.',
+    'import-index'                   => 'Конечно, любой CSV-файл может быть импортирован в Firefly III',
 ];

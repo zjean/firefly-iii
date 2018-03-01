@@ -1,12 +1,22 @@
 <?php
 /**
  * ModelFactory.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -90,7 +100,6 @@ $factory->define(
             'user_id'                 => 1,
             'transaction_type_id'     => 1,
             'bill_id'                 => null,
-            // TODO update this transaction currency reference.
             'transaction_currency_id' => 1,
             'description'             => $faker->words(3, true),
             'date'                    => '2017-01-01',
@@ -109,7 +118,8 @@ $factory->define(
     FireflyIII\Models\Bill::class,
     function (Faker\Generator $faker) {
         return [
-            'id'              => $faker->numberBetween(1, 10),
+            'created_at'      => new Carbon,
+            'updated_at'      => new Carbon,
             'user_id'         => 1,
             'name'            => $faker->words(3, true),
             'match'           => $faker->words(3, true),
@@ -118,9 +128,7 @@ $factory->define(
             'date'            => '2017-01-01',
             'repeat_freq'     => 'monthly',
             'skip'            => 0,
-            'automatch'       => 1,
-            'name_encrypted'  => 0,
-            'match_encrypted' => 0,
+            'automatch'       => 1
         ];
     }
 );
@@ -217,6 +225,9 @@ $factory->define(
     function (Faker\Generator $faker) {
         return [
             'id'              => $faker->unique()->numberBetween(1000, 10000),
+            'user_id'         => 1,
+            'created_at'      => new Carbon,
+            'updated_at'      => new Carbon,
             'name'            => $faker->words(3, true),
             'account_type_id' => 1,
             'active'          => true,

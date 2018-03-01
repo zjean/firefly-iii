@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -37,8 +37,6 @@ use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Support\Collection;
-use Navigation;
-use Preferences;
 use Response;
 use Steam;
 
@@ -79,37 +77,47 @@ class BudgetController extends Controller
      */
     public function budget(Budget $budget)
     {
-        $first        = $this->repository->firstUseDate($budget);
-        $range        = Preferences::get('viewRange', '1M')->data;
-        $currentStart = Navigation::startOfPeriod($first, $range);
-        $last         = session('end', new Carbon);
-        $cache        = new CacheProperties();
-        $cache->addProperty($first);
-        $cache->addProperty($last);
+        $start = $this->repository->firstUseDate($budget);
+        $end   = session('end', new Carbon);
+        $cache = new CacheProperties();
+        $cache->addProperty($start);
+        $cache->addProperty($end);
         $cache->addProperty('chart.budget.budget');
 
         if ($cache->has()) {
             return Response::json($cache->get()); // @codeCoverageIgnore
         }
 
-        $final = clone $last;
-        $final->addYears(2);
+        // depending on diff, do something with range of chart.
+        $step   = '1D';
+        $months = $start->diffInMonths($end);
+        if ($months > 3) {
+            $step = '1W';
+        }
+        if ($months > 24) {
+            $step = '1M';
+        }
+        if ($months > 60) {
+            $step = '1Y'; // @codeCoverageIgnore
+        }
         $budgetCollection = new Collection([$budget]);
-        $last             = Navigation::endOfX($last, $range, $final); // not to overshoot.
-        $entries          = [];
-        while ($currentStart < $last) {
-            // periodspecific dates:
-            $currentEnd = Navigation::endOfPeriod($currentStart, $range);
-            // sub another day because reasons.
-            $currentEnd->subDay();
-            $spent            = $this->repository->spentInPeriod($budgetCollection, new Collection, $currentStart, $currentEnd);
-            $format           = Navigation::periodShow($currentStart, $range);
-            $entries[$format] = bcmul($spent, '-1');
-            $currentStart     = clone $currentEnd;
-            $currentStart->addDays(2);
+        $chartData        = [];
+        $current          = clone $start;
+        $current          = app('navigation')->startOfPeriod($current, $step);
+
+        while ($end >= $current) {
+            $currentEnd = app('navigation')->endOfPeriod($current, $step);
+            if ($step === '1Y') {
+                $currentEnd->subDay(); // @codeCoverageIgnore
+            }
+            $spent             = $this->repository->spentInPeriod($budgetCollection, new Collection, $current, $currentEnd);
+            $label             = app('navigation')->periodShow($current, $step);
+            $chartData[$label] = floatval(bcmul($spent, '-1'));
+            $current           = clone $currentEnd;
+            $current->addDay();
         }
 
-        $data = $this->generator->singleSet(strval(trans('firefly.spent')), $entries);
+        $data = $this->generator->singleSet(strval(trans('firefly.spent')), $chartData);
 
         $cache->store($data);
 
@@ -374,7 +382,7 @@ class BudgetController extends Controller
         if ($cache->has()) {
             return Response::json($cache->get()); // @codeCoverageIgnore
         }
-        $periods  = Navigation::listOfPeriods($start, $end);
+        $periods  = app('navigation')->listOfPeriods($start, $end);
         $entries  = $this->repository->getBudgetPeriodReport(new Collection([$budget]), $accounts, $start, $end); // get the expenses
         $budgeted = $this->getBudgetedInPeriod($budget, $start, $end);
 
@@ -417,7 +425,7 @@ class BudgetController extends Controller
         }
 
         // the expenses:
-        $periods   = Navigation::listOfPeriods($start, $end);
+        $periods   = app('navigation')->listOfPeriods($start, $end);
         $entries   = $this->repository->getNoBudgetPeriodReport($accounts, $start, $end);
         $chartData = [];
 
@@ -464,13 +472,13 @@ class BudgetController extends Controller
      */
     private function getBudgetedInPeriod(Budget $budget, Carbon $start, Carbon $end): array
     {
-        $key      = Navigation::preferredCarbonFormat($start, $end);
-        $range    = Navigation::preferredRangeFormat($start, $end);
+        $key      = app('navigation')->preferredCarbonFormat($start, $end);
+        $range    = app('navigation')->preferredRangeFormat($start, $end);
         $current  = clone $start;
         $budgeted = [];
         while ($current < $end) {
-            $currentStart     = Navigation::startOfPeriod($current, $range);
-            $currentEnd       = Navigation::endOfPeriod($current, $range);
+            $currentStart     = app('navigation')->startOfPeriod($current, $range);
+            $currentEnd       = app('navigation')->endOfPeriod($current, $range);
             $budgetLimits     = $this->repository->getBudgetLimits($budget, $currentStart, $currentEnd);
             $index            = $currentStart->format($key);
             $budgeted[$index] = $budgetLimits->sum('amount');

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -27,7 +27,6 @@ use FireflyIII\Models\AccountType;
 use FireflyIII\Models\PiggyBankEvent;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
-use FireflyIII\Support\SingleCacheProperties;
 use FireflyIII\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
@@ -70,14 +69,6 @@ class JournalTasker implements JournalTaskerInterface
      */
     public function getTransactionsOverview(TransactionJournal $journal): array
     {
-        $cache = new SingleCacheProperties;
-        $cache->addProperty('transaction-overview');
-        $cache->addProperty($journal->id);
-        $cache->addProperty($journal->updated_at);
-        if ($cache->has()) {
-            return $cache->get();
-        }
-        // get all transaction data + the opposite site in one list.
         $set = $journal
             ->transactions()// "source"
             ->leftJoin(
@@ -177,7 +168,6 @@ class JournalTasker implements JournalTaskerInterface
 
             $transactions[] = $transaction;
         }
-        $cache->store($transactions);
 
         return $transactions;
     }

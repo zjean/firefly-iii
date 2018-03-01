@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * validation.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'iban'                           => 'Это некорректный IBAN.',
@@ -54,24 +63,24 @@ return [
     'integer'                        => ':attribute должно быть целым числом.',
     'ip'                             => ':attribute должен быть верным IP-адресом.',
     'json'                           => ':attribute должно быть верной JSON строкой.',
-    'max.numeric'                    => 'The :attribute may not be greater than :max.',
-    'max.file'                       => 'The :attribute may not be greater than :max kilobytes.',
-    'max.string'                     => 'The :attribute may not be greater than :max characters.',
-    'max.array'                      => 'The :attribute may not have more than :max items.',
-    'mimes'                          => 'The :attribute must be a file of type: :values.',
+    'max.numeric'                    => 'Значение :attribute не может быть больше :max.',
+    'max.file'                       => 'Значение :attribute не может быть больше :max килобайт.',
+    'max.string'                     => 'Значение :attribute не может быть больше :max символов.',
+    'max.array'                      => 'Значение :attribute не может содержать более :max элементов.',
+    'mimes'                          => ':attribute должен быть файлом типа :values.',
     'min.numeric'                    => ':attribute должен быть минимум :min.',
     'min.file'                       => ':attribute должен быть минимум :min килобайт.',
-    'min.string'                     => 'The :attribute must be at least :min characters.',
-    'min.array'                      => 'The :attribute must have at least :min items.',
+    'min.string'                     => 'Значение :attribute должно быть не меньше :min символов.',
+    'min.array'                      => 'Значение :attribute должно содержать не меньше :min элементов.',
     'not_in'                         => 'Выбранный :attribute не верный.',
     'numeric'                        => ':attribute должен быть числом.',
-    'regex'                          => 'The :attribute format is invalid.',
-    'required'                       => 'The :attribute field is required.',
-    'required_if'                    => 'The :attribute field is required when :other is :value.',
-    'required_unless'                => 'The :attribute field is required unless :other is in :values.',
-    'required_with'                  => 'The :attribute field is required when :values is present.',
-    'required_with_all'              => 'The :attribute field is required when :values is present.',
-    'required_without'               => 'The :attribute field is required when :values is not present.',
+    'regex'                          => 'Формат :attribute некорректен.',
+    'required'                       => 'Поле :attribute является обязательным.',
+    'required_if'                    => 'Значение :attribute является обязательным, когда :other равное :value.',
+    'required_unless'                => 'Поле :attribute является обязательным, если :other не входит в список :values.',
+    'required_with'                  => 'Поле :attribute является обязательным, когда есть :values.',
+    'required_with_all'              => 'Поле :attribute является обязательным, когда есть :values.',
+    'required_without'               => 'Поле :attribute является обязательным, когда отсутствует :values.',
     'required_without_all'           => ':attribute поле обязательно для заполнения, так как ни одно из :values не существует.',
     'same'                           => ':attribute и :other должны совпадать.',
     'size.numeric'                   => ':attribute должен быть размером :size.',
@@ -90,4 +99,38 @@ return [
     'present'                        => 'Поле :attribute должно быть заполнено.',
     'amount_zero'                    => 'Общее количество не может быть равно нулю',
     'secure_password'                => 'Это не безопасный пароль. Попробуйте еще раз. Для получения справки посетите https://goo.gl/NCh2tN',
+    'attributes'                     => [
+        'email'                => '"Адрес электронной почты"',
+        'description'          => '"Описание"',
+        'amount'               => 'Сумма',
+        'name'                 => '"Название"',
+        'targetamount'         => '"Целевая сумма"',
+        'openingBalanceDate'   => '"Дата начального баланса"',
+        'openingBalance'       => '"Начальный баланс"',
+        'match'                => '"Ключи для связи"',
+        'amount_min'           => '"Минимальная сумма"',
+        'amount_max'           => '"Максимальная сумма"',
+        'title'                => '"Заголовок"',
+        'tag'                  => '"Метка"',
+        'rule-action-value.1'  => '"Значение действия #1"',
+        'rule-action-value.2'  => '"Значение действия #2"',
+        'rule-action-value.3'  => '"Значение действия #3"',
+        'rule-action-value.4'  => '"Значение действия #4"',
+        'rule-action-value.5'  => '"Значение действия #5"',
+        'rule-action.1'        => '"Действие #1"',
+        'rule-action.2'        => '"Действие #2"',
+        'rule-action.3'        => '"Действие #3"',
+        'rule-action.4'        => '"Действие #4"',
+        'rule-action.5'        => '"Действие #5"',
+        'rule-trigger-value.1' => '"Значение условия #1"',
+        'rule-trigger-value.2' => '"Значение условия #2"',
+        'rule-trigger-value.3' => '"Значение условия #3"',
+        'rule-trigger-value.4' => '"Значение условия #4"',
+        'rule-trigger-value.5' => '"Значение условия #5"',
+        'rule-trigger.1'       => '"Условие #1"',
+        'rule-trigger.2'       => '"Условие #2"',
+        'rule-trigger.3'       => '"Условие #3"',
+        'rule-trigger.4'       => '"Условие #4"',
+        'rule-trigger.5'       => '"Условие #5"',
+    ],
 ];

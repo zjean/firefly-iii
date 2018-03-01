@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -60,6 +60,7 @@ interface CurrencyRepositoryInterface
      *
      * @param int $currencyId
      *
+     * @deprecated
      * @return TransactionCurrency
      */
     public function find(int $currencyId): TransactionCurrency;
@@ -67,11 +68,22 @@ interface CurrencyRepositoryInterface
     /**
      * Find by currency code.
      *
+     * @deprecated
+     *
      * @param string $currencyCode
      *
      * @return TransactionCurrency
      */
     public function findByCode(string $currencyCode): TransactionCurrency;
+
+    /**
+     * Find by currency code, return NULL if unfound.
+     *
+     * @param string $currencyCode
+     *
+     * @return TransactionCurrency|null
+     */
+    public function findByCodeNull(string $currencyCode): ?TransactionCurrency;
 
     /**
      * Find by currency name.
@@ -90,6 +102,15 @@ interface CurrencyRepositoryInterface
      * @return TransactionCurrency
      */
     public function findBySymbol(string $currencySymbol): TransactionCurrency;
+
+    /**
+     * Find by ID, return NULL if not found.
+     *
+     * @param int $currencyId
+     *
+     * @return TransactionCurrency|null
+     */
+    public function findNull(int $currencyId): ?TransactionCurrency;
 
     /**
      * @return Collection

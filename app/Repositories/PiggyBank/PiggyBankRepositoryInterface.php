@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -101,6 +101,24 @@ interface PiggyBankRepositoryInterface
      * @return PiggyBank
      */
     public function find(int $piggyBankid): PiggyBank;
+
+    /**
+     * Find by name or return NULL.
+     *
+     * @param string $name
+     *
+     * @return PiggyBank|null
+     */
+    public function findByName(string $name): ?PiggyBank;
+
+    /**
+     * Get current amount saved in piggy bank.
+     *
+     * @param PiggyBank $piggyBank
+     *
+     * @return string
+     */
+    public function getCurrentAmount(PiggyBank $piggyBank): string;
 
     /**
      * Get all events.

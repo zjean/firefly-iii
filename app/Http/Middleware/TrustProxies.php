@@ -16,18 +16,9 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
-
-/**
- * TrustProxies.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
- *
- * See the LICENSE file for details.
- */
 
 namespace FireflyIII\Http\Middleware;
 
@@ -35,6 +26,10 @@ use Fideloper\Proxy\TrustProxies as Middleware;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\Request;
 
+/**
+ * @codeCoverageIgnore
+ * Class TrustProxies
+ */
 class TrustProxies extends Middleware
 {
     /**
@@ -65,8 +60,8 @@ class TrustProxies extends Middleware
     public function __construct(Repository $config)
     {
         $trustedProxies = env('TRUSTED_PROXIES', null);
-        if (null !== $trustedProxies && strlen($trustedProxies) > 0) {
-            $this->proxies = $trustedProxies;
+        if (false !== $trustedProxies && null !== $trustedProxies && strlen($trustedProxies) > 0) {
+            $this->proxies = strval($trustedProxies);
         }
 
         parent::__construct($config);

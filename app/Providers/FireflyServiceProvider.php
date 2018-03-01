@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -42,6 +42,8 @@ use FireflyIII\Helpers\Report\PopupReport;
 use FireflyIII\Helpers\Report\PopupReportInterface;
 use FireflyIII\Helpers\Report\ReportHelper;
 use FireflyIII\Helpers\Report\ReportHelperInterface;
+use FireflyIII\Repositories\TransactionType\TransactionTypeRepository;
+use FireflyIII\Repositories\TransactionType\TransactionTypeRepositoryInterface;
 use FireflyIII\Repositories\User\UserRepository;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
 use FireflyIII\Services\Password\PwndVerifier;
@@ -69,10 +71,14 @@ use TwigBridge\Extension\Loader\Functions;
 use Validator;
 
 /**
+ * @codeCoverageIgnore
  * Class FireflyServiceProvider.
  */
 class FireflyServiceProvider extends ServiceProvider
 {
+    /**
+     * Start provider.
+     */
     public function boot()
     {
         Validator::resolver(
@@ -94,7 +100,7 @@ class FireflyServiceProvider extends ServiceProvider
     }
 
     /**
-     *
+     * Register stuff.
      */
     public function register()
     {
@@ -158,6 +164,7 @@ class FireflyServiceProvider extends ServiceProvider
         // export:
         $this->app->bind(ProcessorInterface::class, ExpandedProcessor::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(TransactionTypeRepositoryInterface::class, TransactionTypeRepository::class);
         $this->app->bind(AttachmentHelperInterface::class, AttachmentHelper::class);
 
         // more generators:

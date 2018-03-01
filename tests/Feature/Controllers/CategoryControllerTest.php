@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -33,6 +33,7 @@ use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Navigation;
 use Steam;
 use Tests\TestCase;
 
@@ -159,8 +160,6 @@ class CategoryControllerTest extends TestCase
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
         $collector->shouldReceive('setLimit')->andReturnSelf();
 
-        Steam::shouldReceive('positive')->once()->andReturn('1');
-
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);
         $response = $this->get(route('categories.no-category'));
@@ -175,6 +174,8 @@ class CategoryControllerTest extends TestCase
      * @dataProvider dateRangeProvider
      *
      * @param string $range
+     *
+     * @throws \Exception
      */
     public function testNoCategoryAll(string $range)
     {
@@ -229,7 +230,12 @@ class CategoryControllerTest extends TestCase
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
         $collector->shouldReceive('setLimit')->andReturnSelf();
 
-        Steam::shouldReceive('positive')->once()->andReturn('1');
+        Navigation::shouldReceive('updateStartDate')->andReturn(new Carbon);
+        Navigation::shouldReceive('updateEndDate')->andReturn(new Carbon);
+        Navigation::shouldReceive('startOfPeriod')->andReturn(new Carbon);
+        Navigation::shouldReceive('endOfPeriod')->andReturn(new Carbon);
+        Navigation::shouldReceive('periodShow')->andReturn('Some date');
+        Navigation::shouldReceive('blockPeriods')->andReturn([['period' =>'1M','start' => new Carbon, 'end' => new Carbon]])->once();
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);
@@ -251,11 +257,10 @@ class CategoryControllerTest extends TestCase
     {
         $transaction  = factory(Transaction::class)->make();
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
 
         // mock stuff
         $repository = $this->mock(CategoryRepositoryInterface::class);
-        $repository->shouldReceive('firstUseDate')->once()->andReturn(new Carbon);
         $repository->shouldReceive('spentInPeriod')->andReturn('0');
         $repository->shouldReceive('earnedInPeriod')->andReturn('0');
 
@@ -265,17 +270,24 @@ class CategoryControllerTest extends TestCase
         $collector = $this->mock(JournalCollectorInterface::class);
         $collector->shouldReceive('setPage')->andReturnSelf()->once();
         $collector->shouldReceive('setLimit')->andReturnSelf()->once();
-        $collector->shouldReceive('setAllAssetAccounts')->andReturnSelf()->twice();
-        $collector->shouldReceive('setRange')->andReturnSelf()->twice();
-        $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf()->twice();
-        $collector->shouldReceive('setTypes')->andReturnSelf()->once();
+        $collector->shouldReceive('setAllAssetAccounts')->andReturnSelf()->atLeast(2);
+        $collector->shouldReceive('setRange')->andReturnSelf()->atLeast(2);
+        $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf()->atLeast(2);
         $collector->shouldReceive('withBudgetInformation')->andReturnSelf()->once();
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf()->once();
-        $collector->shouldReceive('withOpposingAccount')->andReturnSelf()->twice();
-
-        $collector->shouldReceive('getJournals')->andReturn(new Collection)->once();
-        $collector->shouldReceive('setCategory')->andReturnSelf()->twice();
+        $collector->shouldReceive('withOpposingAccount')->andReturnSelf()->atLeast(2);
+        $collector->shouldReceive('setCategory')->andReturnSelf()->atLeast(2);
         $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([$transaction], 0, 10))->once();
+
+        $collector->shouldReceive('setTypes')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('getJournals')->andReturn(new Collection)->atLeast(1);
+
+        Navigation::shouldReceive('updateStartDate')->andReturn(new Carbon);
+        Navigation::shouldReceive('updateEndDate')->andReturn(new Carbon);
+        Navigation::shouldReceive('startOfPeriod')->andReturn(new Carbon);
+        Navigation::shouldReceive('endOfPeriod')->andReturn(new Carbon);
+        Navigation::shouldReceive('periodShow')->andReturn('Some date');
+        Navigation::shouldReceive('blockPeriods')->andReturn([['period' =>'1M','start' => new Carbon, 'end' => new Carbon]])->once();
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);
@@ -311,7 +323,6 @@ class CategoryControllerTest extends TestCase
         $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([$transaction], 0, 10))->once();
 
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
-
         $repository->shouldReceive('firstUseDate')->andReturn(new Carbon);
 
         $this->be($this->user());
@@ -336,7 +347,7 @@ class CategoryControllerTest extends TestCase
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $collector    = $this->mock(JournalCollectorInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
 
         $accountRepos->shouldReceive('getAccountsByType')->andReturn(new Collection);
 
@@ -353,7 +364,6 @@ class CategoryControllerTest extends TestCase
         $collector->shouldReceive('getJournals')->andReturn(new Collection)->atLeast(1);
         $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([$transaction], 0, 10))->once();
 
-        $repository->shouldReceive('firstUseDate')->once()->andReturn(new Carbon('1900-01-01'));
         $repository->shouldReceive('spentInPeriod')->andReturn('-1');
         $repository->shouldReceive('earnedInPeriod')->andReturn('1');
 
@@ -375,11 +385,10 @@ class CategoryControllerTest extends TestCase
     public function testShowEmpty(string $range)
     {
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
 
         // mock stuff
         $repository = $this->mock(CategoryRepositoryInterface::class);
-        $repository->shouldReceive('firstUseDate')->once()->andReturn(new Carbon);
         $repository->shouldReceive('spentInPeriod')->andReturn('0');
         $repository->shouldReceive('earnedInPeriod')->andReturn('0');
 
@@ -389,17 +398,17 @@ class CategoryControllerTest extends TestCase
         $collector = $this->mock(JournalCollectorInterface::class);
         $collector->shouldReceive('setPage')->andReturnSelf()->once();
         $collector->shouldReceive('setLimit')->andReturnSelf()->once();
-        $collector->shouldReceive('setAllAssetAccounts')->andReturnSelf()->twice();
-        $collector->shouldReceive('setRange')->andReturnSelf()->twice();
-        $collector->shouldReceive('setTypes')->andReturnSelf()->times(1);
-        $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf()->twice();
-        $collector->shouldReceive('withBudgetInformation')->andReturnSelf()->once();
-        $collector->shouldReceive('withCategoryInformation')->andReturnSelf()->once();
-        $collector->shouldReceive('withOpposingAccount')->andReturnSelf()->twice();
-        $collector->shouldReceive('setCategory')->andReturnSelf()->twice();
+        $collector->shouldReceive('setAllAssetAccounts')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('setRange')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('withBudgetInformation')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('withCategoryInformation')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('withOpposingAccount')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('setCategory')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('setTypes')->andReturnSelf()->atLeast(1);
+        $collector->shouldReceive('getJournals')->andReturn(new Collection)->atLeast(1);
 
-        $collector->shouldReceive('getJournals')->andReturn(new Collection)->times(1);
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10))->once();
+        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10))->atLeast(1);
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);

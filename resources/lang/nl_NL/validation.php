@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * validation.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'iban'                           => 'Dit is niet een geldige IBAN.',
@@ -90,4 +99,38 @@ return [
     'present'                        => 'Het :attribute veld moet aanwezig zijn.',
     'amount_zero'                    => 'Het totaalbedrag kan niet nul zijn',
     'secure_password'                => 'Dit is geen sterk wachtwoord. Probeer het nog een keer. Zie ook: https://goo.gl/NCh2tN',
+    'attributes'                     => [
+        'email'                => 'e-mailadres',
+        'description'          => 'omschrijving',
+        'amount'               => 'bedrag',
+        'name'                 => 'naam',
+        'targetamount'         => 'doelbedrag',
+        'openingBalanceDate'   => 'startsaldodatum',
+        'openingBalance'       => 'startsaldo',
+        'match'                => 'overeenkomst',
+        'amount_min'           => 'minimumbedrag',
+        'amount_max'           => 'maximumbedrag',
+        'title'                => 'titel',
+        'tag'                  => 'tag',
+        'rule-action-value.1'  => 'actiewaarde #1',
+        'rule-action-value.2'  => 'actiewaarde #2',
+        'rule-action-value.3'  => 'actiewaarde #3',
+        'rule-action-value.4'  => 'actiewaarde #4',
+        'rule-action-value.5'  => 'actiewaarde #5',
+        'rule-action.1'        => 'regelactie #1',
+        'rule-action.2'        => 'regelactie #2',
+        'rule-action.3'        => 'regelactie #3',
+        'rule-action.4'        => 'regelactie #4',
+        'rule-action.5'        => 'regelactie #5',
+        'rule-trigger-value.1' => 'triggerwaarde #1',
+        'rule-trigger-value.2' => 'triggerwaarde #2',
+        'rule-trigger-value.3' => 'triggerwaarde #3',
+        'rule-trigger-value.4' => 'triggerwaarde #4',
+        'rule-trigger-value.5' => 'triggerwaarde #5',
+        'rule-trigger.1'       => 'regeltrigger #1',
+        'rule-trigger.2'       => 'regeltrigger #2',
+        'rule-trigger.3'       => 'regeltrigger #3',
+        'rule-trigger.4'       => 'regeltrigger #4',
+        'rule-trigger.5'       => 'regeltrigger #5',
+    ],
 ];

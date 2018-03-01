@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -24,9 +24,12 @@ namespace FireflyIII\Http\Controllers;
 
 use Artisan;
 use Carbon\Carbon;
-use DB;
+use Exception;
+use FireflyIII\Events\RequestedVersionCheckStatus;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Http\Middleware\IsDemoUser;
+use FireflyIII\Http\Middleware\IsSandStormUser;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
@@ -34,10 +37,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
 use Log;
-use Monolog\Handler\RotatingFileHandler;
 use Preferences;
+use Response;
 use Route as RouteFacade;
-use Session;
 use View;
 
 /**
@@ -51,12 +53,16 @@ class HomeController extends Controller
     public function __construct()
     {
         parent::__construct();
-        View::share('title', 'Firefly III');
-        View::share('mainTitleIcon', 'fa-fire');
+        app('view')->share('title', 'Firefly III');
+        app('view')->share('mainTitleIcon', 'fa-fire');
+        $this->middleware(IsDemoUser::class)->except(['dateRange', 'index']);
+        $this->middleware(IsSandStormUser::class)->only('routes');
     }
 
     /**
      * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function dateRange(Request $request)
     {
@@ -77,67 +83,19 @@ class HomeController extends Controller
         $diff = $start->diffInDays($end);
 
         if ($diff > 50) {
-            Session::flash('warning', strval(trans('firefly.warning_much_data', ['days' => $diff])));
+            $request->session()->flash('warning', strval(trans('firefly.warning_much_data', ['days' => $diff])));
         }
 
-        Session::put('is_custom_range', $isCustomRange);
-        Session::put('start', $start);
-        Session::put('end', $end);
+        $request->session()->put('is_custom_range', $isCustomRange);
+        Log::debug(sprintf('Set is_custom_range to %s', var_export($isCustomRange, true)));
+        $request->session()->put('start', $start);
+        Log::debug(sprintf('Set start to %s', $start->format('Y-m-d H:i:s')));
+        $request->session()->put('end', $end);
+        Log::debug(sprintf('Set end to %s', $end->format('Y-m-d H:i:s')));
+
+        return Response::json(['ok' => 'ok']);
     }
 
-    /**
-     * @param Request $request
-     *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function displayDebug(Request $request)
-    {
-        $phpVersion     = PHP_VERSION;
-        $phpOs          = php_uname();
-        $interface      = PHP_SAPI;
-        $now            = Carbon::create()->format('Y-m-d H:i:s e');
-        $extensions     = join(', ', get_loaded_extensions());
-        $drivers        = join(', ', DB::availableDrivers());
-        $currentDriver  = DB::getDriverName();
-        $userAgent      = $request->header('user-agent');
-        $isSandstorm    = var_export(env('IS_SANDSTORM', 'unknown'), true);
-        $isDocker       = var_export(env('IS_DOCKER', 'unknown'), true);
-        $trustedProxies = env('TRUSTED_PROXIES', '(none)');
-
-        // get latest log file:
-        $logger     = Log::getMonolog();
-        $handlers   = $logger->getHandlers();
-        $logContent = '';
-        foreach ($handlers as $handler) {
-            if ($handler instanceof RotatingFileHandler) {
-                $logFile = $handler->getUrl();
-                if (null !== $logFile) {
-                    $logContent = file_get_contents($logFile);
-                }
-            }
-        }
-        // last few lines
-        $logContent = 'Truncated from this point <----|' . substr($logContent, -4096);
-
-        return view(
-            'debug',
-            compact(
-                'phpVersion',
-                'extensions',
-                'carbon',
-                'now',
-                'drivers',
-                'currentDriver',
-                'userAgent',
-                'phpOs',
-                'interface',
-                'logContent',
-                'isDocker',
-                'isSandstorm',
-                'trustedProxies'
-            )
-        );
-    }
 
     /**
      * @throws FireflyException
@@ -164,7 +122,21 @@ class HomeController extends Controller
     {
         Preferences::mark();
         $request->session()->forget(['start', 'end', '_previous', 'viewRange', 'range', 'is_custom_range']);
+        Log::debug('Call cache:clear...');
         Artisan::call('cache:clear');
+        Log::debug('Call config:clear...');
+        Artisan::call('config:clear');
+        Log::debug('Call route:clear...');
+        Artisan::call('route:clear');
+        Log::debug('Call twig:clean...');
+        try {
+            Artisan::call('twig:clean');
+        } catch (Exception $e) {
+            // dont care
+        }
+        Log::debug('Call view:clear...');
+        Artisan::call('view:clear');
+        Log::debug('Done! Redirecting...');
 
         return redirect(route('index'));
     }
@@ -182,7 +154,6 @@ class HomeController extends Controller
         if (0 === $count) {
             return redirect(route('new-user.index'));
         }
-
         $subTitle     = trans('firefly.welcomeBack');
         $transactions = [];
         $frontPage    = Preferences::get(
@@ -209,12 +180,18 @@ class HomeController extends Controller
             $transactions[] = [$set, $account];
         }
 
+        // fire check update event:
+        event(new RequestedVersionCheckStatus(auth()->user()));
+
         return view(
             'index',
             compact('count', 'subTitle', 'transactions', 'showDeps', 'billCount', 'start', 'end', 'today')
         );
     }
 
+    /**
+     * @return string
+     */
     public function routes()
     {
         $set    = RouteFacade::getRoutes();
@@ -223,37 +200,44 @@ class HomeController extends Controller
                    'login', 'logout', 'password.reset', 'profile.confirm-email-change', 'profile.undo-email-change',
                    'register', 'report.options', 'routes', 'rule-groups.down', 'rule-groups.up', 'rules.up', 'rules.down',
                    'rules.select', 'search.search', 'test-flash', 'transactions.link.delete', 'transactions.link.switch',
-                   'two-factor.lost', 'report.options',
+                   'two-factor.lost', 'reports.options', 'debug', 'import.create-job', 'import.download', 'import.start', 'import.status.json',
+                   'preferences.delete-code', 'rules.test-triggers', 'piggy-banks.remove-money', 'piggy-banks.add-money',
+                   'accounts.reconcile.transactions', 'accounts.reconcile.overview', 'export.download',
+                   'transactions.clone', 'two-factor.index',
         ];
-
+        $return = '&nbsp;';
         /** @var Route $route */
         foreach ($set as $route) {
             $name = $route->getName();
             if (null !== $name && in_array('GET', $route->methods()) && strlen($name) > 0) {
+
                 $found = false;
                 foreach ($ignore as $string) {
-                    if (false !== strpos($name, $string)) {
+                    if (!(false === stripos($name, $string))) {
                         $found = true;
+                        break;
                     }
                 }
-                if (!$found) {
-                    echo 'touch ' . $route->getName() . '.md;';
+                if ($found === false) {
+                    $return .= 'touch ' . $route->getName() . '.md;';
                 }
             }
         }
 
-        return '&nbsp;';
+        return $return;
     }
 
     /**
+     * @param Request $request
+     *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function testFlash()
+    public function testFlash(Request $request)
     {
-        Session::flash('success', 'This is a success message.');
-        Session::flash('info', 'This is an info message.');
-        Session::flash('warning', 'This is a warning.');
-        Session::flash('error', 'This is an error!');
+        $request->session()->flash('success', 'This is a success message.');
+        $request->session()->flash('info', 'This is an info message.');
+        $request->session()->flash('warning', 'This is a warning.');
+        $request->session()->flash('error', 'This is an error!');
 
         return redirect(route('home'));
     }

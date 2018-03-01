@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 /** global: moment, token, dateRangeMeta,dateRangeConfig, accountingConfig, accounting, currencySymbol, mon_decimal_point, frac_digits, showFullList, showOnlyTop, mon_thousands_sep */
 
@@ -32,7 +32,7 @@ $(function () {
 
     $.ajaxSetup({
                     headers: {
-                        'X-CSRF-Token': $('meta[name="_token"]').attr('content')
+                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
                     }
                 });
 

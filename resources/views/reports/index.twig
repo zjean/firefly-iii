@@ -1,7 +1,7 @@
 {% extends "./layout/default" %}
 
 {% block breadcrumbs %}
-    {{ Breadcrumbs.renderIfExists(Route.getCurrentRoute.getName) }}
+    {{ Breadcrumbs.render(Route.getCurrentRoute.getName) }}
 {% endblock %}
 
 {% block content %}
@@ -29,6 +29,7 @@
                                     <option label="{{ 'report_type_budget'|_ }}" value="budget">{{ 'report_type_budget'|_ }}</option>
                                     <option label="{{ 'report_type_category'|_ }}" value="category">{{ 'report_type_category'|_ }}</option>
                                     <option label="{{ 'report_type_tag'|_ }}" value="tag">{{ 'report_type_tag'|_ }}</option>
+                                    <option label="{{ 'report_type_account'|_ }}" value="account">{{ 'report_type_account'|_ }}</option>
                                 </select>
                             </div>
                         </div>
@@ -54,7 +55,7 @@
                             <label for="inputDateRange" class="col-sm-3 control-label">{{ 'report_date_range'|_ }}</label>
 
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" id="inputDateRange" name="daterange"
+                                <input autocomplete="off" type="text" class="form-control" id="inputDateRange" name="daterange"
                                        value="{{ Session.get('start').format('Y-m-d') }} - {{ Session.get('end').format('Y-m-d') }}">
                             </div>
                         </div>
@@ -173,10 +174,13 @@
     <script type="text/javascript">
         var minDate = "{{ start.format('m/d/Y') }}";
         var picker;
-        var nonSelectedText = "{{ 'multi_select_no_selection'|_ }}";
-        var allSelectedText = "{{ 'multi_select_all_selected'|_ }}";
-        var filterPlaceholder = "{{ 'multi_select_filter_placeholder'|_ }}";
+        var selectAllText = "{{ trans('firefly.multi_select_select_all')|escape('js') }}";
+        var nonSelectedText = "{{ trans('firefly.multi_select_no_selection')|escape('js') }}";
+        var nSelectedText = "{{ trans('firefly.multi_select_n_selected')|escape('js') }}";
+        var allSelectedText = "{{ trans('firefly.multi_select_all_selected')|escape('js')   }}";
+        var filterPlaceholder = "{{ trans('firefly.multi_select_filter_placeholder')|escape('js') }}";
     </script>
     <script type="text/javascript" src="js/lib/bootstrap-multiselect.js?v={{ FF_VERSION }}"></script>
+    <script type="text/javascript" src="js/ff/reports/all.js?v={{ FF_VERSION }}"></script>
     <script type="text/javascript" src="js/ff/reports/index.js?v={{ FF_VERSION }}"></script>
 {% endblock %}

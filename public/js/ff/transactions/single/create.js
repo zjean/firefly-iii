@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: currencyInfo, overruleCurrency,useAccountCurrency, accountInfo, what,Modernizr, title, breadcrumbs, middleCrumbName, button, piggiesLength, txt, middleCrumbUrl,exchangeRateInstructions, convertForeignToNative, convertSourceToDestination, selectsForeignCurrency, accountInfo */
@@ -98,7 +98,7 @@ function updateNativeCurrency(useAccountCurrency) {
  */
 function updateDescription() {
     $.getJSON('json/transaction-journals/' + what).done(function (data) {
-        $('input[name="description"]').typeahead('destroy').typeahead({source: data});
+        $('input[name="description"]').typeahead('destroy').typeahead({source: data, autoSelect: false});
     });
     $('#ffInput_description').focus();
 }

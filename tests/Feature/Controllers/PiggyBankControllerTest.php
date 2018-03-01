@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -177,6 +177,7 @@ class PiggyBankControllerTest extends TestCase
         $two->account_id = $one->account_id;
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $repository->shouldReceive('getPiggyBanks')->andReturn(new Collection([$one, $two]));
+        $repository->shouldReceive('getCurrentAmount')->andReturn('10');
 
         Steam::shouldReceive('balanceIgnoreVirtual')->twice()->andReturn('1');
 

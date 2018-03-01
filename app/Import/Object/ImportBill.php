@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -114,7 +114,7 @@ class ImportBill
             Log::debug(sprintf('Finding bill with ID #%d', $this->id['value']));
             /** @var Bill $bill */
             $bill = $this->repository->find(intval($this->id['value']));
-            if (null !== $bill->id) {
+            if (null !== $bill) {
                 Log::debug(sprintf('Found unmapped bill by ID (#%d): %s', $bill->id, $bill->name));
 
                 return $bill;
@@ -199,7 +199,7 @@ class ImportBill
         $search = intval($array['mapped']);
         $bill   = $this->repository->find($search);
 
-        if (null === $bill->id) {
+        if (null === $bill) {
             Log::error(sprintf('There is no bill with id #%d. Invalid mapping will be ignored!', $search));
 
             return new Bill;

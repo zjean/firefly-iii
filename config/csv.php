@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 declare(strict_types=1);
@@ -73,7 +73,7 @@ return [
      *
      */
     'import_roles'     => [
-        '_ignore'       => [
+        '_ignore'               => [
             'mappable'        => false,
             'pre-process-map' => false,
             'field'           => 'ignored',
@@ -82,42 +82,55 @@ return [
 
 
         ],
-        'bill-id'       => [
+        'bill-id'               => [
             'mappable'        => true,
             'pre-process-map' => false,
             'field'           => 'bill',
             'converter'       => 'BillId',
             'mapper'          => 'Bills',
         ],
-        'bill-name'     => [
+        'note'                  => [
+            'mappable'        => false,
+            'pre-process-map' => false,
+            'field'           => 'note',
+            'converter'       => 'Note',
+        ],
+        'bill-name'             => [
             'mappable'        => true,
             'pre-process-map' => false,
             'field'           => 'bill',
             'converter'       => 'BillName',
             'mapper'          => 'Bills',
         ],
-        'currency-id'   => [
+        'currency-id'           => [
             'mappable'        => true,
             'pre-process-map' => false,
             'field'           => 'currency',
             'converter'       => 'CurrencyId',
             'mapper'          => 'TransactionCurrencies',
         ],
-        'currency-name' => [
+        'currency-name'         => [
             'mappable'        => true,
             'pre-process-map' => false,
             'converter'       => 'CurrencyName',
             'field'           => 'currency',
             'mapper'          => 'TransactionCurrencies',
         ],
-        'currency-code' => [
+        'currency-code'         => [
             'mappable'        => true,
             'pre-process-map' => false,
             'converter'       => 'CurrencyCode',
             'field'           => 'currency',
             'mapper'          => 'TransactionCurrencies',
         ],
-        'external-id'   => [
+        'foreign-currency-code' => [
+            'mappable'        => true,
+            'pre-process-map' => false,
+            'converter'       => 'CurrencyCode',
+            'field'           => 'foreign_currency',
+            'mapper'          => 'TransactionCurrencies',
+        ],
+        'external-id'           => [
             'mappable'        => false,
             'pre-process-map' => false,
             'converter'       => 'ExternalId',
@@ -175,16 +188,16 @@ return [
             'field'           => 'budget',
             'mapper'          => 'Budgets',
         ],
-        'rabo-debet-credit' => [
+        'rabo-debit-credit' => [
             'mappable'        => false,
             'pre-process-map' => false,
-            'converter'       => 'RabobankDebetCredit',
+            'converter'       => 'RabobankDebitCredit',
             'field'           => 'amount-modifier',
         ],
-        'ing-debet-credit'  => [
+        'ing-debit-credit'  => [
             'mappable'        => false,
             'pre-process-map' => false,
-            'converter'       => 'INGDebetCredit',
+            'converter'       => 'INGDebitCredit',
             'field'           => 'amount-modifier',
         ],
         'category-id'       => [
@@ -280,17 +293,23 @@ return [
             'converter'       => 'Amount',
             'field'           => 'amount',
         ],
-        'amount_debet'      => [
+        'amount_debit'      => [
             'mappable'        => false,
             'pre-process-map' => false,
-            'converter'       => 'AmountDebet',
-            'field'           => 'amount_debet',
+            'converter'       => 'AmountDebit',
+            'field'           => 'amount_debit',
         ],
         'amount_credit'     => [
             'mappable'        => false,
             'pre-process-map' => false,
             'converter'       => 'AmountCredit',
             'field'           => 'amount_credit',
+        ],
+        'amount_foreign'    => [
+            'mappable'        => false,
+            'pre-process-map' => false,
+            'converter'       => 'Amount',
+            'field'           => 'amount_foreign',
         ],
         'sepa-ct-id'        => [
             'mappable'        => false,
@@ -314,18 +333,4 @@ return [
 
     // number of example rows:
     'example_rows'     => 5,
-    'default_config'   => [
-        'initial-config-complete' => false,
-        'has-headers'             => false, // assume
-        'date-format'             => 'Ymd', // assume
-        'delimiter'               => ',', // assume
-        'import-account'          => 0, // none,
-        'specifics'               => [], // none
-        'column-count'            => 0, // unknown
-        'column-roles'            => [], // unknown
-        'column-do-mapping'       => [], // not yet set which columns must be mapped
-        'column-roles-complete'   => false, // not yet configured roles for columns
-        'column-mapping-config'   => [], // no mapping made yet.
-        'column-mapping-complete' => false, // so mapping is not complete.
-    ],
 ];

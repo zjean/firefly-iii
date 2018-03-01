@@ -1,122 +1,133 @@
 <?php
-declare(strict_types=1);
-
 /**
  * intro.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the Creative Commons Attribution-ShareAlike 4.0 International License.
  *
- * See the LICENSE file for details.
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     // index
-    'index_intro'                           => 'Welcome to the index page of Firefly III. Please take the time to walk through this intro to get a feeling of how Firefly III works.',
-    'index_accounts-chart'                  => 'This chart shows the current balance of your asset accounts. You can select the accounts visible here in your preferences.',
-    'index_box_out_holder'                  => 'This little box and the boxes next to this one will give you a quick overview of your financial situation.',
-    'index_help'                            => 'If you ever need help with a page or a form, press this button.',
-    'index_outro'                           => 'Most pages of Firefly III will start with a little tour like this one. Please contact me when you have questions or comments. Enjoy!',
-    'index_sidebar-toggle'                  => 'To create new transactions, accounts or other things, use the menu under this icon.',
+    'index_intro'                           => 'Selamat datang di halaman indeks Firefly III. Mohon luangkan waktu untuk menelusuri pengantar ini melihat bagaimana Firefly III bekerja.',
+    'index_accounts-chart'                  => 'Bagan ini menunjukkan saldo akun aset anda saat ini, Anda dapat memilih akun yang terlihat di sini dalam preferensi anda.',
+    'index_box_out_holder'                  => 'Kotak kecil dan kotak di samping kotak ini akan memberi anda gambaran singkat tentang situasi keuangan anda.',
+    'index_help'                            => 'Jika anda memerlukan bantuan dengan halaman atau formulir, tekan tombol ini.',
+    'index_outro'                           => 'Sebagian besar halaman Firefly III akan dimulai dengan petunjuk kecil seperti ini. Silahkan hubungi saya bila ada pertanyaan atau komentar. Selamat mencoba!',
+    'index_sidebar-toggle'                  => 'Untuk membuat transakisi baru, akun atau hal lainnya, gunakan menu di bawah gambar ini.',
 
     // create account:
-    'accounts_create_iban'                  => 'Give your accounts a valid IBAN. This could make a data import very easy in the future.',
-    'accounts_create_asset_opening_balance' => 'Assets accounts may have an "opening balance", indicating the start of this account\'s history in Firefly.',
-    'accounts_create_asset_currency'        => 'Firefly III supports multiple currencies. Asset accounts have one main currency, which you must set here.',
-    'accounts_create_asset_virtual'         => 'It can sometimes help to give your account a virtual balance: an extra amount always added to or removed from the actual balance.',
+    'accounts_create_iban'                  => 'Berikan akun anda IBAN yang benar. Hal ini bisa membuat data impor sangat mudah di masa yang akan datang.',
+    'accounts_create_asset_opening_balance' => 'Assets accounts may have an "opening balance", indicating the start of this account\'s history in Firefly III.',
+    'accounts_create_asset_currency'        => 'Firelfly III mendukung berbagai mata uang. Akun aset memiliki satu mata uang utama, yang yang harus anda tetapkan.',
+    'accounts_create_asset_virtual'         => 'Kadang-kadang itu dapat membantu memberi akun anda saldo virtual: jumlah tambahan yang selalu ditambahkan atau dihapus dari saldo sebenarnya.',
 
     // budgets index
-    'budgets_index_intro'                   => 'Budgets are used to manage your finances and form one of the core functions of Firefly III.',
-    'budgets_index_set_budget'              => 'Set your total budget for every period so Firefly can tell you if you have budgeted all available money.',
-    'budgets_index_see_expenses_bar'        => 'Spending money will slowly fill this bar.',
-    'budgets_index_navigate_periods'        => 'Navigate through periods to easily set budgets ahead of time.',
-    'budgets_index_new_budget'              => 'Create new budgets as you see fit.',
-    'budgets_index_list_of_budgets'         => 'Use this table to set the amounts for each budget and see how you are doing.',
-    'budgets_index_outro'                   => 'To learn more about budgeting, checkout the help icon in the top right corner.',
+    'budgets_index_intro'                   => 'Anggaran yang digunakan untuk mengelola keuangan anda dan membentuk salah satu fungsi inti dari Firefly III.',
+    'budgets_index_set_budget'              => 'Set your total budget for every period so Firefly III can tell you if you have budgeted all available money.',
+    'budgets_index_see_expenses_bar'        => 'Menghabiskan uang secara perlahan dengan mengisi di bar ini.',
+    'budgets_index_navigate_periods'        => 'Menavigasi melalui periode dengan mudah menetapkan anggaraan sebelumnya.',
+    'budgets_index_new_budget'              => 'Buat anggaran baru sesuai keinginan anda.',
+    'budgets_index_list_of_budgets'         => 'Gunakan tabel ini untuk menetapkan jumlah setiap anggaran daan melihat bagaimana keadaan anda.',
+    'budgets_index_outro'                   => 'Untuk mempelajari lebih lanjut tentang anggaran, periksa ikon bantuan di pojok kanan atas.',
 
     // reports (index)
-    'reports_index_intro'                   => 'Use these reports to get detailed insights in your finances.',
-    'reports_index_inputReportType'         => 'Pick a report type. Check out the help pages to see what each report shows you.',
-    'reports_index_inputAccountsSelect'     => 'You can exclude or include asset accounts as you see fit.',
-    'reports_index_inputDateRange'          => 'The selected date range is entirely up to you: from one day to 10 years.',
-    'reports_index_extra-options-box'       => 'Depending on the report you have selected, you can select extra filters and options here. Watch this box when you change report types.',
+    'reports_index_intro'                   => 'Gunakan laporan ini untuk mendapatkan wawasan terperinci dalam keuangan anda.',
+    'reports_index_inputReportType'         => 'Pilih sebuah jenis laporan. Periksa bantuan halaman untuk melihat apa yang ditunjukkan pada laporan anda.',
+    'reports_index_inputAccountsSelect'     => 'Anda dapat mengecualikan atau menyertakan akun aset sesuai keinginan anda.',
+    'reports_index_inputDateRange'          => 'Rentang tanggal yang dipilih sepenuhnya terserah anda: dari satu hari sampai 10 tahun.',
+    'reports_index_extra-options-box'       => 'Bergantung pada laporan yang anda pilih, anda dapat memilih filter dan opsi tambahan di sini. Lihat kotak ini saat anda mengubah jenis laporan.',
 
     // reports (reports)
-    'reports_report_default_intro'          => 'This report will give you a quick and comprehensive overview of your finances. If you wish to see anything else, please don\'t hestitate to contact me!',
-    'reports_report_audit_intro'            => 'This report will give you detailed insights in your asset accounts.',
-    'reports_report_audit_optionsBox'       => 'Use these check boxes to show or hide the columns you are interested in.',
+    'reports_report_default_intro'          => 'Laporan ini akan memberi gambaran singkat tentang keuanggan anda secara cepat dan menyeluruh. Jika anda ingin melihat yang lain, jangan ragu untuk menghubungi saya!',
+    'reports_report_audit_intro'            => 'Laporan ini memberikan anda pengetahuan rnci dalam akun aset anda.',
+    'reports_report_audit_optionsBox'       => 'Gunakan kotak centang ini untuk menampilkan atau menyembunyikan kolom yang anda suka.',
 
-    'reports_report_category_intro'                  => 'This report will give you insight in one or multiple categories.',
-    'reports_report_category_pieCharts'              => 'These charts will give you insight in expenses and income per category or per account.',
-    'reports_report_category_incomeAndExpensesChart' => 'This chart shows your expenses and income per category.',
+    'reports_report_category_intro'                  => 'Laporan ini akan memberi anda pengetahuan pada satu atau beberapa kategori.',
+    'reports_report_category_pieCharts'              => 'Bagan ini memberi anda pengetahuan tentang biaya dan pendapatan per kategori atau per akun.',
+    'reports_report_category_incomeAndExpensesChart' => 'Bagan ini menunjukkan pengeluaran dan pendapatan anda per kategori.',
 
-    'reports_report_tag_intro'                  => 'This report will give you insight in one or multiple tags.',
-    'reports_report_tag_pieCharts'              => 'These charts will give you insight in expenses and income per tag, account, category or budget.',
-    'reports_report_tag_incomeAndExpensesChart' => 'This chart shows your expenses and income per tag.',
+    'reports_report_tag_intro'                  => 'Laporan ini memberi anda pengetahuan dalam satu atau beberapa label.',
+    'reports_report_tag_pieCharts'              => 'Bagan ini memberikan anda pengetahuan tentang biaya dan pendapatan per label, akun, kategori atau anggaran.',
+    'reports_report_tag_incomeAndExpensesChart' => 'Bagan ini menunjukkan pengeluaran dan pendapatan anda per label.',
 
-    'reports_report_budget_intro'                             => 'This report will give you insight in one or multiple budgets.',
-    'reports_report_budget_pieCharts'                         => 'These charts will give you insight in expenses per budget or per account.',
-    'reports_report_budget_incomeAndExpensesChart'            => 'This chart shows your expenses per budget.',
+    'reports_report_budget_intro'                             => 'Laporan ini memberikan anda pengetahuan tentang satu atau beberapa anggaran.',
+    'reports_report_budget_pieCharts'                         => 'Bagan ini memberikan anda pengetahuan tentang biaya per anggaran atau per akun.',
+    'reports_report_budget_incomeAndExpensesChart'            => 'Bagan ini menunjukkan pengeluaran anda per anggaran.',
 
     // create transaction
-    'transactions_create_switch_box'                          => 'Use these buttons to quickly switch the type of transaction you wish to save.',
-    'transactions_create_ffInput_category'                    => 'You can freely type in this field. Previously created categories will be suggested.',
-    'transactions_create_withdrawal_ffInput_budget'           => 'Link your withdrawal to a budget for better financial control.',
-    'transactions_create_withdrawal_currency_dropdown_amount' => 'Use this dropdown when your withdrawal is in another currency.',
-    'transactions_create_deposit_currency_dropdown_amount'    => 'Use this dropdown when your deposit is in another currency.',
-    'transactions_create_transfer_ffInput_piggy_bank_id'      => 'Select a piggy bank and link this transfer to your savings.',
+    'transactions_create_switch_box'                          => 'Gunakan tombol-tombol ini dengan cepat untuk mengganti jenis transaksi yang ingin anda simpan.',
+    'transactions_create_ffInput_category'                    => 'Anda bisa dengan bebas mengetik di bidang ini. Kategori yang dibuat sebelumnya yang akan disarankan.',
+    'transactions_create_withdrawal_ffInput_budget'           => 'Tautkan penarikan anda ke anggaraan untuk mendapatkan kontrol keuangan yang lebih baik.',
+    'transactions_create_withdrawal_currency_dropdown_amount' => 'Gunakan dropdown ini saat penarikan anda dalam mata uang lainnya.',
+    'transactions_create_deposit_currency_dropdown_amount'    => 'Gunakan dropdown ini saat deposit anda berada dalam mata uang lainnya.',
+    'transactions_create_transfer_ffInput_piggy_bank_id'      => 'Pilihlah celengan dan hubungkan transfer ini ke tabungan anda.',
 
     // piggy banks index:
-    'piggy-banks_index_saved'                                 => 'This field shows you how much you\'ve saved in each piggy bank.',
-    'piggy-banks_index_button'                                => 'Next to this progress bar are two buttons (+ and -) to add or remove money from each piggy bank.',
-    'piggy-banks_index_accountStatus'                         => 'For each asset account with at least one piggy bank the status is listed in this table.',
+    'piggy-banks_index_saved'                                 => 'Bagian ini menunjukkan berapa banyak yang telah anda simpan di setiap celengan.',
+    'piggy-banks_index_button'                                => 'Di samping bilah kemajuan ini ada dua tombol (+ dan -) untuk menanmbahkan atau menghapus uang dari masing-masing celengan.',
+    'piggy-banks_index_accountStatus'                         => 'Untuk setiap akun aset dengan sedikitnya satu celenggan, statusnya terdaftar dalam tabel ini.',
 
     // create piggy
-    'piggy-banks_create_name'                                 => 'What is your goal? A new couch, a camera, money for emergencies?',
-    'piggy-banks_create_date'                                 => 'You can set a target date or a deadline for your piggy bank.',
+    'piggy-banks_create_name'                                 => 'Apa tujuanmu? Sofa baru, kamera baru, uang untuk keadaan darurat?',
+    'piggy-banks_create_date'                                 => 'Anda dapat menetapkan tanggal target atau tenggat waktu untuk celengan anda.',
 
     // show piggy
-    'piggy-banks_show_piggyChart'                             => 'This chart will show the history of this piggy bank.',
-    'piggy-banks_show_piggyDetails'                           => 'Some details about your piggy bank',
-    'piggy-banks_show_piggyEvents'                            => 'Any additions or removals are also listed here.',
+    'piggy-banks_show_piggyChart'                             => 'Bagan ini akan menunjukkan riwayat celengan.',
+    'piggy-banks_show_piggyDetails'                           => 'Beberapa rincian tentang celengan anda',
+    'piggy-banks_show_piggyEvents'                            => 'Setiap tambahan atau kepindahan juga tercantum di sini.',
 
     // bill index
-    'bills_index_paid_in_period'                              => 'This field indicates when the bill was last paid.',
-    'bills_index_expected_in_period'                          => 'This field indicates for each bill if and when the next bill is expected to hit.',
+    'bills_index_paid_in_period'                              => 'Bagian ini menunjukkan kapan tagihan terakhir dibayarkan.',
+    'bills_index_expected_in_period'                          => 'Bagian ini menunjukkan setiap tagihan jika dan kapan tagihan berikutnya diperkirakan akan dibayar.',
 
     // show bill
-    'bills_show_billInfo'                                     => 'This table shows some general information about this bill.',
-    'bills_show_billButtons'                                  => 'Use this button to re-scan old transactions so they will be matched to this bill.',
-    'bills_show_billChart'                                    => 'This chart shows the transactions linked to this bill.',
+    'bills_show_billInfo'                                     => 'Tabel ini menunjukkan beberapa informasi umum tentang tagihan ini.',
+    'bills_show_billButtons'                                  => 'Gunakan tombol ini untuk memindai ulang transaksi lama sehingga cocok dengan tagihan ini.',
+    'bills_show_billChart'                                    => 'Bagan ini menunjukkan transaksi yang terkait dengan tagihan ini.',
 
     // create bill
-    'bills_create_name'                                       => 'Use a descriptive name such as "Rent" or "Health insurance".',
-    'bills_create_match'                                      => 'To match transactions, use terms from those transactions or the expense account involved. All words must match.',
-    'bills_create_amount_min_holder'                          => 'Select a minimum and maximum amount for this bill.',
-    'bills_create_repeat_freq_holder'                         => 'Most bills repeat monthly, but you can set another frequency here.',
-    'bills_create_skip_holder'                                => 'If a bill repeats every 2 weeks for example, the "skip"-field should be set to "1" to skip every other week.',
+    'bills_create_name'                                       => 'Gunakan nama yang deskriptif seperti "Rent" atau "Health insurance".',
+    'bills_create_match'                                      => 'Untuk mencocokan transaksi, gunakan persyaratan dari transaksi tersebut atau akun biaya yang terlibat. Semua kata harus sesuai.',
+    'bills_create_amount_min_holder'                          => 'Pilih jumlah minimum dan maksimum untuk tagihan ini.',
+    'bills_create_repeat_freq_holder'                         => 'Sebagian besar tagihan diulang setiap bulannya, tapi anda bisa mengatur frekuensi lain di sini.',
+    'bills_create_skip_holder'                                => 'Jika tagihan berulang setiap 2 minggu misalnya, bagian "lewati" harus ditetapkan ke "1" untuk melewati setiap minggu lainnya.',
 
     // rules index
-    'rules_index_intro'                                       => 'Firefly III allows you to manage rules, that will automagically be applied to any transaction you create or edit.',
-    'rules_index_new_rule_group'                              => 'You can combine rules in groups for easier management.',
-    'rules_index_new_rule'                                    => 'Create as many rules as you like.',
-    'rules_index_prio_buttons'                                => 'Order them any way you see fit.',
-    'rules_index_test_buttons'                                => 'You can test your rules or apply them to existing transactions.',
-    'rules_index_rule-triggers'                               => 'Rules have "triggers" and "actions" that you can order by drag-and-drop.',
-    'rules_index_outro'                                       => 'Be sure to check out the help pages using the (?) icon in the top right!',
+    'rules_index_intro'                                       => 'Firefly III memungkinkan anda mengatur peraturan-peraturan, yang otomatis akan diterapkan pada transaksi yang anda buat atau edit.',
+    'rules_index_new_rule_group'                              => 'Anda dapat menggabungkan aturan dalam kelompok untuk memudahkan pengelolaan.',
+    'rules_index_new_rule'                                    => 'Buat aturan sebanyak yang anda suka.',
+    'rules_index_prio_buttons'                                => 'Memesannya sesuai keinginan anda.',
+    'rules_index_test_buttons'                                => 'Anda bisa menguji peraturan anda atau menerapkannya pada transaksi yang ada.',
+    'rules_index_rule-triggers'                               => 'Aturan memiliki "pemicu" dan "tindakan" yang dapat anda pesan dengan drag-and-drop.',
+    'rules_index_outro'                                       => 'Pastikan untuk periksa halaman bantuan menggunakan ikon (?) di bagian kanan atas!',
 
     // create rule:
-    'rules_create_mandatory'                                  => 'Choose a descriptive title, and set when the rule should be fired.',
-    'rules_create_ruletriggerholder'                          => 'Add as many triggers as you like, but remember that ALL triggers must match before any actions are fired.',
-    'rules_create_test_rule_triggers'                         => 'Use this button to see which transactions would match your rule.',
-    'rules_create_actions'                                    => 'Set as many actions as you like.',
+    'rules_create_mandatory'                                  => 'Pilih judul deskriptif dan tentukan kapan aturan harus dijalankan.',
+    'rules_create_ruletriggerholder'                          => 'Tambahkan sebanyak mungkin trigger sebanyak yang kamu sukai, tap ingat bahwa SEMUA trigger harus cocok sebelum tindakan dijalankan.',
+    'rules_create_test_rule_triggers'                         => 'Gunakan tombol ini untuk melihat transaksi mana yang sesuai dengan peraturan anda.',
+    'rules_create_actions'                                    => 'Tentukan sebanyak mungkin tindakan yang anda inginkan.',
 
     // preferences
-    'preferences_index_tabs'                                  => 'More options are available behind these tabs.',
+    'preferences_index_tabs'                                  => 'Pilihan lainnya tersedia dibalik tab ini.',
 
     // currencies
-    'currencies_index_intro'                                  => 'Firefly III supports multiple currencies, which you can change on this page.',
-    'currencies_index_default'                                => 'Firefly III has one default currency. You can always switch of course using these buttons.',
+    'currencies_index_intro'                                  => 'Firefly III mendukung banyak mata uang, yang dapat anda ubah di halaman ini.',
+    'currencies_index_default'                                => 'Firefly III memiliki satu mata uang standar. Anda selalu dapat beralih ke mata uang lainnya dengan menggunakan tombol-tombol ini.',
 
     // create currency
-    'currencies_create_code'                                  => 'This code should be ISO compliant (Google it for your new currency).',
+    'currencies_create_code'                                  => 'Kode ini harus sesuai dengan ISO (Google untuk mata uang baru anda).',
 ];

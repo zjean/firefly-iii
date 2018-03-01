@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -31,12 +31,47 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  */
 interface ImportJobRepositoryInterface
 {
+
     /**
-     * @param string $fileType
+     * @param ImportJob $job
+     * @param int       $index
+     * @param string    $error
      *
      * @return ImportJob
      */
-    public function create(string $fileType): ImportJob;
+    public function addError(ImportJob $job, int $index, string $error): ImportJob;
+
+    /**
+     * @param ImportJob $job
+     * @param int       $steps
+     *
+     * @return ImportJob
+     */
+    public function addStepsDone(ImportJob $job, int $steps = 1): ImportJob;
+
+    /**
+     * @param ImportJob $job
+     * @param int       $steps
+     *
+     * @return ImportJob
+     */
+    public function addTotalSteps(ImportJob $job, int $steps = 1): ImportJob;
+
+    /**
+     * Return number of imported rows with this hash value.
+     *
+     * @param string $hash
+     *
+     * @return int
+     */
+    public function countByHash(string $hash): int;
+
+    /**
+     * @param string $type
+     *
+     * @return ImportJob
+     */
+    public function create(string $type): ImportJob;
 
     /**
      * @param string $key
@@ -44,6 +79,31 @@ interface ImportJobRepositoryInterface
      * @return ImportJob
      */
     public function findByKey(string $key): ImportJob;
+
+    /**
+     * Return configuration of job.
+     *
+     * @param ImportJob $job
+     *
+     * @return array
+     */
+    public function getConfiguration(ImportJob $job): array;
+
+    /**
+     * Return extended status of job.
+     *
+     * @param ImportJob $job
+     *
+     * @return array
+     */
+    public function getExtendedStatus(ImportJob $job): array;
+
+    /**
+     * @param ImportJob $job
+     *
+     * @return string
+     */
+    public function getStatus(ImportJob $job);
 
     /**
      * @param ImportJob    $job
@@ -54,12 +114,12 @@ interface ImportJobRepositoryInterface
     public function processConfiguration(ImportJob $job, UploadedFile $file): bool;
 
     /**
-     * @param ImportJob    $job
-     * @param UploadedFile $file
+     * @param ImportJob         $job
+     * @param null|UploadedFile $file
      *
-     * @return mixed
+     * @return bool
      */
-    public function processFile(ImportJob $job, UploadedFile $file): bool;
+    public function processFile(ImportJob $job, ?UploadedFile $file): bool;
 
     /**
      * @param ImportJob $job
@@ -68,6 +128,38 @@ interface ImportJobRepositoryInterface
      * @return ImportJob
      */
     public function setConfiguration(ImportJob $job, array $configuration): ImportJob;
+
+    /**
+     * @param ImportJob $job
+     * @param array     $array
+     *
+     * @return void
+     */
+    public function setExtendedStatus(ImportJob $job, array $array): ImportJob;
+
+    /**
+     * @param ImportJob $job
+     * @param string    $status
+     *
+     * @return ImportJob
+     */
+    public function setStatus(ImportJob $job, string $status): ImportJob;
+
+    /**
+     * @param ImportJob $job
+     * @param int       $count
+     *
+     * @return ImportJob
+     */
+    public function setStepsDone(ImportJob $job, int $steps): ImportJob;
+
+    /**
+     * @param ImportJob $job
+     * @param int       $count
+     *
+     * @return ImportJob
+     */
+    public function setTotalSteps(ImportJob $job, int $count): ImportJob;
 
     /**
      * @param User $user
@@ -81,4 +173,13 @@ interface ImportJobRepositoryInterface
      * @return ImportJob
      */
     public function updateStatus(ImportJob $job, string $status): ImportJob;
+
+    /**
+     * Return import file content.
+     *
+     * @param ImportJob $job
+     *
+     * @return string
+     */
+    public function uploadFileContents(ImportJob $job): string;
 }

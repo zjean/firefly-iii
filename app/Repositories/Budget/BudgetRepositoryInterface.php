@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -73,19 +73,29 @@ interface BudgetRepositoryInterface
      * Find a budget.
      *
      * @param int $budgetId
+     * @deprecated
      *
      * @return Budget
      */
     public function find(int $budgetId): Budget;
 
     /**
+     * Find a budget or return NULL
+     *
+     * @param int $budgetId
+     *
+     * @return Budget|null
+     */
+    public function findNull(int $budgetId): ?Budget;
+
+    /**
      * Find a budget.
      *
      * @param string $name
      *
-     * @return Budget
+     * @return Budget|null
      */
-    public function findByName(string $name): Budget;
+    public function findByName(string $name): ?Budget;
 
     /**
      * This method returns the oldest journal or transaction date known to this budget.

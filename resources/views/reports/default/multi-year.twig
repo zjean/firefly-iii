@@ -1,7 +1,7 @@
 {% extends "./layout/default" %}
 
 {% block breadcrumbs %}
-    {{ Breadcrumbs.renderIfExists(Route.getCurrentRoute.getName, accountIds, start, end) }}
+    {{ Breadcrumbs.render(Route.getCurrentRoute.getName, accountIds, start, end) }}
 {% endblock %}
 
 {% block content %}
@@ -9,7 +9,7 @@
     {# charts #}
     <div class="row">
         <div class="col-lg-8 col-md-8 col-sm-12">
-            <div class="box">
+            <div class="box" id="year-inc-exp">
                 <div class="box-header with-border">
                     <h3 class="box-title">{{ 'incomeVsExpenses'|_ }}</h3>
                 </div>
@@ -19,7 +19,7 @@
             </div>
         </div>
         <div class="col-lg-4 col-md-4 col-sm-12">
-            <div class="box">
+            <div class="box" id="year-inc-exp-sum">
                 <div class="box-header with-border">
                     <h3 class="box-title">{{ 'incomeVsExpenses'|_ }}</h3>
                 </div>
@@ -59,8 +59,9 @@
             </div>
         </div>
     </div>
+
+    {# block with income #}
     <div class="row">
-        {# block with income #}
         <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
             <div class="box">
                 <div class="box-header with-border">
@@ -222,6 +223,7 @@
         var categoryIncomeUri = '{{ route('report-data.category.income', [accountIds, start.format('Ymd'), end.format('Ymd')]) }}';
 
     </script>
+    <script type="text/javascript" src="js/ff/reports/all.js?v={{ FF_VERSION }}"></script>
     <script type="text/javascript" src="js/ff/reports/default/all.js?v={{ FF_VERSION }}"></script>
     <script type="text/javascript" src="js/ff/reports/default/multi-year.js?v={{ FF_VERSION }}"></script>
 {% endblock %}

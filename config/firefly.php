@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 declare(strict_types=1);
@@ -28,39 +28,87 @@ declare(strict_types=1);
  */
 
 return [
-    'configuration'              => [
+    'configuration'  => [
         'single_user_mode' => true,
         'is_demo_site'     => false,
     ],
-    'encryption'                 => (is_null(env('USE_ENCRYPTION')) || env('USE_ENCRYPTION') === true),
-    'version'                    => '4.6.11',
-    'maxUploadSize'              => 15242880,
-    'allowedMimes'               => ['image/png', 'image/jpeg', 'application/pdf','text/plain'],
-    'list_length'                => 10,
-    'export_formats'             => [
+    'encryption'     => (is_null(env('USE_ENCRYPTION')) || env('USE_ENCRYPTION') === true),
+    'version'        => '4.7.0',
+    'api_version'    => '0.1',
+    'maxUploadSize'  => 15242880,
+    'allowedMimes'   => [
+        /* plain files */
+        'text/plain',
+
+        /* images */
+        'image/jpeg',
+        'image/svg+xml',
+        'image/png',
+        'image/heic',
+        'image/heic-sequence',
+
+        /* PDF */
+        'application/pdf',
+
+
+        /* MS word */
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+        /* MS excel */
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+        /* MS powerpoint */
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.openxmlformats-officedocument.presentationml.template',
+        'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+        /* iWork */
+        'application/x-iwork-pages-sffpages',
+        /* open office */
+        'application/vnd.sun.xml.writer',
+        'application/vnd.sun.xml.writer.template',
+        'application/vnd.sun.xml.writer.global',
+        'application/vnd.stardivision.writer',
+        'application/vnd.stardivision.writer-global',
+        'application/vnd.sun.xml.calc',
+        'application/vnd.sun.xml.calc.template',
+        'application/vnd.stardivision.calc',
+        'application/vnd.sun.xml.impress',
+        'application/vnd.sun.xml.impress.template',
+        'application/vnd.stardivision.impress',
+        'application/vnd.sun.xml.draw',
+        'application/vnd.sun.xml.draw.template',
+        'application/vnd.stardivision.draw',
+        'application/vnd.sun.xml.math',
+        'application/vnd.stardivision.math',
+        'application/vnd.oasis.opendocument.text',
+        'application/vnd.oasis.opendocument.text-template',
+        'application/vnd.oasis.opendocument.text-web',
+        'application/vnd.oasis.opendocument.text-master',
+        'application/vnd.oasis.opendocument.graphics',
+        'application/vnd.oasis.opendocument.graphics-template',
+        'application/vnd.oasis.opendocument.presentation',
+        'application/vnd.oasis.opendocument.presentation-template',
+        'application/vnd.oasis.opendocument.spreadsheet',
+        'application/vnd.oasis.opendocument.spreadsheet-template',
+        'application/vnd.oasis.opendocument.chart',
+        'application/vnd.oasis.opendocument.formula',
+        'application/vnd.oasis.opendocument.database',
+        'application/vnd.oasis.opendocument.image',
+    ],
+    'list_length'    => 10,
+    'export_formats' => [
         'csv' => 'FireflyIII\Export\Exporter\CsvExporter',
     ],
-    'import_formats'             => [
-        'csv' => 'FireflyIII\Import\Configurator\CsvConfigurator',
-    ],
-    'import_configurators'       => [
-        'csv' => 'FireflyIII\Import\Configurator\CsvConfigurator',
-    ],
-    'import_processors'          => [
-        'csv' => 'FireflyIII\Import\FileProcessor\CsvProcessor',
-    ],
-    'import_pre'                 => [
-        'bunq' => 'FireflyIII\Support\Import\Prerequisites\BunqPrerequisites',
-    ],
-    'import_info'                => [
-        'bunq' => 'FireflyIII\Support\Import\Information\BunqInformation',
-    ],
-    'import_transactions'        => [
-        'bunq' => 'FireflyIII\Support\Import\Transactions\BunqTransactions',
-    ],
-    'bunq'                       => [
+    'bunq'           => [
         'server' => 'https://sandbox.public.api.bunq.com',
     ],
+    'spectre'        => [
+        'server' => 'https://www.saltedge.com',
+    ],
+
     'default_export_format'      => 'csv',
     'default_import_format'      => 'csv',
     'bill_periods'               => ['weekly', 'monthly', 'quarterly', 'half-year', 'yearly'],
@@ -127,19 +175,21 @@ return [
         ],
     'languages'                  => [
         // completed languages
-        'nl_NL' => ['name_locale' => 'Nederlands', 'name_english' => 'Dutch', 'complete' => true],
-        'de_DE' => ['name_locale' => 'Deutsch', 'name_english' => 'German', 'complete' => true],
-        'en_US' => ['name_locale' => 'English', 'name_english' => 'English', 'complete' => true],
-        'fr_FR' => ['name_locale' => 'Français', 'name_english' => 'French', 'complete' => true],
-        'pl_PL' => ['name_locale' => 'Polski', 'name_english' => 'Polish ', 'complete' => true],
+        'en_US' => ['name_locale' => 'English', 'name_english' => 'English'],
+        'es_ES' => ['name_locale' => 'Español', 'name_english' => 'Spanish'],
+        'de_DE' => ['name_locale' => 'Deutsch', 'name_english' => 'German'],
+        'fr_FR' => ['name_locale' => 'Français', 'name_english' => 'French'],
+        'id_ID' => ['name_locale' => 'Bahasa Indonesia', 'name_english' => 'Indonesian'],
+        'nl_NL' => ['name_locale' => 'Nederlands', 'name_english' => 'Dutch'],
+        'pl_PL' => ['name_locale' => 'Polski', 'name_english' => 'Polish '],
+        'pt_BR' => ['name_locale' => 'Português do Brasil', 'name_english' => 'Portuguese (Brazil)'],
+        'ru_RU' => ['name_locale' => 'Русский', 'name_english' => 'Russian'],
+        'tr_TR' => ['name_locale' => 'Türkçe', 'name_english' => 'Turkish'],
 
         // incomplete languages:
-        'pt_BR' => ['name_locale' => 'Português do Brasil', 'name_english' => 'Portuguese (Brazil)', 'complete' => false],
-        'id_ID' => ['name_locale' => 'Indonesian', 'name_english' => 'Indonesian', 'complete' => false],
-        'es_ES' => ['name_locale' => 'Spanish', 'name_english' => 'Spanish', 'complete' => false],
-        'ru_RU' => ['name_locale' => 'Русский', 'name_english' => 'Russian', 'complete' => false],
-        'sl_SI' => ['name_locale' => 'Slovenščina', 'name_english' => 'Slovenian', 'complete' => false],
-        'tr_TR' => ['name_locale' => 'Türkçe', 'name_english' => 'Turkish', 'complete' => false],
+        //'id_ID' => ['name_locale' => 'Indonesian', 'name_english' => 'Indonesian'],
+        //
+        //'sl_SI' => ['name_locale' => 'Slovenščina', 'name_english' => 'Slovenian'],
     ],
     'transactionTypesByWhat'     => [
         'expenses'   => ['Withdrawal'],
@@ -159,34 +209,48 @@ return [
 
     ],
     'bindables'                  => [
-        'account'           => 'FireflyIII\Models\Account',
-        'attachment'        => 'FireflyIII\Models\Attachment',
-        'bill'              => 'FireflyIII\Models\Bill',
-        'budget'            => 'FireflyIII\Models\Budget',
-        'category'          => 'FireflyIII\Models\Category',
-        'transaction_type'  => 'FireflyIII\Models\TransactionType',
+        // models
+        'account'           => \FireflyIII\Models\Account::class,
+        'attachment'        => \FireflyIII\Models\Attachment::class,
+        'bill'              => \FireflyIII\Models\Bill::class,
+        'budget'            => \FireflyIII\Models\Budget::class,
+        'budgetLimit'       => \FireflyIII\Models\BudgetLimit::class,
+        'category'          => \FireflyIII\Models\Category::class,
+        'linkType'          => \FireflyIII\Models\LinkType::class,
+        'transactionType'   => \FireflyIII\Models\TransactionType::class,
         'journalLink'       => \FireflyIII\Models\TransactionJournalLink::class,
-        'currency'          => 'FireflyIII\Models\TransactionCurrency',
-        'fromCurrencyCode'  => 'FireflyIII\Support\Binder\CurrencyCode',
-        'toCurrencyCode'    => 'FireflyIII\Support\Binder\CurrencyCode',
-        'limitrepetition'   => 'FireflyIII\Models\LimitRepetition',
-        'budgetlimit'       => 'FireflyIII\Models\BudgetLimit',
-        'piggyBank'         => 'FireflyIII\Models\PiggyBank',
-        'tj'                => 'FireflyIII\Models\TransactionJournal',
-        'unfinishedJournal' => 'FireflyIII\Support\Binder\UnfinishedJournal',
-        'tag'               => 'FireflyIII\Models\Tag',
-        'rule'              => 'FireflyIII\Models\Rule',
-        'ruleGroup'         => 'FireflyIII\Models\RuleGroup',
-        'jobKey'            => 'FireflyIII\Models\ExportJob',
-        'importJob'         => 'FireflyIII\Models\ImportJob',
-        'accountList'       => 'FireflyIII\Support\Binder\AccountList',
-        'budgetList'        => 'FireflyIII\Support\Binder\BudgetList',
-        'journalList'       => 'FireflyIII\Support\Binder\JournalList',
-        'categoryList'      => 'FireflyIII\Support\Binder\CategoryList',
-        'tagList'           => 'FireflyIII\Support\Binder\TagList',
-        'start_date'        => 'FireflyIII\Support\Binder\Date',
-        'end_date'          => 'FireflyIII\Support\Binder\Date',
-        'date'              => 'FireflyIII\Support\Binder\Date',
+        'currency'          => \FireflyIII\Models\TransactionCurrency::class,
+        'piggyBank'         => \FireflyIII\Models\PiggyBank::class,
+        'tj'                => \FireflyIII\Models\TransactionJournal::class,
+        'tag'               => \FireflyIII\Models\Tag::class,
+        'rule'              => \FireflyIII\Models\Rule::class,
+        'ruleGroup'         => \FireflyIII\Models\RuleGroup::class,
+        'exportJob'         => \FireflyIII\Models\ExportJob::class,
+        'importJob'         => \FireflyIII\Models\ImportJob::class,
+        'transaction'       => \FireflyIII\Models\Transaction::class,
+        'user'              => \FireflyIII\User::class,
+
+        // strings
+
+        // dates
+        'start_date'        => \FireflyIII\Support\Binder\Date::class,
+        'end_date'          => \FireflyIII\Support\Binder\Date::class,
+        'date'              => \FireflyIII\Support\Binder\Date::class,
+
+        // lists
+        'accountList'       => \FireflyIII\Support\Binder\AccountList::class,
+        'expenseList'       => \FireflyIII\Support\Binder\AccountList::class,
+        'budgetList'        => \FireflyIII\Support\Binder\BudgetList::class,
+        'journalList'       => \FireflyIII\Support\Binder\JournalList::class,
+        'categoryList'      => \FireflyIII\Support\Binder\CategoryList::class,
+        'tagList'           => \FireflyIII\Support\Binder\TagList::class,
+
+        // others
+        'fromCurrencyCode'  => \FireflyIII\Support\Binder\CurrencyCode::class,
+        'toCurrencyCode'    => \FireflyIII\Support\Binder\CurrencyCode::class,
+        'unfinishedJournal' => \FireflyIII\Support\Binder\UnfinishedJournal::class,
+
+
     ],
     'rule-triggers'              => [
         'user_action'           => 'FireflyIII\TransactionRules\Triggers\UserAction',

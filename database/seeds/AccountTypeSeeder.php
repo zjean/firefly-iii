@@ -1,12 +1,22 @@
 <?php
 /**
  * AccountTypeSeeder.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -20,15 +30,24 @@ class AccountTypeSeeder extends Seeder
 {
     public function run()
     {
-        AccountType::create(['type' => AccountType::DEFAULT]);
-        AccountType::create(['type' => AccountType::CASH]);
-        AccountType::create(['type' => AccountType::ASSET]);
-        AccountType::create(['type' => AccountType::EXPENSE]);
-        AccountType::create(['type' => AccountType::REVENUE]);
-        AccountType::create(['type' => AccountType::INITIAL_BALANCE]);
-        AccountType::create(['type' => AccountType::BENEFICIARY]);
-        AccountType::create(['type' => AccountType::IMPORT]);
-        AccountType::create(['type' => AccountType::LOAN]);
-        AccountType::create(['type' => AccountType::RECONCILIATION]);
+        $types = [
+            AccountType::DEFAULT,
+            AccountType::CASH,
+            AccountType::ASSET,
+            AccountType::EXPENSE,
+            AccountType::REVENUE,
+            AccountType::INITIAL_BALANCE,
+            AccountType::BENEFICIARY,
+            AccountType::IMPORT,
+            AccountType::LOAN,
+            AccountType::RECONCILIATION,
+        ];
+        foreach ($types as $type) {
+            try {
+                AccountType::create(['type' => $type]);
+            } catch (PDOException $e) {
+                Log::warning(sprintf('Could not create account type "%s". It might exist already.', $type));
+            }
+        }
     }
 }

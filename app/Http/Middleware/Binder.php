@@ -1,7 +1,7 @@
 <?php
 /**
  * Binder.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -24,32 +24,48 @@ namespace FireflyIII\Http\Middleware;
 
 use Closure;
 use FireflyIII\Support\Domain;
-use Illuminate\Http\Request;
+use Illuminate\Contracts\Auth\Factory as Auth;
+use Illuminate\Routing\Route;
 
 /**
- * Class Binder.
+ * Class HttpBinder
  */
 class Binder
 {
+    /**
+     * The authentication factory instance.
+     *
+     * @var \Illuminate\Contracts\Auth\Factory
+     */
+    protected $auth;
+    /**
+     * @var array
+     */
     protected $binders = [];
 
     /**
      * Binder constructor.
+     *
+     * @param  \Illuminate\Contracts\Auth\Factory $auth
      */
-    public function __construct()
+    public function __construct(Auth $auth)
     {
         $this->binders = Domain::getBindables();
+        $this->auth    = $auth;
     }
 
     /**
      * Handle an incoming request.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \Closure                 $next
+     * @param  \Illuminate\Http\Request $request
+     * @param  \Closure                 $next
+     * @param  string[]                 ...$guards
      *
      * @return mixed
+     *
+     * @throws \Illuminate\Auth\AuthenticationException
      */
-    public function handle(Request $request, Closure $next)
+    public function handle($request, Closure $next, ...$guards)
     {
         foreach ($request->route()->parameters() as $key => $value) {
             if (isset($this->binders[$key])) {
@@ -68,7 +84,7 @@ class Binder
      *
      * @return mixed
      */
-    private function performBinding($key, $value, $route)
+    private function performBinding(string $key, string $value, Route $route)
     {
         $class = $this->binders[$key];
 

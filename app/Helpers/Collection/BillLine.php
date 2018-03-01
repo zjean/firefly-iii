@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -41,7 +41,11 @@ class BillLine
     /** @var string */
     protected $min;
     /** @var Carbon */
+    private $endOfPayDate;
+    /** @var Carbon */
     private $lastHitDate;
+    /** @var Carbon */
+    private $payDate;
     /** @var int */
     private $transactionJournalId;
 
@@ -83,6 +87,22 @@ class BillLine
     public function setBill(BillModel $bill)
     {
         $this->bill = $bill;
+    }
+
+    /**
+     * @return Carbon
+     */
+    public function getEndOfPayDate(): Carbon
+    {
+        return $this->endOfPayDate;
+    }
+
+    /**
+     * @param Carbon $endOfPayDate
+     */
+    public function setEndOfPayDate(Carbon $endOfPayDate): void
+    {
+        $this->endOfPayDate = $endOfPayDate;
     }
 
     /**
@@ -131,6 +151,22 @@ class BillLine
     public function setMin(string $min)
     {
         $this->min = $min;
+    }
+
+    /**
+     * @return Carbon
+     */
+    public function getPayDate(): Carbon
+    {
+        return $this->payDate;
+    }
+
+    /**
+     * @param Carbon $payDate
+     */
+    public function setPayDate(Carbon $payDate): void
+    {
+        $this->payDate = $payDate;
     }
 
     /**

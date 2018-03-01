@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -26,8 +26,6 @@ use DB;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountMeta;
 use FireflyIII\Models\AccountType;
-use FireflyIII\Models\BudgetLimit;
-use FireflyIII\Models\LimitRepetition;
 use FireflyIII\Models\Note;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionCurrency;
@@ -75,6 +73,8 @@ class UpgradeDatabase extends Command
 
     /**
      * Execute the console command.
+     *
+     * @throws \Exception
      */
     public function handle()
     {
@@ -146,6 +146,7 @@ class UpgradeDatabase extends Command
 
                 // both 0? set to default currency:
                 if (0 === $accountCurrency && 0 === $obCurrency) {
+                    AccountMeta::where('account_id', $account->id)->where('name', 'currency_id')->forceDelete();
                     AccountMeta::create(['account_id' => $account->id, 'name' => 'currency_id', 'data' => $defaultCurrency->id]);
                     $this->line(sprintf('Account #%d ("%s") now has a currency setting (%s).', $account->id, $account->name, $defaultCurrencyCode));
 
@@ -218,8 +219,8 @@ class UpgradeDatabase extends Command
                         }
 
                         // when mismatch in transaction:
-                        if ($transaction->transaction_currency_id !== $currency->id) {
-                            $transaction->foreign_currency_id     = $transaction->transaction_currency_id;
+                        if (!(intval($transaction->transaction_currency_id) === intval($currency->id))) {
+                            $transaction->foreign_currency_id     = intval($transaction->transaction_currency_id);
                             $transaction->foreign_amount          = $transaction->amount;
                             $transaction->transaction_currency_id = $currency->id;
                             $transaction->save();
@@ -282,6 +283,8 @@ class UpgradeDatabase extends Command
 
     /**
      * Move all the journal_meta notes to their note object counter parts.
+     *
+     * @throws \Exception
      */
     private function migrateNotes(): void
     {
@@ -399,24 +402,24 @@ class UpgradeDatabase extends Command
 
         // has no currency ID? Must have, so fill in using account preference:
         if (null === $transaction->transaction_currency_id) {
-            $transaction->transaction_currency_id = $currency->id;
+            $transaction->transaction_currency_id = intval($currency->id);
             Log::debug(sprintf('Transaction #%d has no currency setting, now set to %s', $transaction->id, $currency->code));
             $transaction->save();
         }
 
         // does not match the source account (see above)? Can be fixed
         // when mismatch in transaction and NO foreign amount is set:
-        if ($transaction->transaction_currency_id !== $currency->id && null === $transaction->foreign_amount) {
+        if (!(intval($transaction->transaction_currency_id) === intval($currency->id)) && null === $transaction->foreign_amount) {
             Log::debug(
                 sprintf(
-                    'Transaction #%d has a currency setting (#%d) that should be #%d. Amount remains %s, currency is changed.',
+                    'Transaction #%d has a currency setting #%d that should be #%d. Amount remains %s, currency is changed.',
                     $transaction->id,
                     $transaction->transaction_currency_id,
                     $currency->id,
                     $transaction->amount
                 )
             );
-            $transaction->transaction_currency_id = $currency->id;
+            $transaction->transaction_currency_id = intval($currency->id);
             $transaction->save();
         }
 
@@ -434,7 +437,7 @@ class UpgradeDatabase extends Command
         }
 
         // if the destination account currency is the same, both foreign_amount and foreign_currency_id must be NULL for both transactions:
-        if ($opposingCurrency->id === $currency->id) {
+        if (intval($opposingCurrency->id) === intval($currency->id)) {
             // update both transactions to match:
             $transaction->foreign_amount       = null;
             $transaction->foreign_currency_id  = null;
@@ -448,7 +451,7 @@ class UpgradeDatabase extends Command
             return;
         }
         // if destination account currency is different, both transactions must have this currency as foreign currency id.
-        if ($opposingCurrency->id !== $currency->id) {
+        if (!(intval($opposingCurrency->id) === intval($currency->id))) {
             $transaction->foreign_currency_id = $opposingCurrency->id;
             $opposing->foreign_currency_id    = $opposingCurrency->id;
             $transaction->save();
@@ -498,4 +501,5 @@ class UpgradeDatabase extends Command
 
         return;
     }
+
 }

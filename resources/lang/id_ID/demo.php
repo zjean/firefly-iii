@@ -1,26 +1,35 @@
 <?php
-declare(strict_types=1);
-
 /**
  * demo.php
- * Copyright (c) 2016 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the Creative Commons Attribution-ShareAlike 4.0 International License.
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * See the LICENSE file for details.
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
-    'no_demo_text'                   => 'Sorry, there is no extra demo-explanation text for <abbr title=":route">this page</abbr>.',
-    'see_help_icon'                  => 'However, the <i class="fa fa-question-circle"></i>-icon in the top right corner may tell you more.',
-    'index'                          => 'Welcome to <strong>Firefly III</strong>! On this page you get a quick overview of your finances. For more information, check out Accounts &rarr; <a href=":asset">Asset Accounts</a> and of course the <a href=":budgets">Budgets</a> and <a href=":reports">Reports</a> pages. Or just take a look around and see where you end up.',
-    'accounts-index'                 => 'Asset accounts are your personal bank accounts. Expense accounts are the accounts you spend money at, such as stores and friends. Revenue accounts are accounts you receive money from, such as your job, the government or other sources of income. On this page you can edit or remove them.',
-    'budgets-index'                  => 'This page shows you an overview of your budgets. The top bar shows the amount that is available to be budgeted. This can be customized for any period by clicking the amount on the right. The amount you\'ve actually spent is shown in the bar below. Below that are the expenses per budget and what you\'ve budgeted for them.',
-    'reports-index-start'            => 'Firefly III supports four types of reports. Read about them by clicking on the <i class="fa fa-question-circle"></i>-icon in the top right corner.',
-    'reports-index-examples'         => 'Be sure to check out these examples: <a href=":one">a monthly financial overview</a>, <a href=":two">a yearly financial overview</a> and <a href=":three">a budget overview</a>.',
-    'currencies-index'               => 'Firefly III supports multiple currencies. Although it defaults to the Euro it can be set to the US Dollar and many other currencies. As you can see a small selection of currencies has been included but you can add your own if you wish to. Changing the default currency will not change the currency of existing transactions however: Firefly III supports the use of multiple currencies at the same time.',
-    'transactions-index'             => 'These expenses, deposits and transfers are not particularly imaginative. They have been generated automatically.',
-    'piggy-banks-index'              => 'As you can see, there are three piggy banks. Use the plus and minus buttons to influence the amount of money in each piggy bank. Click the name of the piggy bank to see the administration for each piggy bank.',
-    'import-index'                   => 'Of course, any CSV file can be imported into Firefly III',
-    'import-configure-security'      => 'Because of security concerns, your upload has been replaced with a local file.',
-    'import-configure-configuration' => 'The configuration you see below is correct for the local file.',
+    'no_demo_text'                   => 'Maaf, tidak ada teks penjelasan-penjelasan tambahan <abbr title=":route">laman halaman</abbr> ini.',
+    'see_help_icon'                  => 'Namun, ikon <i class="fa fa-question-circle"></i> di pojok kanan atas mungkin memberi tahu Anda lebih banyak.',
+    'index'                          => 'Selamat Datang di <strong>Firefly III</strong>! Di halaman ini Anda mendapatkan gambaran singkat tentang keuangan Anda. Untuk informasi lebih lanjut, lihat Akun &rarr; <a href=":asset">Setelan Akun</a> dan tentu saja halaman <a href=":budgets">Budgets123_4_6_32_23_32_19_7_321Reports</a>. Atau hanya melihat-lihat dan melihat di mana Anda berakhir.',
+    'accounts-index'                 => 'Akun aset adalah rekening bank pribadi Anda. Akun pengeluaran adalah akun yang Anda belanjakan, seperti toko dan teman. Akun pendapatan adalah rekening yang Anda terima dari, seperti pekerjaan Anda, pemerintah atau sumber pendapatan lainnya. Pada halaman ini Anda dapat mengedit atau menghapusnya.',
+    'budgets-index'                  => 'Halaman ini menunjukkan ikhtisar anggaran Anda. Bagian atas menunjukkan jumlah yang tersedia untuk dianggarkan. Ini dapat disesuaikan untuk segala periode dengan mengklik jumlah di sebelah kanan. Jumlah yang sebenarnya Anda habiskan ditunjukkan di bilah di bawah ini. Di bawah ini adalah biaya per anggaran dan apa yang telah Anda anggarkan untuk mereka.',
+    'reports-index-start'            => 'Firefly III mendukung sejumlah jenis laporan. Baca tentang mereka dengan mengklik <i class="fa fa-question-circle"></i>-icon di pojok kanan atas.',
+    'reports-index-examples'         => 'Pastikan untuk memeriksa contoh-contoh ini: <a href=":one">gambaran keuangan bulanan</a>, <a href=":two">ikhtisar keuangan tahunan</a> dan <a href=":three">gambaran umum anggaran</a>.',
+    'currencies-index'               => 'Firefly III mendukung banyak mata uang. Meski default ke Euro itu bisa diatur ke US Dollar dan banyak mata uang lainnya. Seperti yang bisa Anda lihat, sejumlah kecil mata uang telah disertakan namun Anda dapat menambahkannya sendiri jika menginginkannya. Mengubah mata uang default tidak akan mengubah mata uang dari transaksi yang ada namun: Firefly III mendukung penggunaan beberapa mata uang pada saat bersamaan.',
+    'transactions-index'             => 'Biaya ini, deposito dan transfer tidak terlalu imajinatif. Mereka telah dihasilkan secara otomatis.',
+    'piggy-banks-index'              => 'Seperti yang bisa Anda lihat, ada tiga celengan. Gunakan tombol plus dan minus untuk mempengaruhi jumlah uang di setiap celengan. Klik nama celengan untuk melihat administrasi masing-masing celengan.',
+    'import-index'                   => 'Tentu saja, file CSV manapun bisa diimpor ke Firefly III',
 ];

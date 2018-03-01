@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -25,11 +25,14 @@ namespace FireflyIII\Handlers\Events;
 use FireflyIII\Events\RegisteredUser;
 use FireflyIII\Events\RequestedNewPassword;
 use FireflyIII\Events\UserChangedEmail;
+use FireflyIII\Factories\RoleFactory;
 use FireflyIII\Mail\ConfirmEmailChangeMail;
 use FireflyIII\Mail\RegisteredUser as RegisteredUserMail;
 use FireflyIII\Mail\RequestedNewPassword as RequestedNewPasswordMail;
 use FireflyIII\Mail\UndoEmailChangeMail;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
+use FireflyIII\User;
+use Illuminate\Auth\Events\Login;
 use Log;
 use Mail;
 use Preferences;
@@ -60,6 +63,47 @@ class UserEventHandler
         if (1 === $repository->count()) {
             $repository->attachRole($event->user, 'owner');
         }
+
+        return true;
+    }
+
+    /**
+     * @param Login $event
+     *
+     * @return bool
+     */
+    public function checkSingleUserIsAdmin(Login $event): bool
+    {
+        /** @var UserRepositoryInterface $repository */
+        $repository = app(UserRepositoryInterface::class);
+
+        /** @var User $user */
+        $user  = $event->user;
+        $count = $repository->count();
+
+        if ($count > 1) {
+            // if more than one user, do nothing.
+            Log::debug(sprintf('System has %d users, will not change users roles.', $count));
+
+            return true;
+        }
+        // user is only user but has admin role
+        if (1 === $count && $user->hasRole('owner')) {
+            Log::debug(sprintf('User #%d is only user but has role owner so all is well.', $user->id));
+
+            return true;
+        }
+        // user is the only user but does not have role "owner".
+        $role = $repository->getRole('owner');
+        if (is_null($role)) {
+            // create role, does not exist. Very strange situation so let's raise a big fuss about it.
+            $role = $repository->createRole('owner', 'Site Owner', 'User runs this instance of FF3');
+            Log::error('Could not find role "owner". This is weird.');
+        }
+
+        Log::info(sprintf('Gave user #%d role #%d ("%s")', $user->id, $role->id, $role->name));
+        // give user the role
+        $repository->attachRole($user, 'owner');
 
         return true;
     }

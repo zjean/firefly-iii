@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -81,6 +81,8 @@ class CategoryControllerTest extends TestCase
         $category   = factory(Category::class)->make();
         $repository->shouldReceive('getCategories')->andReturn(new Collection([$category]));
         $repository->shouldReceive('spentInPeriod')->andReturn('-1');
+        $repository->shouldReceive('earnedInPeriod')->andReturn('1');
+
 
         $this->be($this->user());
         $response = $this->get(route('report-data.category.operations', ['1', '20120101', '20120131']));

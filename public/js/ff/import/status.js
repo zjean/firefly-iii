@@ -15,10 +15,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** global: jobImportUrl, langImportSingleError, langImportMultiError, jobStartUrl, langImportTimeOutError, langImportFinished, langImportFatalError */
+/** global: job, langImportSingleError, langImportMultiError, jobStartUrl, langImportTimeOutError, langImportFinished, langImportFatalError */
 
 var timeOutId;
 var startInterval = 1000;
@@ -28,27 +28,36 @@ var interval = 500;
 var numberOfSteps = 0;
 var numberOfReports = 0;
 var jobFailed = false;
+var pressedStart = false;
 
 // counts how many errors have been detected
 var knownErrors = 0;
 
 $(function () {
     "use strict";
-    timeOutId = setTimeout(checkImportStatus, startInterval);
-    $('.start-job').click(startJob);
+    timeOutId = setTimeout(checkJobStatus, startInterval);
+
+    $('.start-job').click(function () {
+        // notify (extra) that start button is pressed.
+        pressedStart = true;
+        startJob();
+    });
+    if (job.configuration['auto-start']) {
+        startJob();
+    }
 });
 
 /**
  * Downloads some JSON and responds to its content to see what the status is of the current import.
  */
-function checkImportStatus() {
-    $.getJSON(jobImportUrl).done(reportOnJobImport).fail(failedJobImport);
+function checkJobStatus() {
+    $.getJSON(jobStatusUri).done(reportOnJobStatus).fail(reportFailedJob);
 }
 
 /**
  * This method is called when the JSON query returns an error. If possible, this error is relayed to the user.
  */
-function failedJobImport(jqxhr, textStatus, error) {
+function reportFailedJob(jqxhr, textStatus, error) {
     // hide all possible boxes:
     $('.statusbox').hide();
 
@@ -67,13 +76,23 @@ function failedJobImport(jqxhr, textStatus, error) {
  *
  * @param data
  */
-function reportOnJobImport(data) {
+function reportOnJobStatus(data) {
 
     switch (data.status) {
         case "configured":
             // job is ready. Do not check again, just show the start-box. Hide the rest.
-            $('.statusbox').hide();
-            $('.status_configured').show();
+            if (!job.configuration['auto-start']) {
+                $('.statusbox').hide();
+                $('.status_configured').show();
+            }
+            if (job.configuration['auto-start']) {
+                timeOutId = setTimeout(checkJobStatus, interval);
+            }
+            if (pressedStart) {
+                // do a time out just in case. Could be that job is running or is even done already.
+                timeOutId = setTimeout(checkJobStatus, 2000);
+                pressedStart = false;
+            }
             break;
         case "running":
             // job is running! Show the running box:
@@ -94,16 +113,35 @@ function reportOnJobImport(data) {
                 showStalledBox();
             } else {
                 // check again in 500ms
-                timeOutId = setTimeout(checkImportStatus, interval);
+                timeOutId = setTimeout(checkJobStatus, interval);
             }
             break;
         case "finished":
             $('.statusbox').hide();
             $('.status_finished').show();
+            // report on detected errors:
+            reportOnErrors(data);
             // show text:
             $('#import-status-more-info').html(data.finishedText);
             break;
+        case "error":
+            // hide all possible boxes:
+            $('.statusbox').hide();
+
+            // fill in some details:
+            var errorMessage = data.errors.join(", ");
+
+            $('.fatal_error_txt').text(errorMessage);
+
+            // show the fatal error box:
+            $('.fatal_error').show();
+            break;
+        case "configuring":
+            // redirect back to configure screen.
+            window.location = jobConfigureUri;
+            break;
         default:
+            console.error('Cannot handle job status ' + data.status);
             break;
 
     }
@@ -140,17 +178,24 @@ function jobIsStalled(data) {
 
 /**
  * This function tells Firefly start the job. It will also initialize a re-check in 500ms time.
+ * Only when job is in "configured" state.
  */
 function startJob() {
-    // disable the button, add loading thing.
-    $('.start-job').prop('disabled', true).text('...');
-    $.post(jobStartUrl).fail(reportOnSubmitError);
+    if (job.status === "configured") {
+        // disable the button, add loading thing.
+        $('.start-job').prop('disabled', true).text('...');
+        $.post(jobStartUri, {_token: token}).fail(reportOnSubmitError);
 
-    // check status, every 500 ms.
-    timeOutId = setTimeout(checkImportStatus, startInterval);
+        // check status, every 500 ms.
+        timeOutId = setTimeout(checkJobStatus, startInterval);
+        return;
+    }
 }
 
-function reportOnSubmitError() {
+/**
+ * When the start button fails (returns error code) this function reports. It assumes a time out.
+ */
+function reportOnSubmitError(jqxhr, textStatus, error) {
     // stop the refresh thing
     clearTimeout(timeOutId);
 
@@ -158,7 +203,7 @@ function reportOnSubmitError() {
     $('.statusbox').hide();
 
     // fill in some details:
-    var errorMessage = "Time out while waiting for job to finish.";
+    var errorMessage = "Submitting the job returned an error: " + textStatus + ' ' + error;
 
     $('.fatal_error_txt').text(errorMessage);
 

@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: triggerCount, actionCount */
@@ -296,7 +296,7 @@ function updateTriggerInput(selectList) {
 function createAutoComplete(input, URI) {
     input.typeahead('destroy');
     $.getJSON(URI).done(function (data) {
-        input.typeahead({source: data});
+        input.typeahead({source: data, autoSelect: false});
     });
 
 }

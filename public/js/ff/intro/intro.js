@@ -15,11 +15,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** global: routeForTour, token, routeStepsUri, routeForFinishedTour, forceDemoOff */
-
+/** global: nextLabel, prevLabel,skipLabel,doneLabel routeForTour, token, routeStepsUri, routeForFinishedTour, forceDemoOff */
 $(function () {
     "use strict";
     if (!forceDemoOff) {
@@ -31,6 +30,10 @@ function setupIntro(steps) {
 
     var intro = introJs();
     intro.setOptions({
+                         nextLabel: nextLabel,
+                         prevLabel: prevLabel,
+                         skipLabel: skipLabel,
+                         doneLabel: doneLabel,
                          steps: steps,
                          exitOnEsc: true,
                          exitOnOverlayClick: true,

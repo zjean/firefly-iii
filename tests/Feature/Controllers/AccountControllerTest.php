@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
+use FireflyIII\Models\Note;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Models\TransactionJournal;
@@ -114,12 +115,18 @@ class AccountControllerTest extends TestCase
      */
     public function testEdit()
     {
+        $note = new Note();
+        $note->text = 'This is a test';
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $repository   = $this->mock(CurrencyRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $repository->shouldReceive('get')->andReturn(new Collection);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $repository->shouldReceive('find')->once()->andReturn(new TransactionCurrency());
+        $accountRepos->shouldReceive('getNote')->andReturn($note)->once();
+        $accountRepos->shouldReceive('getOpeningBalanceAmount')->andReturnNull();
+        $accountRepos->shouldReceive('getOpeningBalanceDate')->andReturnNull();
 
         $this->be($this->user());
         $account  = $this->user()->accounts()->where('account_type_id', 3)->whereNull('deleted_at')->first();
@@ -127,6 +134,7 @@ class AccountControllerTest extends TestCase
         $response->assertStatus(200);
         // has bread crumb
         $response->assertSee('<ol class="breadcrumb">');
+        $response->assertSee($note->text);
     }
 
     /**
@@ -198,40 +206,6 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\AccountController::show
-     * @dataProvider dateRangeProvider
-     *
-     * @param string $range
-     */
-    public function testShowAll(string $range)
-    {
-        // mock stuff
-        $transaction  = factory(Transaction::class)->make();
-        $collector    = $this->mock(JournalCollectorInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
-        $collector->shouldReceive('setAccounts')->andReturnSelf();
-        $collector->shouldReceive('setRange')->andReturnSelf();
-        $collector->shouldReceive('setLimit')->andReturnSelf();
-        $collector->shouldReceive('setPage')->andReturnSelf();
-
-        $collector->shouldReceive('setTypes')->andReturnSelf();
-
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([$transaction], 0, 10));
-
-        $tasker = $this->mock(AccountTaskerInterface::class);
-        $tasker->shouldReceive('amountOutInPeriod')->withAnyArgs()->andReturn('-1');
-        $tasker->shouldReceive('amountInInPeriod')->withAnyArgs()->andReturn('1');
-
-        $this->be($this->user());
-        $this->changeDateRange($this->user(), $range);
-        $response = $this->get(route('accounts.show', [1, 'all']));
-        $response->assertStatus(200);
-        // has bread crumb
-        $response->assertSee('<ol class="breadcrumb">');
-    }
-
-    /**
      * @covers                   \FireflyIII\Http\Controllers\AccountController::show
      * @covers                   \FireflyIII\Http\Controllers\AccountController::redirectToOriginalAccount
      * @expectedExceptionMessage Expected a transaction
@@ -250,39 +224,6 @@ class AccountControllerTest extends TestCase
         $response->assertStatus(500);
     }
 
-    /**
-     * @covers       \FireflyIII\Http\Controllers\AccountController::show
-     * @dataProvider dateRangeProvider
-     *
-     * @param string $range
-     */
-    public function testShowByDate(string $range)
-    {
-        // mock stuff
-        $transaction  = factory(Transaction::class)->make();
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
-        $collector = $this->mock(JournalCollectorInterface::class);
-        $collector->shouldReceive('setAccounts')->andReturnSelf();
-        $collector->shouldReceive('setRange')->andReturnSelf();
-        $collector->shouldReceive('setLimit')->andReturnSelf();
-        $collector->shouldReceive('setPage')->andReturnSelf();
-
-        $collector->shouldReceive('setTypes')->andReturnSelf();
-        $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection([$transaction]));
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([$transaction], 0, 10));
-
-        $repository = $this->mock(AccountRepositoryInterface::class);
-        $repository->shouldReceive('oldestJournalDate')->andReturn(new Carbon)->once();
-
-        $this->be($this->user());
-        $this->changeDateRange($this->user(), $range);
-        $response = $this->get(route('accounts.show', [1, '2016-01-01']));
-        $response->assertStatus(200);
-        // has bread crumb
-        $response->assertSee('<ol class="breadcrumb">');
-    }
 
     /**
      * @covers       \FireflyIII\Http\Controllers\AccountController::show

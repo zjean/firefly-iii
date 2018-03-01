@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -43,17 +43,16 @@ class AssetAccounts implements MapperInterface
 
         /** @var Account $account */
         foreach ($set as $account) {
-            $name = $account->name;
-            $iban = $account->iban ?? '';
+            $accountId = intval($account->id);
+            $name      = $account->name;
+            $iban      = $account->iban ?? '';
             if (strlen($iban) > 0) {
-                $name .= ' (' . $account->iban . ')';
+                $name .= ' (' . $iban . ')';
             }
-            $list[$account->id] = $name;
+            $list[$accountId] = $name;
         }
-
         asort($list);
-
-        $list = [0 => trans('csv.map_do_not_map')] + $list;
+        $list = [0 => trans('import.map_do_not_map')] + $list;
 
         return $list;
     }

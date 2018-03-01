@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -34,6 +34,11 @@ class TagsSpace implements PreProcessorInterface
      */
     public function run(string $value): array
     {
-        return explode(' ', $value);
+        $set    = explode(' ', $value);
+        $set    = array_map('trim', $set);
+        $set    = array_filter($set, 'strlen');
+        $return = array_values($set);
+
+        return $return;
     }
 }

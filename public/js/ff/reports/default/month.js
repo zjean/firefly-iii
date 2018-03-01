@@ -15,24 +15,17 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: categoryReportUri, budgetReportUri, balanceReportUri, accountChartUri */
 
 $(function () {
     "use strict";
-    drawChart();
+    lineChart(accountChartUri, 'account-balances-chart');
 
     loadAjaxPartial('categoryReport', categoryReportUri);
     loadAjaxPartial('budgetReport', budgetReportUri);
     loadAjaxPartial('balanceReport', balanceReportUri);
 });
 
-function drawChart() {
-    "use strict";
-
-    // month view:
-    // draw account chart
-    lineChart(accountChartUri, 'account-balances-chart');
-}

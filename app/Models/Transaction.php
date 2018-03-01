@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Watson\Validating\ValidatingTrait;
 
 /**
@@ -66,6 +67,7 @@ use Watson\Validating\ValidatingTrait;
  * @property string $transaction_currency_symbol
  * @property int    $transaction_currency_dp
  * @property string $transaction_currency_code
+ * @property string $description
  */
 class Transaction extends Model
 {
@@ -75,7 +77,7 @@ class Transaction extends Model
      * @var array
      */
     protected $casts
-                      = [
+        = [
             'created_at'          => 'datetime',
             'updated_at'          => 'datetime',
             'deleted_at'          => 'datetime',
@@ -84,12 +86,21 @@ class Transaction extends Model
             'bill_name_encrypted' => 'boolean',
             'reconciled'          => 'boolean',
         ];
+    /**
+     * @var array
+     */
     protected $fillable
-                      = ['account_id', 'transaction_journal_id', 'description', 'amount', 'identifier', 'transaction_currency_id', 'foreign_currency_id',
-                         'foreign_amount',];
+        = ['account_id', 'transaction_journal_id', 'description', 'amount', 'identifier', 'transaction_currency_id', 'foreign_currency_id',
+           'foreign_amount','reconciled'];
+    /**
+     * @var array
+     */
     protected $hidden = ['encrypted'];
+    /**
+     * @var array
+     */
     protected $rules
-                      = [
+        = [
             'account_id'              => 'required|exists:accounts,id',
             'transaction_journal_id'  => 'required|exists:transaction_journals,id',
             'transaction_currency_id' => 'required|exists:transaction_currencies,id',
@@ -98,6 +109,8 @@ class Transaction extends Model
         ];
 
     /**
+     * @codeCoverageIgnore
+     *
      * @param Builder $query
      * @param string  $table
      *
@@ -118,9 +131,29 @@ class Transaction extends Model
         return false;
     }
 
+    /**
+     * @param string $value
+     *
+     * @return Transaction
+     */
+    public static function routeBinder(string $value): Transaction
+    {
+        if (auth()->check()) {
+            $transactionId = intval($value);
+            $transaction   = auth()->user()->transactions()->where('transactions.id', $transactionId)
+                                   ->first(['transactions.*']);
+            if (!is_null($transaction)) {
+                return $transaction;
+            }
+        }
+
+        throw new NotFoundHttpException;
+    }
+
     use SoftDeletes, ValidatingTrait;
 
     /**
+     * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function account()
@@ -129,6 +162,7 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function budgets()
@@ -137,6 +171,7 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function categories()
@@ -145,6 +180,7 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function foreignCurrency()
@@ -153,6 +189,8 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
+     *
      * @param $value
      *
      * @return float|int
@@ -163,6 +201,8 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
+     *
      * @param Builder $query
      * @param Carbon  $date
      */
@@ -175,6 +215,8 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
+     *
      * @param Builder $query
      * @param Carbon  $date
      */
@@ -187,6 +229,8 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
+     *
      * @param Builder $query
      * @param array   $types
      */
@@ -203,14 +247,17 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
+     *
      * @param $value
      */
     public function setAmountAttribute($value)
     {
-        $this->attributes['amount'] = strval(round($value, 12));
+        $this->attributes['amount'] = strval($value);
     }
 
     /**
+     * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function transactionCurrency()
@@ -219,6 +266,7 @@ class Transaction extends Model
     }
 
     /**
+     * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function transactionJournal()

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -109,9 +109,9 @@ trait FindAccountsTrait
      * @param string $name
      * @param array  $types
      *
-     * @return Account
+     * @return Account|null
      */
-    public function findByName(string $name, array $types): Account
+    public function findByName(string $name, array $types): ?Account
     {
         $query = $this->user->accounts();
 
@@ -132,7 +132,7 @@ trait FindAccountsTrait
         }
         Log::debug(sprintf('There is no account with name "%s" or types', $name), $types);
 
-        return new Account;
+        return null;
     }
 
     /**
@@ -211,6 +211,8 @@ trait FindAccountsTrait
 
     /**
      * @return Account
+     *
+     * @throws FireflyException
      */
     public function getCashAccount(): Account
     {
@@ -250,7 +252,7 @@ trait FindAccountsTrait
             'accountType'    => 'reconcile',
             'name'           => $name,
             'iban'           => null,
-            'virtualBalance' => null,
+            'virtualBalance' => '0',
             'active'         => true,
         ];
         $account = $this->storeAccount($data);

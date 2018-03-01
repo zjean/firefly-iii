@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -54,14 +54,14 @@ class Steam
         $currencyId = intval($account->getMeta('currency_id'));
         // use system default currency:
         if (0 === $currencyId) {
-            $currency   = app('amount')->getDefaultCurrency();
+            $currency   = app('amount')->getDefaultCurrencyByUser($account->user);
             $currencyId = $currency->id;
         }
         // first part: get all balances in own currency:
         $nativeBalance = strval(
             $account->transactions()
                     ->leftJoin('transaction_journals', 'transaction_journals.id', '=', 'transactions.transaction_journal_id')
-                    ->where('transaction_journals.date', '<=', $date->format('Y-m-d'))
+                    ->where('transaction_journals.date', '<=', $date->format('Y-m-d 23:59:59'))
                     ->where('transactions.transaction_currency_id', $currencyId)
                     ->sum('transactions.amount')
         );
@@ -72,6 +72,7 @@ class Steam
                     ->leftJoin('transaction_journals', 'transaction_journals.id', '=', 'transactions.transaction_journal_id')
                     ->where('transaction_journals.date', '<=', $date->format('Y-m-d'))
                     ->where('transactions.foreign_currency_id', $currencyId)
+                    ->where('transactions.transaction_currency_id', '!=', $currencyId)
                     ->sum('transactions.foreign_amount')
         );
         $balance        = bcadd($nativeBalance, $foreignBalance);
@@ -114,6 +115,7 @@ class Steam
                     ->leftJoin('transaction_journals', 'transaction_journals.id', '=', 'transactions.transaction_journal_id')
                     ->where('transaction_journals.date', '<=', $date->format('Y-m-d'))
                     ->where('transactions.foreign_currency_id', $currencyId)
+                    ->where('transactions.transaction_currency_id', '!=', $currencyId)
                     ->sum('transactions.foreign_amount')
         );
         $balance        = bcadd($nativeBalance, $foreignBalance);
@@ -148,9 +150,10 @@ class Steam
 
         $start->subDay();
         $end->addDay();
-        $balances             = [];
-        $formatted            = $start->format('Y-m-d');
-        $startBalance         = $this->balance($account, $start);
+        $balances     = [];
+        $formatted    = $start->format('Y-m-d');
+        $startBalance = $this->balance($account, $start);
+
         $balances[$formatted] = $startBalance;
         $currencyId           = intval($account->getMeta('currency_id'));
         $start->addDay();
@@ -158,8 +161,8 @@ class Steam
         // query!
         $set = $account->transactions()
                        ->leftJoin('transaction_journals', 'transactions.transaction_journal_id', '=', 'transaction_journals.id')
-                       ->where('transaction_journals.date', '>=', $start->format('Y-m-d'))
-                       ->where('transaction_journals.date', '<=', $end->format('Y-m-d'))
+                       ->where('transaction_journals.date', '>=', $start->format('Y-m-d 00:00:00'))
+                       ->where('transaction_journals.date', '<=', $end->format('Y-m-d  23:59:59'))
                        ->groupBy('transaction_journals.date')
                        ->groupBy('transactions.transaction_currency_id')
                        ->groupBy('transactions.foreign_currency_id')
@@ -182,11 +185,11 @@ class Steam
             $modified        = null === $entry->modified ? '0' : strval($entry->modified);
             $foreignModified = null === $entry->modified_foreign ? '0' : strval($entry->modified_foreign);
             $amount          = '0';
-            if ($currencyId === $entry->transaction_currency_id || 0 === $currencyId) {
+            if ($currencyId === intval($entry->transaction_currency_id) || 0 === $currencyId) {
                 // use normal amount:
                 $amount = $modified;
             }
-            if ($currencyId === $entry->foreign_currency_id) {
+            if ($currencyId === intval($entry->foreign_currency_id)) {
                 // use foreign amount:
                 $amount = $foreignModified;
             }

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -110,6 +110,7 @@ class BillControllerTest extends TestCase
     /**
      * @covers \FireflyIII\Http\Controllers\BillController::index
      * @covers \FireflyIII\Http\Controllers\BillController::__construct
+     * @covers \FireflyIII\Http\Controllers\BillController::lastPaidDate
      */
     public function testIndex()
     {
@@ -117,11 +118,13 @@ class BillControllerTest extends TestCase
         $bill         = factory(Bill::class)->make();
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $repository   = $this->mock(BillRepositoryInterface::class);
-        $repository->shouldReceive('getBills')->andReturn(new Collection([$bill]));
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
-        $repository->shouldReceive('getPaidDatesInRange')->once()->andReturn(new Collection([1, 2, 3]));
-        $repository->shouldReceive('getPayDatesInRange')->once()->andReturn(new Collection([1, 2]));
-        $repository->shouldReceive('nextExpectedMatch')->andReturn(new Carbon);
+        $collection = new Collection([$bill]);
+        $repository->shouldReceive('getPaginator')->andReturn(new LengthAwarePaginator($collection, 1, 50))->once();
+        $repository->shouldReceive('setUser');
+        $repository->shouldReceive('getPaidDatesInRange')->twice()->andReturn(new Collection([new Carbon, new Carbon, new Carbon]));
+
+
 
         $this->be($this->user());
         $response = $this->get(route('bills.index'));
@@ -185,6 +188,8 @@ class BillControllerTest extends TestCase
         $collector->shouldReceive('withBudgetInformation')->andReturnSelf();
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10));
+        $repository->shouldReceive('getPaidDatesInRange')->twice()->andReturn(new Collection([new Carbon, new Carbon, new Carbon]));
+        $repository->shouldReceive('setUser');
 
         $this->be($this->user());
         $response = $this->get(route('bills.show', [1]));

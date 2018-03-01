@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * list.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'buttons'                 => 'Botões',
@@ -17,7 +26,7 @@ return [
     'id'                      => 'ID',
     'create_date'             => 'Criado em',
     'update_date'             => 'Atualizado em',
-    'updated_at'              => 'Updated at',
+    'updated_at'              => 'Atualizado em',
     'balance_before'          => 'Saldo Antes',
     'balance_after'           => 'Saldo depois',
     'name'                    => 'Nome',
@@ -25,7 +34,7 @@ return [
     'currentBalance'          => 'Saldo atual',
     'active'                  => 'Está ativo?',
     'lastActivity'            => 'Última atividade',
-    'balanceDiff'             => 'Saldo diferente entre :start e :end',
+    'balanceDiff'             => 'Diferença de saldo',
     'matchesOn'               => 'Correspondido em',
     'account_type'            => 'Tipo de conta',
     'created_at'              => 'Criado em',
@@ -35,7 +44,7 @@ return [
     'destination'             => 'Destino',
     'source'                  => 'Fonte',
     'next_expected_match'     => 'Próximo correspondente esperado',
-    'automatch'               => 'Auto match?',
+    'automatch'               => 'Correspondência automática?',
     'repeat_freq'             => 'Repetições',
     'description'             => 'Descrição',
     'amount'                  => 'Total',
@@ -71,7 +80,7 @@ return [
     'source_account'          => 'Conta de origem',
     'destination_account'     => 'Conta de destino',
     'accounts_count'          => 'Número de Contas',
-    'journals_count'          => 'Number of transactions',
+    'journals_count'          => 'Número de transações',
     'attachments_count'       => 'Número de anexos',
     'bills_count'             => 'Número de contas',
     'categories_count'        => 'Número de categorias',
@@ -80,14 +89,17 @@ return [
     'budget_count'            => 'Número de orçamentos',
     'rule_and_groups_count'   => 'Número de regras e grupos de regras',
     'tags_count'              => 'Número de tags',
-    'inward'                  => 'Inward description',
-    'outward'                 => 'Outward description',
-    'number_of_transactions'  => 'Number of transactions',
-    'total_amount'            => 'Total amount',
-    'sum'                     => 'Sum',
-    'sum_excluding_transfers' => 'Sum (excluding transfers)',
-    'sum_withdrawals'         => 'Sum of withdrawals',
-    'sum_deposits'            => 'Sum of deposits',
-    'sum_transfers'           => 'Sum of transfers',
-    'reconcile'               => 'Reconcile',
+    'tags'                    => 'Indexadores',
+    'inward'                  => 'Descrição interna',
+    'outward'                 => 'Descrição externa',
+    'number_of_transactions'  => 'Número de transações',
+    'total_amount'            => 'Valor total',
+    'sum'                     => 'Soma',
+    'sum_excluding_transfers' => 'Soma (excluindo transferências)',
+    'sum_withdrawals'         => 'Soma de retiradas',
+    'sum_deposits'            => 'Soma dos depósitos',
+    'sum_transfers'           => 'Soma das transferências',
+    'reconcile'               => 'Pago',
+    'account_on_spectre'      => 'Conta (Spectre)',
+    'do_import'               => 'Importar desta conta',
 ];

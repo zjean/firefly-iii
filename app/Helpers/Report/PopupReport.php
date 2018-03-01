@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -136,7 +136,7 @@ class PopupReport implements PopupReportInterface
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
         $collector->setAccounts($attributes['accounts'])->setTypes([TransactionType::WITHDRAWAL, TransactionType::TRANSFER])
-                  ->setRange($attributes['startDate'], $attributes['endDate'])
+                  ->setRange($attributes['startDate'], $attributes['endDate'])->withOpposingAccount()
                   ->setCategory($category);
         $journals = $collector->getJournals();
 

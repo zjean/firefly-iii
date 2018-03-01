@@ -16,27 +16,24 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
-
-/**
- * Handler.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
- *
- * See the LICENSE file for details.
- */
 
 namespace FireflyIII\Exceptions;
 
 use ErrorException;
 use Exception;
 use FireflyIII\Jobs\MailError;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Validation\ValidationException;
 use Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * Class Handler
+ */
 class Handler extends ExceptionHandler
 {
     /**
@@ -68,6 +65,35 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if ($exception instanceof ValidationException && $request->expectsJson()) {
+            // ignore it: controller will handle it.
+            return parent::render($request, $exception);
+        }
+        if ($exception instanceof NotFoundHttpException && $request->expectsJson()) {
+            return response()->json(['message' => 'Resource not found', 'exception' => 'NotFoundHttpException'], 404);
+        }
+
+        if ($exception instanceof AuthenticationException && $request->expectsJson()) {
+            return response()->json(['message' => 'Unauthenticated', 'exception' => 'AuthenticationException'], 401);
+        }
+
+        if ($request->expectsJson()) {
+            $isDebug = env('APP_DEBUG', false);
+            if ($isDebug) {
+                return response()->json(
+                    [
+                        'message'   => $exception->getMessage(),
+                        'exception' => get_class($exception),
+                        'line'      => $exception->getLine(),
+                        'file'      => $exception->getFile(),
+                        'trace'     => $exception->getTrace(),
+                    ], 500
+                );
+            }
+
+            return response()->json(['message' => 'Internal Firefly III Exception. See log files.', 'exception' => get_class($exception)], 500);
+        }
+
         if ($exception instanceof FireflyException || $exception instanceof ErrorException) {
             $isDebug = env('APP_DEBUG', false);
 
@@ -87,6 +113,8 @@ class Handler extends ExceptionHandler
      * @param \Exception $exception
      *
      * @return mixed|void
+     *
+     * @throws Exception
      */
     public function report(Exception $exception)
     {

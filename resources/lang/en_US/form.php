@@ -1,18 +1,26 @@
 <?php
-declare(strict_types=1);
-
 /**
  * form.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
-
     // new user:
     'bank_name'                      => 'Bank name',
     'bank_balance'                   => 'Balance',
@@ -70,6 +78,7 @@ return [
     'new_email_address'              => 'New email address',
     'verification'                   => 'Verification',
     'api_key'                        => 'API key',
+    'remember_me'                    => 'Remember me',
 
     'source_account_asset'        => 'Source account (asset account)',
     'destination_account_expense' => 'Destination account (expense account)',
@@ -79,7 +88,6 @@ return [
     'convert_Withdrawal'          => 'Convert withdrawal',
     'convert_Deposit'             => 'Convert deposit',
     'convert_Transfer'            => 'Convert transfer',
-
 
     'amount'                     => 'Amount',
     'date'                       => 'Date',
@@ -150,7 +158,7 @@ return [
     'tag_areYouSure'             => 'Are you sure you want to delete the tag ":tag"?',
     'journal_link_areYouSure'    => 'Are you sure you want to delete the link between <a href=":source_link">:source</a> and <a href=":destination_link">:destination</a>?',
     'linkType_areYouSure'        => 'Are you sure you want to delete the link type ":name" (":inward" / ":outward")?',
-    'permDeleteWarning'          => 'Deleting stuff from Firely is permanent and cannot be undone.',
+    'permDeleteWarning'          => 'Deleting stuff from Firefly III is permanent and cannot be undone.',
     'mass_make_selection'        => 'You can still prevent items from being deleted by removing the checkbox.',
     'delete_all_permanently'     => 'Delete selected permanently',
     'update_all_journals'        => 'Update these transactions',
@@ -162,6 +170,7 @@ return [
     'budget_keep_transactions'   => 'The only transaction connected to this budget will not be deleted.|All :count transactions connected to this budget will spared deletion.',
     'category_keep_transactions' => 'The only transaction connected to this category will not be deleted.|All :count transactions connected to this category will spared deletion.',
     'tag_keep_transactions'      => 'The only transaction connected to this tag will not be deleted.|All :count transactions connected to this tag will spared deletion.',
+    'check_for_updates'          => 'Check for updates',
 
     'email'                 => 'Email address',
     'password'              => 'Password',
@@ -169,12 +178,10 @@ return [
     'blocked'               => 'Is blocked?',
     'blocked_code'          => 'Reason for block',
 
-
     // admin
     'domain'                => 'Domain',
     'single_user_mode'      => 'Disable user registration',
     'is_demo_site'          => 'Is demo site',
-
 
     // import
     'import_file'           => 'Import file',
@@ -186,7 +193,12 @@ return [
     'csv_delimiter'         => 'CSV field delimiter',
     'csv_import_account'    => 'Default import account',
     'csv_config'            => 'CSV import configuration',
-
+    'client_id'             => 'Client ID',
+    'service_secret'        => 'Service secret',
+    'app_secret'            => 'App secret',
+    'public_key'            => 'Public key',
+    'country_code'          => 'Country code',
+    'provider_code'         => 'Bank or data-provider',
 
     'due_date'           => 'Due date',
     'payment_date'       => 'Payment date',

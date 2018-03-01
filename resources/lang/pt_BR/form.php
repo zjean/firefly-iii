@@ -1,18 +1,26 @@
 <?php
-declare(strict_types=1);
-
 /**
  * form.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
-
     // new user:
     'bank_name'                      => 'Nome do banco',
     'bank_balance'                   => 'Saldo',
@@ -33,7 +41,7 @@ return [
     'journal_source_account_name'    => 'Conta de receita (fonte)',
     'journal_source_account_id'      => 'Conta de ativo (fonte)',
     'BIC'                            => 'BIC',
-    'verify_password'                => 'Verify password security',
+    'verify_password'                => 'Verificação da segurança da senha',
     'source_account'                 => 'Conta de origem',
     'destination_account'            => 'Conta de destino',
     'journal_destination_account_id' => 'Conta de ativo (destino)',
@@ -48,7 +56,7 @@ return [
     'budget_id'                      => 'Orçamento',
     'openingBalance'                 => 'Saldo inicial',
     'tagMode'                        => 'Modo de tag',
-    'tag_position'                   => 'Tag location',
+    'tag_position'                   => 'Localização do indexador',
     'virtualBalance'                 => 'Saldo virtual',
     'targetamount'                   => 'Valor alvo',
     'accountRole'                    => 'Tipo de conta',
@@ -64,12 +72,13 @@ return [
     'revenue_account'                => 'Conta de Receita',
     'decimal_places'                 => 'Casas décimais',
     'exchange_rate_instruction'      => 'Moedas estrangeiras',
-    'source_amount'                  => 'Amount (source)',
-    'destination_amount'             => 'Amount (destination)',
-    'native_amount'                  => 'Native amount',
-    'new_email_address'              => 'New email address',
-    'verification'                   => 'Verification',
-    'api_key'                        => 'API key',
+    'source_amount'                  => 'Quantidade (fonte)',
+    'destination_amount'             => 'Quantidade (destino)',
+    'native_amount'                  => 'Montante original',
+    'new_email_address'              => 'Novo endereço de e-mail',
+    'verification'                   => 'Verificação',
+    'api_key'                        => 'Chave da API',
+    'remember_me'                    => 'Lembrar-me',
 
     'source_account_asset'        => 'Conta de origem (conta de ativo)',
     'destination_account_expense' => 'Conta de destino (conta de despesa)',
@@ -79,7 +88,6 @@ return [
     'convert_Withdrawal'          => 'Converter a retirada',
     'convert_Deposit'             => 'Converter o depósito',
     'convert_Transfer'            => 'Converter a transferência',
-
 
     'amount'                     => 'Valor',
     'date'                       => 'Data',
@@ -91,14 +99,14 @@ return [
     'deletePermanently'          => 'Apagar permanentemente',
     'cancel'                     => 'Cancelar',
     'targetdate'                 => 'Data Alvo',
-    'startdate'                  => 'Start date',
+    'startdate'                  => 'Data de Início',
     'tag'                        => 'Etiqueta',
     'under'                      => 'Debaixo',
     'symbol'                     => 'Símbolo',
     'code'                       => 'Código',
     'iban'                       => 'IBAN',
     'accountNumber'              => 'Número de conta',
-    'creditCardNumber'           => 'Credit card number',
+    'creditCardNumber'           => 'Número do cartão de crédito',
     'has_headers'                => 'Cabeçalhos',
     'date_format'                => 'Formato da Data',
     'specifix'                   => 'Banco- ou arquivo específico corrigídos',
@@ -128,14 +136,14 @@ return [
     'delete_bill'                => 'Apagar fatura ":name"',
     'delete_budget'              => 'Excluir o orçamento ":name"',
     'delete_category'            => 'Excluir categoria ":name"',
-    'delete_currency'            => 'Excluir moeda ":moeda"',
+    'delete_currency'            => 'Excluir moeda ":name"',
     'delete_journal'             => 'Excluir a transação com a descrição ":description"',
     'delete_attachment'          => 'Apagar anexo ":name"',
     'delete_rule'                => 'Excluir regra ":title"',
     'delete_rule_group'          => 'Exclua o grupo de regras ":title"',
-    'delete_link_type'           => 'Delete link type ":name"',
-    'delete_user'                => 'Delete user ":email"',
-    'user_areYouSure'            => 'If you delete user ":email", everything will be gone. There is no undo, undelete or anything. If you delete yourself, you will lose access to this instance of Firefly III.',
+    'delete_link_type'           => 'Excluir tipo de link ":name"',
+    'delete_user'                => 'Excluir o usuário ":email"',
+    'user_areYouSure'            => 'Se você excluir o usuário ":email", tudo desaparecerá. Não será possível desfazer a ação. Se excluir você mesmo, você perderá acesso total a essa instância do Firefly III.',
     'attachment_areYouSure'      => 'Tem certeza que deseja excluir o anexo denominado ":name"?',
     'account_areYouSure'         => 'Tem certeza que deseja excluir a conta denominada ":name"?',
     'bill_areYouSure'            => 'Você tem certeza que quer apagar a fatura ":name"?',
@@ -148,33 +156,32 @@ return [
     'journal_areYouSure'         => 'Tem certeza que deseja excluir a transação descrita ":description"?',
     'mass_journal_are_you_sure'  => 'Tem a certeza que pretende apagar estas transações?',
     'tag_areYouSure'             => 'Você tem certeza que quer apagar a tag ":tag"?',
-    'journal_link_areYouSure'    => 'Are you sure you want to delete the link between <a href=":source_link">:source</a> and <a href=":destination_link">:destination</a>?',
-    'linkType_areYouSure'        => 'Are you sure you want to delete the link type ":name" (":inward" / ":outward")?',
+    'journal_link_areYouSure'    => 'Tem certeza que deseja excluir a ligação entre <a href=":source_link">:source</a> e <a href=":destination_link">:destination</a>?',
+    'linkType_areYouSure'        => 'Tem certeza que deseja excluir o tipo de link ":name" (":inward" / ":outward")?',
     'permDeleteWarning'          => 'Exclusão de dados do Firely são permanentes e não podem ser desfeitos.',
     'mass_make_selection'        => 'Você ainda pode evitar que itens sejam excluídos, removendo a caixa de seleção.',
     'delete_all_permanently'     => 'Exclua os selecionados permanentemente',
     'update_all_journals'        => 'Atualizar essas transações',
     'also_delete_transactions'   => 'A única transação ligada a essa conta será excluída também.|Todas as :count transações ligadas a esta conta serão excluídas também.',
-    'also_delete_connections'    => 'The only transaction linked with this link type will lose this connection.|All :count transactions linked with this link type will lose their connection.',
+    'also_delete_connections'    => 'A única transação relacionada com este tipo de link vai perder a conexão. | Todas as transações de :count ligadas com este tipo de link vão perder sua conexão.',
     'also_delete_rules'          => 'A única regra que ligado a este grupo de regras será excluída também.|Todos as :count regras ligadas a este grupo de regras serão excluídas também.',
     'also_delete_piggyBanks'     => 'O único cofrinho conectado a essa conta será excluído também.|Todos os :count cofrinhos conectados a esta conta serão excluídos também.',
     'bill_keep_transactions'     => 'A única transação a esta conta não será excluída.|Todos as :count transações conectadas a esta fatura não serão excluídos.',
     'budget_keep_transactions'   => 'A única transação conectada a este orçamento não será excluída.|Todos :count transações ligadas a este orçamento não serão excluídos.',
     'category_keep_transactions' => 'A única transação ligada a esta categoria não será excluída.|Todos :count transações ligadas a esta categoria não serão excluídos.',
     'tag_keep_transactions'      => 'A única transação ligada a essa marca não será excluída.|Todos :count transações ligadas a essa marca não serão excluídos.',
+    'check_for_updates'          => 'Buscar atualizações',
 
     'email'                 => 'E-mail',
     'password'              => 'Senha',
     'password_confirmation' => 'Senha(Confirmar)',
     'blocked'               => 'Está bloqueado?',
-    'blocked_code'          => 'Reason for block',
-
+    'blocked_code'          => 'Razão para ser reportado',
 
     // admin
     'domain'                => 'Domínio',
-    'single_user_mode'      => 'Disable user registration',
+    'single_user_mode'      => 'Desabilitar registro de usuários',
     'is_demo_site'          => 'É o site de demonstração',
-
 
     // import
     'import_file'           => 'Importar arquivo',
@@ -186,13 +193,18 @@ return [
     'csv_delimiter'         => 'Delimitador de campo CSV',
     'csv_import_account'    => 'Conta de importação padrão',
     'csv_config'            => 'Importar CSV de configuração',
-
+    'client_id'             => 'Id do Cliente',
+    'service_secret'        => 'Service secret',
+    'app_secret'            => 'App secret',
+    'public_key'            => 'Chave pública',
+    'country_code'          => 'Código do país',
+    'provider_code'         => 'Banco ou provedor de dados',
 
     'due_date'           => 'Data de vencimento',
     'payment_date'       => 'Data de pagamento',
     'invoice_date'       => 'Data da Fatura',
     'internal_reference' => 'Referência interna',
-    'inward'             => 'Inward description',
-    'outward'            => 'Outward description',
-    'rule_group_id'      => 'Rule group',
+    'inward'             => 'Descrição interna',
+    'outward'            => 'Descrição externa',
+    'rule_group_id'      => 'Grupo de regras',
 ];

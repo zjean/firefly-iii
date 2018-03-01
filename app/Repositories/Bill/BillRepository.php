@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -32,6 +32,7 @@ use FireflyIII\Models\TransactionType;
 use FireflyIII\Support\CacheProperties;
 use FireflyIII\User;
 use Illuminate\Database\Query\JoinClause;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Log;
 use Navigation;
@@ -48,6 +49,8 @@ class BillRepository implements BillRepositoryInterface
      * @param Bill $bill
      *
      * @return bool
+     *
+     * @throws \Exception
      */
     public function destroy(Bill $bill): bool
     {
@@ -63,14 +66,12 @@ class BillRepository implements BillRepositoryInterface
      *
      * @return Bill
      */
-    public function find(int $billId): Bill
+    public function find(int $billId): ?Bill
     {
-        $bill = $this->user->bills()->find($billId);
-        if (null === $bill) {
-            $bill = new Bill;
-        }
+        /** @var Bill $res */
+        $res = $this->user->bills()->find($billId);
 
-        return $bill;
+        return $res;
     }
 
     /**
@@ -80,7 +81,7 @@ class BillRepository implements BillRepositoryInterface
      *
      * @return Bill
      */
-    public function findByName(string $name): Bill
+    public function findByName(string $name): ?Bill
     {
         $bills = $this->user->bills()->get(['bills.*']);
 
@@ -91,7 +92,7 @@ class BillRepository implements BillRepositoryInterface
             }
         }
 
-        return new Bill;
+        return null;
     }
 
     /**
@@ -268,6 +269,16 @@ class BillRepository implements BillRepositoryInterface
     }
 
     /**
+     * @param int $size
+     *
+     * @return LengthAwarePaginator
+     */
+    public function getPaginator(int $size): LengthAwarePaginator
+    {
+        return $this->user->bills()->paginate($size);
+    }
+
+    /**
      * The "paid dates" list is a list of dates of transaction journals that are linked to this bill.
      *
      * @param Bill   $bill
@@ -365,8 +376,8 @@ class BillRepository implements BillRepositoryInterface
     public function getYearAverage(Bill $bill, Carbon $date): string
     {
         $journals = $bill->transactionJournals()
-                         ->where('date', '>=', $date->year . '-01-01')
-                         ->where('date', '<=', $date->year . '-12-31')
+                         ->where('date', '>=', $date->year . '-01-01 00:00:00')
+                         ->where('date', '<=', $date->year . '-12-31 00:00:00')
                          ->get();
         $sum      = '0';
         $count    = strval($journals->count());
@@ -390,6 +401,7 @@ class BillRepository implements BillRepositoryInterface
      * @param Carbon $date
      *
      * @return \Carbon\Carbon
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function nextDateMatch(Bill $bill, Carbon $date): Carbon
     {
@@ -521,11 +533,15 @@ class BillRepository implements BillRepositoryInterface
      */
     public function store(array $data): Bill
     {
+        $matchArray = explode(',', $data['match']);
+        $matchArray = array_unique($matchArray);
+        $match      = join(',', $matchArray);
+
         /** @var Bill $bill */
         $bill = Bill::create(
             [
                 'name'        => $data['name'],
-                'match'       => $data['match'],
+                'match'       => $match,
                 'amount_min'  => $data['amount_min'],
                 'user_id'     => $this->user->id,
                 'amount_max'  => $data['amount_max'],
@@ -553,8 +569,12 @@ class BillRepository implements BillRepositoryInterface
      */
     public function update(Bill $bill, array $data): Bill
     {
+        $matchArray = explode(',', $data['match']);
+        $matchArray = array_unique($matchArray);
+        $match      = join(',', $matchArray);
+
         $bill->name        = $data['name'];
-        $bill->match       = $data['match'];
+        $bill->match       = $match;
         $bill->amount_min  = $data['amount_min'];
         $bill->amount_max  = $data['amount_max'];
         $bill->date        = $data['date'];
@@ -610,10 +630,9 @@ class BillRepository implements BillRepositoryInterface
         return $wordMatch;
     }
 
-
     /**
-     * @param Bill $bill
-     * @param string             $note
+     * @param Bill   $bill
+     * @param string $note
      *
      * @return bool
      */

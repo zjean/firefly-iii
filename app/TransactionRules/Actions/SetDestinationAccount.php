@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -59,6 +59,7 @@ class SetDestinationAccount implements ActionInterface
 
     /**
      * Set destination account to X
+     *
      * @param TransactionJournal $journal
      *
      * @return bool
@@ -103,6 +104,7 @@ class SetDestinationAccount implements ActionInterface
         $transaction             = $journal->transactions()->where('amount', '>', 0)->first();
         $transaction->account_id = $this->newDestinationAccount->id;
         $transaction->save();
+        $journal->touch();
         Log::debug(sprintf('Updated transaction #%d and gave it new account ID.', $transaction->id));
 
         return true;
@@ -115,7 +117,7 @@ class SetDestinationAccount implements ActionInterface
     {
         $account = $this->repository->findByName($this->action->action_value, [AccountType::DEFAULT, AccountType::ASSET]);
 
-        if (null === $account->id) {
+        if (null === $account) {
             Log::debug(sprintf('There is NO asset account called "%s".', $this->action->action_value));
 
             return false;
@@ -132,7 +134,7 @@ class SetDestinationAccount implements ActionInterface
     private function findExpenseAccount()
     {
         $account = $this->repository->findByName($this->action->action_value, [AccountType::EXPENSE]);
-        if (null === $account->id) {
+        if (null === $account) {
             // create new revenue account with this name:
             $data    = [
                 'name'           => $this->action->action_value,

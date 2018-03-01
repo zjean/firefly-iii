@@ -1,18 +1,26 @@
 <?php
-declare(strict_types=1);
-
 /**
  * form.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
-
     // new user:
     'bank_name'                      => 'Name der Bank',
     'bank_balance'                   => 'Kontostand',
@@ -70,6 +78,7 @@ return [
     'new_email_address'              => 'Neue E-Mail-Adresse',
     'verification'                   => 'Bestätigung',
     'api_key'                        => 'API-Schlüssel',
+    'remember_me'                    => 'Angemeldet bleiben',
 
     'source_account_asset'        => 'Quellkonto (Bestandskonto)',
     'destination_account_expense' => 'Zielkonto (Unkostenkonto)',
@@ -78,8 +87,7 @@ return [
     'type'                        => 'Type',
     'convert_Withdrawal'          => 'Ändere zu Abhebung',
     'convert_Deposit'             => 'Ändere zu Einzahlung',
-    'convert_Transfer'            => 'Ändere zu Überweisung',
-
+    'convert_Transfer'            => 'In Umbuchung umwandeln',
 
     'amount'                     => 'Betrag',
     'date'                       => 'Datum',
@@ -105,10 +113,10 @@ return [
     'attachments[]'              => 'Anhänge',
     'store_new_withdrawal'       => 'Speichere neue Ausgabe',
     'store_new_deposit'          => 'Speichere neue Einnahme',
-    'store_new_transfer'         => 'Speichere neue Überweisung',
+    'store_new_transfer'         => 'Neue Umbuchung speichern',
     'add_new_withdrawal'         => 'Fügen Sie eine neue Ausgabe hinzu',
     'add_new_deposit'            => 'Fügen Sie eine neue Einnahme hinzu',
-    'add_new_transfer'           => 'Fügen Sie eine neue Überweisung hinzu',
+    'add_new_transfer'           => 'Neue Umbuchung anlegen',
     'title'                      => 'Titel',
     'notes'                      => 'Notizen',
     'filename'                   => 'Dateiname',
@@ -162,6 +170,7 @@ return [
     'budget_keep_transactions'   => 'Die eine Überweisung, die mit diesem Budget verknüpft ist, wird nicht gelöscht. | Keines der :count Budgets, die mit dieser Rechnung verknüpft sind, werden gelöscht.',
     'category_keep_transactions' => 'Die eine Überweisungen, die mit dieser Kategorie verknüpft ist, wird nicht gelöscht. | Keine der :count Kategorien, die mit dieser Rechnung verknüpft sind, werden gelöscht.',
     'tag_keep_transactions'      => 'Die einzige Überweisung, die mit diesem Tag verknüpft ist, wird nicht gelöscht. | Keiner der :count Tags, die mit dieser Rechnung verknüpft sind, werden gelöscht.',
+    'check_for_updates'          => 'Nach Updates suchen',
 
     'email'                 => 'E-Mail Adresse',
     'password'              => 'Passwort',
@@ -169,12 +178,10 @@ return [
     'blocked'               => 'Ist blockiert?',
     'blocked_code'          => 'Grund für Block',
 
-
     // admin
     'domain'                => 'Domain',
     'single_user_mode'      => 'Registrierung deaktivieren',
     'is_demo_site'          => 'Ist eine Demonstrationsseite',
-
 
     // import
     'import_file'           => 'Datei importieren',
@@ -186,7 +193,12 @@ return [
     'csv_delimiter'         => 'CSV-Trennzeichen',
     'csv_import_account'    => 'Standard Import-Konto',
     'csv_config'            => 'CSV-Import Einstellungen',
-
+    'client_id'             => 'Client-ID',
+    'service_secret'        => 'Service secret',
+    'app_secret'            => 'App-Secret',
+    'public_key'            => 'Öffentlicher Schlüssel',
+    'country_code'          => 'Ländercode',
+    'provider_code'         => 'Bank oder Datenanbieter',
 
     'due_date'           => 'Fälligkeitstermin',
     'payment_date'       => 'Zahlungsdatum',

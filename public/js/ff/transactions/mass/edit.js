@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: what */
@@ -26,18 +26,18 @@ $(document).ready(function () {
     // destination account names:
     if ($('input[name^="destination_account_name["]').length > 0) {
         $.getJSON('json/expense-accounts').done(function (data) {
-            $('input[name^="destination_account_name["]').typeahead({source: data});
+            $('input[name^="destination_account_name["]').typeahead({source: data, autoSelect: false});
         });
     }
 
     // source account name
     if ($('input[name^="source_account_name["]').length > 0) {
         $.getJSON('json/revenue-accounts').done(function (data) {
-            $('input[name^="source_account_name["]').typeahead({source: data});
+            $('input[name^="source_account_name["]').typeahead({source: data, autoSelect: false});
         });
     }
 
     $.getJSON('json/categories').done(function (data) {
-        $('input[name^="category["]').typeahead({source: data});
+        $('input[name^="category["]').typeahead({source: data, autoSelect: false});
     });
 });

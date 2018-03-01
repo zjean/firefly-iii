@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -30,7 +30,7 @@ use FireflyIII\Models\PiggyBank;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\PiggyBank\PiggyBankRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Log;
 use Preferences;
 use Response;
@@ -52,8 +52,8 @@ class PiggyBankController extends Controller
 
         $this->middleware(
             function ($request, $next) {
-                View::share('title', trans('firefly.piggyBanks'));
-                View::share('mainTitleIcon', 'fa-sort-amount-asc');
+                app('view')->share('title', trans('firefly.piggyBanks'));
+                app('view')->share('mainTitleIcon', 'fa-sort-amount-asc');
 
                 return $next($request);
             }
@@ -67,12 +67,12 @@ class PiggyBankController extends Controller
      *
      * @return View
      */
-    public function add(PiggyBank $piggyBank)
+    public function add(PiggyBank $piggyBank, PiggyBankRepositoryInterface $repository)
     {
         /** @var Carbon $date */
         $date          = session('end', Carbon::now()->endOfMonth());
         $leftOnAccount = $piggyBank->leftOnAccount($date);
-        $savedSoFar    = $piggyBank->currentRelevantRep()->currentamount ?? '0';
+        $savedSoFar    = $repository->getCurrentAmount($piggyBank);
         $leftToSave    = bcsub($piggyBank->targetamount, $savedSoFar);
         $maxAmount     = min($leftOnAccount, $leftToSave);
 
@@ -86,12 +86,12 @@ class PiggyBankController extends Controller
      *
      * @return View
      */
-    public function addMobile(PiggyBank $piggyBank)
+    public function addMobile(PiggyBank $piggyBank, PiggyBankRepositoryInterface $repository)
     {
         /** @var Carbon $date */
         $date          = session('end', Carbon::now()->endOfMonth());
         $leftOnAccount = $piggyBank->leftOnAccount($date);
-        $savedSoFar    = $piggyBank->currentRelevantRep()->currentamount ?? '0';
+        $savedSoFar    = $repository->getCurrentAmount($piggyBank);
         $leftToSave    = bcsub($piggyBank->targetamount, $savedSoFar);
         $maxAmount     = min($leftOnAccount, $leftToSave);
 
@@ -120,8 +120,6 @@ class PiggyBankController extends Controller
             $this->rememberPreviousUri('piggy-banks.create.uri');
         }
         Session::forget('piggy-banks.create.fromStore');
-        Session::flash('gaEventCategory', 'piggy-banks');
-        Session::flash('gaEventAction', 'create');
 
         return view('piggy-banks.create', compact('accounts', 'subTitle', 'subTitleIcon'));
     }
@@ -137,8 +135,6 @@ class PiggyBankController extends Controller
 
         // put previous url in session
         $this->rememberPreviousUri('piggy-banks.delete.uri');
-        Session::flash('gaEventCategory', 'piggy-banks');
-        Session::flash('gaEventAction', 'delete');
 
         return view('piggy-banks.delete', compact('piggyBank', 'subTitle'));
     }
@@ -188,8 +184,6 @@ class PiggyBankController extends Controller
                       'note'         => null === $note ? '' : $note->text,
         ];
         Session::flash('preFilled', $preFilled);
-        Session::flash('gaEventCategory', 'piggy-banks');
-        Session::flash('gaEventAction', 'edit');
 
         // put previous url in session if not redirect from store (not "return_to_edit").
         if (true !== session('piggy-banks.edit.fromUpdate')) {
@@ -205,18 +199,21 @@ class PiggyBankController extends Controller
      *
      * @return View
      */
-    public function index(PiggyBankRepositoryInterface $piggyRepository)
+    public function index(Request $request, PiggyBankRepositoryInterface $piggyRepository)
     {
-        /** @var Collection $piggyBanks */
-        $piggyBanks = $piggyRepository->getPiggyBanks();
+        $collection = $piggyRepository->getPiggyBanks();
+        $total      = $collection->count();
+        $page       = 0 === intval($request->get('page')) ? 1 : intval($request->get('page'));
+        $pageSize   = intval(Preferences::get('listPageSize', 50)->data);
         /** @var Carbon $end */
         $end = session('end', Carbon::now()->endOfMonth());
 
         $accounts = [];
         Log::debug('Looping piggues');
         /** @var PiggyBank $piggyBank */
-        foreach ($piggyBanks as $piggyBank) {
-            $piggyBank->savedSoFar = $piggyBank->currentRelevantRep()->currentamount ?? '0';
+        foreach ($collection as $piggyBank) {
+
+            $piggyBank->savedSoFar = $piggyRepository->getCurrentAmount($piggyBank);
             $piggyBank->percentage = 0 !== bccomp('0', $piggyBank->savedSoFar) ? intval($piggyBank->savedSoFar / $piggyBank->targetamount * 100) : 0;
             $piggyBank->leftToSave = bcsub($piggyBank->targetamount, strval($piggyBank->savedSoFar));
             $piggyBank->percentage = $piggyBank->percentage > 100 ? 100 : $piggyBank->percentage;
@@ -241,6 +238,11 @@ class PiggyBankController extends Controller
                 $accounts[$account->id]['leftToSave']   = bcadd($accounts[$account->id]['leftToSave'], $piggyBank->leftToSave);
             }
         }
+
+        // paginate piggy banks
+        $collection = $collection->slice(($page - 1) * $pageSize, $pageSize);
+        $piggyBanks = new LengthAwarePaginator($collection, $total, $pageSize, $page);
+        $piggyBanks->setPath(route('piggy-banks.index'));
 
         return view('piggy-banks.index', compact('piggyBanks', 'accounts'));
     }
@@ -382,7 +384,7 @@ class PiggyBankController extends Controller
     {
         $note     = $piggyBank->notes()->first();
         $events   = $repository->getEvents($piggyBank);
-        $subTitle = e($piggyBank->name);
+        $subTitle = $piggyBank->name;
 
         return view('piggy-banks.show', compact('piggyBank', 'events', 'subTitle', 'note'));
     }
@@ -400,7 +402,6 @@ class PiggyBankController extends Controller
             $data['startdate'] = new Carbon;
         }
         $piggyBank = $repository->store($data);
-
 
         Session::flash('success', strval(trans('firefly.stored_piggy_bank', ['name' => $piggyBank->name])));
         Preferences::mark();

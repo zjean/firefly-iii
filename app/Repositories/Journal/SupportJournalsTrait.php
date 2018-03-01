@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -100,6 +100,7 @@ trait SupportJournalsTrait
             $budget = Budget::find($budgetId);
             $journal->budgets()->save($budget);
         }
+        $journal->touch();
     }
 
     /**
@@ -112,6 +113,7 @@ trait SupportJournalsTrait
             $category = Category::firstOrCreateEncrypted(['name' => $category, 'user_id' => $journal->user_id]);
             $journal->categories()->save($category);
         }
+        $journal->touch();
     }
 
     /**
@@ -119,6 +121,9 @@ trait SupportJournalsTrait
      * @param array $data
      *
      * @return array
+     *
+     * @throws FireflyException
+     * @throws FireflyException
      */
     protected function storeDepositAccounts(User $user, array $data): array
     {
@@ -165,6 +170,9 @@ trait SupportJournalsTrait
      * @param array $data
      *
      * @return array
+     *
+     * @throws FireflyException
+     * @throws FireflyException
      */
     protected function storeWithdrawalAccounts(User $user, array $data): array
     {
@@ -241,6 +249,10 @@ trait SupportJournalsTrait
             case TransactionType::WITHDRAWAL:
                 // continue:
                 $nativeCurrencyId = intval($accounts[$check]->getMeta('currency_id'));
+                if ($nativeCurrencyId === 0) {
+                    // fall back to given ID (not everybody upgrades nicely).
+                    $nativeCurrencyId = $submittedCurrencyId;
+                }
 
                 // does not match? Then user has submitted amount in a foreign currency:
                 if ($nativeCurrencyId !== $submittedCurrencyId) {

@@ -16,12 +16,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
 namespace FireflyIII\Repositories\User;
 
+use FireflyIII\Models\Role;
 use FireflyIII\User;
 use Illuminate\Support\Collection;
 
@@ -30,6 +31,7 @@ use Illuminate\Support\Collection;
  */
 interface UserRepositoryInterface
 {
+
     /**
      * Returns a collection of all users.
      *
@@ -85,6 +87,15 @@ interface UserRepositoryInterface
     public function count(): int;
 
     /**
+     * @param string $name
+     * @param string $displayName
+     * @param string $description
+     *
+     * @return Role
+     */
+    public function createRole(string $name, string $displayName, string $description): Role;
+
+    /**
      * @param User $user
      *
      * @return bool
@@ -106,6 +117,20 @@ interface UserRepositoryInterface
     public function findByEmail(string $email): ?User;
 
     /**
+     * Returns the first user in the DB. Generally only works when there is just one.
+     *
+     * @return null|User
+     */
+    public function first(): ?User;
+
+    /**
+     * @param string $role
+     *
+     * @return Role|null
+     */
+    public function getRole(string $role): ?Role;
+
+    /**
      * Return basic user information.
      *
      * @param User $user
@@ -121,6 +146,18 @@ interface UserRepositoryInterface
      * @return bool
      */
     public function hasRole(User $user, string $role): bool;
+
+    /**
+     * @param array $data
+     *
+     * @return User
+     */
+    public function store(array $data): User;
+
+    /**
+     * @param User $user
+     */
+    public function unblockUser(User $user): void;
 
     /**
      * This updates the users email address. Same as changeEmail just without most logging. This makes sure that the undo/confirm routine can't catch this one.

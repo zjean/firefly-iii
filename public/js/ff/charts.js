@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 /** global: Chart, defaultChartOptions, accounting, defaultPieOptions, noDataForChart, todayText */
 var allCharts = {};
@@ -83,12 +83,18 @@ const verticalLinePlugin = {
         // write label
         context.fillStyle = "#444444";
         context.textAlign = 'left';
+        if(pointIndex > 23) {
+            todayText = todayText + ' ';
+            context.textAlign = 'right';
+        }
         context.fillText(todayText, lineLeftOffset, scale.top * 3); // (scale.bottom - scale.top) / 2 + scale.top
     },
 
     afterDatasetsDraw: function (chart, easing) {
         if (chart.config.lineAtIndex) {
-            chart.config.lineAtIndex.forEach(pointIndex => this.renderVerticalLine(chart, pointIndex));
+            chart.config.lineAtIndex.forEach(function(pointIndex) {
+                this.renderVerticalLine(chart, pointIndex);
+            }, this);
         }
     }
 };

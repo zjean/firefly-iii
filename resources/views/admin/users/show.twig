@@ -1,7 +1,7 @@
 {% extends "./layout/default" %}
 
 {% block breadcrumbs %}
-    {{ Breadcrumbs.renderIfExists(Route.getCurrentRoute.getName, user) }}
+    {{ Breadcrumbs.render(Route.getCurrentRoute.getName, user) }}
 {% endblock %}
 {% block content %}
     <div class="row">
@@ -99,13 +99,11 @@
                         </tr>
                         <tr>
                             <td>{{ trans('list.export_jobs_count') }}</td>
-                            <td>{{ information.export_jobs }}, {{ trans('firefly.successful_count', {count: information.export_jobs_success}) }}
-                                <!-- of which x successful --></td>
+                            <td>{{ information.export_jobs }}, {{ trans('firefly.successful_count', {count: information.export_jobs_success}) }}</td>
                         </tr>
                         <tr>
                             <td>{{ trans('list.import_jobs_count') }}</td>
-                            <td>{{ information.import_jobs }}, {{ trans('firefly.successful_count', {count: information.import_jobs_success}) }}
-                                <!-- of which x successful --></td>
+                            <td>{{ information.import_jobs }}, {{ trans('firefly.successful_count', {count: information.import_jobs_success}) }}</td>
                         </tr>
                         <tr>
                             <td>{{ trans('list.budget_count') }}</td>
@@ -115,9 +113,7 @@
                         <tr>
                             <td>{{ trans('list.rule_and_groups_count') }}</td>
                             <td>
-                                {{ information.rules }} {{ 'rule_or_rules'|_ }} {{ 'in'|_ }} {{ information.rule_groups }}
-
-                                {{ 'rulegroup_or_groups'|_ }}
+                                {{ trans('firefly.nr_of_rules_in_total_groups', {count_rules: information.rules, count_groups: information.rule_groups}) }}
                             </td>
                         </tr>
                         <tr>

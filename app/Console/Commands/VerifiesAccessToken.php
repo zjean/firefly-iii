@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -36,7 +36,7 @@ trait VerifiesAccessToken
     /**
      * Abstract method to make sure trait knows about method "option".
      *
-     * @param null $key
+     * @param string|null $key
      *
      * @return mixed
      */
@@ -55,7 +55,7 @@ trait VerifiesAccessToken
         $repository = app(UserRepositoryInterface::class);
         $user       = $repository->find($userId);
 
-        if (null === $user->id) {
+        if (null === $user) {
             Log::error(sprintf('verifyAccessToken(): no such user for input "%d"', $userId));
 
             return false;
@@ -68,6 +68,7 @@ trait VerifiesAccessToken
         }
         if (!($accessToken->data === $token)) {
             Log::error(sprintf('Invalid access token for user #%d.', $userId));
+            Log::error(sprintf('Token given is "%s", expected "%s".', $token, $accessToken->data));
 
             return false;
         }

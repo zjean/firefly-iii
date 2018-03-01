@@ -15,25 +15,19 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: budgetPeriodReportUri, categoryExpenseUri, categoryIncomeUri, netWorthUri, opChartUri, sumChartUri */
 
 $(function () {
     "use strict";
-    drawChart();
+    lineChart(netWorthUri, 'net-worth');
+    columnChart(opChartUri, 'income-expenses-chart');
+    columnChart(sumChartUri, 'income-expenses-sum-chart');
 
     loadAjaxPartial('budgetPeriodReport', budgetPeriodReportUri);
     loadAjaxPartial('categoryExpense', categoryExpenseUri);
     loadAjaxPartial('categoryIncome', categoryIncomeUri);
 });
 
-function drawChart() {
-    "use strict";
-
-    // income and expense over multi year:
-    lineChart(netWorthUri, 'net-worth');
-    columnChart(opChartUri, 'income-expenses-chart');
-    columnChart(sumChartUri, 'income-expenses-sum-chart');
-}

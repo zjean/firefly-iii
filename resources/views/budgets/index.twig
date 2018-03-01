@@ -1,7 +1,7 @@
 {% extends "./layout/default" %}
 
 {% block breadcrumbs %}
-    {{ Breadcrumbs.renderIfExists(Route.getCurrentRoute.getName) }}
+    {{ Breadcrumbs.render(Route.getCurrentRoute.getName) }}
 {% endblock %}
 
 {% block content %}
@@ -17,10 +17,10 @@
                             <small>{{ 'budgeted'|_ }}: <span id="budgetedAmount" class="text-success">{{ budgeted|formatAmountPlain }}</span></small>
                         </div>
                         <div class="col-lg-9 col-md-9 col-sm-9 col-xs-9" style="text-align:right;margin-bottom:3px;">
-                                <small id="availableBar">{{ trans('firefly.available_between',{start : periodStart, end: periodEnd }) }}:
-                                    <span id="available" data-value="{{ available }}">{{ available|formatAmountPlain }}</span>
-                                    <a href="#" class="updateIncome btn btn-default btn-xs"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="infoIncome btn btn-info btn-xs"><i class="fa fa-info-circle"></i></a>
+                            <small id="availableBar">{{ trans('firefly.available_between',{start : periodStart, end: periodEnd }) }}:
+                                <span id="available" data-value="{{ available }}">{{ available|formatAmountPlain }}</span>
+                                <a href="#" class="updateIncome btn btn-default btn-xs"><i class="fa fa-pencil"></i></a>
+                                <a href="#" class="infoIncome btn btn-info btn-xs"><i class="fa fa-info-circle"></i></a>
                             </small>
                         </div>
                     </div>
@@ -83,7 +83,7 @@
             {% endif %}
         </div>
     </div>
-    {% if budgets.count == 0 and inactive.count == 0 %}
+    {% if budgets.count == 0 and inactive.count == 0 and page == 1 %}
         {% include 'partials.empty' with {what: 'default', type: 'budgets',route: route('budgets.create')} %}
         {# make FF ignore demo for now. #}
         {% set shownDemo = true %}
@@ -108,9 +108,9 @@
                         </div>
                         <div class="col-lg-8 col-md-4 col-sm-12 col-xs-12 text-center">
                             <div class="btn btn-group btn-group-lg" style="padding-top:0;">
-                                <a href="{{ route('budgets.index', [prev.format('Y-m-d')]) }}" class="btn btn-default" title="{{ prevText }}">&larr;</a>
-                                <a href="{{ route('budgets.index', [start.format('Y-m-d')]) }}" class="btn btn-default">{{ currentMonth }}</a>
-                                <a href="{{ route('budgets.index', [next.format('Y-m-d')]) }}" class="btn btn-default" title="{{ nextText }}">&rarr;</a>
+                                <a href="{{ route('budgets.index', [prev.format('Y-m-d')]) }}?page={{ page }}" class="btn btn-default" title="{{ prevText }}">&larr;</a>
+                                <a href="{{ route('budgets.index', [start.format('Y-m-d')]) }}?page={{ page }}" class="btn btn-default">{{ currentMonth }}</a>
+                                <a href="{{ route('budgets.index', [next.format('Y-m-d')]) }}?page={{ page }}" class="btn btn-default" title="{{ nextText }}">&rarr;</a>
                             </div>
                         </div>
                         <div class="col-lg-2 col-md-4 col-sm-12 col-xs-12 text-right">
@@ -134,6 +134,12 @@
                     <h3 class="box-title">{{ 'budgets'|_ }}</h3>
                 </div>
                 <div class="box-body no-padding">
+                    <div style="padding:8px;">
+                        <a href="{{ route('budgets.create') }}" class="btn btn-success"><i class="fa fa-plus fa-fw"></i>  {{ 'createBudget'|_ }}</a>
+                    </div>
+                    <div style="padding-left:8px;">
+                        {{ budgets.render|raw }}
+                    </div>
                     <table class="table table-bordered table-striped sortable" id="budgetList">
                         <thead>
                         <tr>
@@ -141,7 +147,7 @@
                             <th data-defaultsign="az">{{ 'budget'|_ }}</th>
                             <th data-defaultsign="_19" style="width:25%;">{{ 'budgeted'|_ }}</th>
                             <th data-defaultsign="_19" class="hidden-sm hidden-xs">{{ 'spent'|_ }}</th>
-                            <th data-defaultsign="_19" class="hidden-sm hidden-xs">{{ 'left'|_ }}</th>
+                            <th data-defaultsign="_19">{{ 'left'|_ }}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -182,7 +188,7 @@
                                 data-value="{{ budgetInformation[budget.id]['spent'] }}">
                                 {{ budgetInformation[budget.id]['spent']|formatAmount }}
                             </td>
-                            <td class="hidden-sm hidden-xs left" data-id="{{ budget.id }}"
+                            <td class="left" data-id="{{ budget.id }}"
                                 data-value="{{ (repAmount + budgetInformation[budget.id]['spent']) }}">
                                 {{ (repAmount + budgetInformation[budget.id]['spent'])|formatAmount }}
                             </td>
@@ -190,6 +196,12 @@
                         {% endfor %}
                         </tbody>
                     </table>
+                    <div style="padding-left:8px;">
+                        {{ budgets.render|raw }}
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <a href="{{ route('budgets.create') }}" class="btn btn-success"><i class="fa fa-plus fa-fw"></i>  {{ 'createBudget'|_ }}</a>
                 </div>
             </div>
         </div>
@@ -225,14 +237,13 @@
     <script type="text/javascript">
         // actually spent bar data:
         var spent = {{ spent * -1 }}; // must be positive for the calculation to work.
-        var currencySymbol = "{{ getCurrencySymbol()|raw }}";
-
+        var page = {{ page }};
         // budgeted data:
         var budgeted = {{ budgeted }};
         var available = {{ available }};
         var budgetIndexUri = "{{ route('budgets.index','REPLACE') }}";
         var budgetAmountUri = "{{ route('budgets.amount','REPLACE') }}";
-        var updateIncomeUri = "{{ route('budgets.income',[start.format('Y-m-d'),end.format('Y-m-d')]) }}";
+        var updateIncomeUri = "{{ route('budgets.income',[start.format('Y-m-d'),end.format('Y-m-d')]) }}?page={{ page }}";
         var infoIncomeUri = "{{ route('budgets.income.info',[start.format('Y-m-d'),end.format('Y-m-d')]) }}";
         var periodStart = "{{ start.format('Y-m-d') }}";
         var periodEnd = "{{ end.format('Y-m-d') }}";

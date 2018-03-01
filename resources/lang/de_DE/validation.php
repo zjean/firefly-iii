@@ -1,15 +1,24 @@
 <?php
-declare(strict_types=1);
-
 /**
  * validation.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
     'iban'                           => 'Dies ist keine gültige IBAN.',
@@ -90,4 +99,38 @@ return [
     'present'                        => 'Das :attribute Feld muss vorhanden sein.',
     'amount_zero'                    => 'Der Gesamtbetrag darf nicht Null sein',
     'secure_password'                => 'Das ist kein sicheres Passwort. Bitte versuchen Sie es erneut. Weitere Informationen finden Sie unter https://goo.gl/NCh2tN',
+    'attributes'                     => [
+        'email'                => 'E-Mail-Adresse',
+        'description'          => 'Beschreibung',
+        'amount'               => 'Betrag',
+        'name'                 => 'Name',
+        'targetamount'         => 'Zielbetrag',
+        'openingBalanceDate'   => 'Eröffnungsbilanzdatum',
+        'openingBalance'       => 'Eröffnungsbilanz',
+        'match'                => 'match',
+        'amount_min'           => 'Mindestbetrag',
+        'amount_max'           => 'Höchstbetrag',
+        'title'                => 'Titel',
+        'tag'                  => 'tag',
+        'rule-action-value.1'  => 'rule action value #1',
+        'rule-action-value.2'  => 'rule action value #2',
+        'rule-action-value.3'  => 'rule action value #3',
+        'rule-action-value.4'  => 'rule action value #4',
+        'rule-action-value.5'  => 'rule action value #5',
+        'rule-action.1'        => 'rule action #1',
+        'rule-action.2'        => 'rule action #2',
+        'rule-action.3'        => 'rule action #3',
+        'rule-action.4'        => 'rule action #4',
+        'rule-action.5'        => 'rule action #5',
+        'rule-trigger-value.1' => 'rule trigger value #1',
+        'rule-trigger-value.2' => 'rule trigger value #2',
+        'rule-trigger-value.3' => 'rule trigger value #3',
+        'rule-trigger-value.4' => 'rule trigger value #4',
+        'rule-trigger-value.5' => 'rule trigger value #5',
+        'rule-trigger.1'       => 'Regel #1 auslösen',
+        'rule-trigger.2'       => 'Regel #2 auslösen',
+        'rule-trigger.3'       => 'Regel #3 auslösen',
+        'rule-trigger.4'       => 'Regel 4 auslösen',
+        'rule-trigger.5'       => 'Regel #5 auslösen',
+    ],
 ];

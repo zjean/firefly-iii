@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -168,6 +168,16 @@ class HomeControllerTest extends TestCase
         $this->changeDateRange($this->user(), $range);
         $response = $this->get(route('index'));
         $response->assertStatus(302);
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Controllers\HomeController::routes()
+     */
+    public function testRoutes()
+    {
+        $this->be($this->user());
+        $response = $this->get(route('routes'));
+        $response->assertStatus(200);
     }
 
     /**

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -54,6 +54,7 @@ class ClearBudget implements ActionInterface
     public function act(TransactionJournal $journal): bool
     {
         $journal->budgets()->detach();
+        $journal->touch();
         Log::debug(sprintf('RuleAction ClearBudget removed all budgets from journal %d.', $journal->id));
 
         return true;

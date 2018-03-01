@@ -16,14 +16,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-
 declare(strict_types=1);
 
 namespace FireflyIII\Repositories\Journal;
 
 use FireflyIII\Models\Account;
+use FireflyIII\Models\Note;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
@@ -60,7 +60,7 @@ interface JournalRepositoryInterface
      *
      * @return bool
      */
-    public function delete(TransactionJournal $journal): bool;
+    public function destroy(TransactionJournal $journal): bool;
 
     /**
      * Find a specific journal.
@@ -100,6 +100,13 @@ interface JournalRepositoryInterface
     public function getAssetTransaction(TransactionJournal $journal): ?Transaction;
 
     /**
+     * @param TransactionJournal $journal
+     *
+     * @return Note|null
+     */
+    public function getNote(TransactionJournal $journal): ?Note;
+
+    /**
      * @return Collection
      */
     public function getTransactionTypes(): Collection;
@@ -117,6 +124,15 @@ interface JournalRepositoryInterface
      * @return bool
      */
     public function isTransfer(TransactionJournal $journal): bool;
+
+    /**
+     * Mark journal as completed and return it.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return TransactionJournal
+     */
+    public function markCompleted(TransactionJournal $journal): TransactionJournal;
 
     /**
      * @param Transaction $transaction
@@ -146,6 +162,24 @@ interface JournalRepositoryInterface
     public function store(array $data): TransactionJournal;
 
     /**
+     * Store a new transaction journal based on the values given.
+     *
+     * @param array $values
+     *
+     * @return TransactionJournal
+     */
+    public function storeBasic(array $values): TransactionJournal;
+
+    /**
+     * Store a new transaction based on the values given.
+     *
+     * @param array $values
+     *
+     * @return Transaction
+     */
+    public function storeBasicTransaction(array $values): Transaction;
+
+    /**
      * @param TransactionJournal $journal
      * @param array              $data
      *
@@ -155,9 +189,33 @@ interface JournalRepositoryInterface
 
     /**
      * @param TransactionJournal $journal
+     * @param int                $budgetId
+     *
+     * @return TransactionJournal
+     */
+    public function updateBudget(TransactionJournal $journal, int $budgetId): TransactionJournal;
+
+    /**
+     * @param TransactionJournal $journal
+     * @param string             $category
+     *
+     * @return TransactionJournal
+     */
+    public function updateCategory(TransactionJournal $journal, string $category): TransactionJournal;
+
+    /**
+     * @param TransactionJournal $journal
      * @param array              $data
      *
      * @return TransactionJournal
      */
     public function updateSplitJournal(TransactionJournal $journal, array $data): TransactionJournal;
+
+    /**
+     * @param TransactionJournal $journal
+     * @param array              $tags
+     *
+     * @return bool
+     */
+    public function updateTags(TransactionJournal $journal, array $tags): bool;
 }

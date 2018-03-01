@@ -16,14 +16,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
 namespace FireflyIII\Support\Models;
 
 use Carbon\Carbon;
-use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournalMeta;
 use FireflyIII\Models\TransactionType;
@@ -44,9 +43,28 @@ use Illuminate\Support\Collection;
 trait TransactionJournalTrait
 {
     /**
-     * @return string
+     * @param Builder $query
+     * @param string  $table
      *
-     * @throws FireflyException
+     * @return bool
+     */
+    public static function isJoined(Builder $query, string $table): bool
+    {
+        $joins = $query->getQuery()->joins;
+        if (null === $joins) {
+            return false;
+        }
+        foreach ($joins as $join) {
+            if ($join->table === $table) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string
      */
     public function amount(): string
     {
@@ -213,27 +231,6 @@ trait TransactionJournalTrait
      * @return bool
      */
     abstract public function isDeposit(): bool;
-
-    /**
-     * @param Builder $query
-     * @param string  $table
-     *
-     * @return bool
-     */
-    public function isJoined(Builder $query, string $table): bool
-    {
-        $joins = $query->getQuery()->joins;
-        if (null === $joins) {
-            return false;
-        }
-        foreach ($joins as $join) {
-            if ($join->table === $table) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     /**
      * @return bool

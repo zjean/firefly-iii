@@ -2,10 +2,21 @@
 /**
  * LinkTypeSeeder.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
  *
- * See the LICENSE file for details.
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -22,32 +33,38 @@ class LinkTypeSeeder extends Seeder
      */
     public function run()
     {
-        $link           = new LinkType;
-        $link->name     = 'Related';
-        $link->inward   = 'relates to';
-        $link->outward  = 'relates to';
-        $link->editable = false;
-        $link->save();
+        $types = [
+            [
+                'name'     => 'Related',
+                'inward'   => 'relates to',
+                'outward'  => 'relates to',
+                'editable' => false,
+            ],
+            [
+                'name'     => 'Refund',
+                'inward'   => 'is (partially) refunded by',
+                'outward'  => '(partially) refunds',
+                'editable' => false,
+            ],
+            ['name'     => 'Paid',
+             'inward'   => 'is (partially) paid for by',
+             'outward'  => '(partially) pays for',
+             'editable' => false,
+            ],
+            [
+                'name'     => 'Reimbursement',
+                'inward'   => 'is (partially) reimbursed by',
+                'outward'  => '(partially) reimburses',
+                'editable' => false,
+            ],
+        ];
+        foreach ($types as $type) {
+            try {
+                LinkType::create($type);
+            } catch (PDOException $e) {
+                Log::warning(sprintf('Could not create link type "%s". It might exist already.', $type['name']));
+            }
+        }
 
-        $link           = new LinkType;
-        $link->name     = 'Refund';
-        $link->inward   = 'is (partially) refunded by';
-        $link->outward  = '(partially) refunds';
-        $link->editable = false;
-        $link->save();
-
-        $link           = new LinkType;
-        $link->name     = 'Paid';
-        $link->inward   = 'is (partially) paid for by';
-        $link->outward  = '(partially) pays for';
-        $link->editable = false;
-        $link->save();
-
-        $link           = new LinkType;
-        $link->name     = 'Reimbursement';
-        $link->inward   = 'is (partially) reimbursed by';
-        $link->outward  = '(partially) reimburses';
-        $link->editable = false;
-        $link->save();
     }
 }

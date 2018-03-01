@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -65,6 +65,7 @@ class General extends Twig_Extension
             $this->steamPositive(),
             $this->activeRoutePartial(),
             $this->activeRoutePartialWhat(),
+            $this->formatDate(),
         ];
     }
 
@@ -180,6 +181,21 @@ class General extends Twig_Extension
     }
 
     /**
+     * @return Twig_SimpleFunction
+     */
+    protected function formatDate()
+    {
+        return new Twig_SimpleFunction(
+            'formatDate',
+            function (string $date, string $format): string {
+                $carbon = new Carbon($date);
+
+                return $carbon->formatLocalized($format);
+            }
+        );
+    }
+
+    /**
      * @return Twig_SimpleFilter
      */
     protected function formatFilesize(): Twig_SimpleFilter
@@ -256,9 +272,64 @@ class General extends Twig_Extension
                         return 'fa-file-o';
                     case 'application/pdf':
                         return 'fa-file-pdf-o';
+                    /* image */
                     case 'image/png':
                     case 'image/jpeg':
+                    case 'image/svg+xml':
+                    case 'image/heic':
+                    case 'image/heic-sequence':
+                    case 'application/vnd.oasis.opendocument.image':
                         return 'fa-file-image-o';
+                    /* MS word */
+                    case 'application/msword':
+                    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.template':
+                    case 'application/x-iwork-pages-sffpages':
+                    case 'application/vnd.sun.xml.writer':
+                    case 'application/vnd.sun.xml.writer.template':
+                    case 'application/vnd.sun.xml.writer.global':
+                    case 'application/vnd.stardivision.writer':
+                    case 'application/vnd.stardivision.writer-global':
+                    case 'application/vnd.oasis.opendocument.text':
+                    case 'application/vnd.oasis.opendocument.text-template':
+                    case 'application/vnd.oasis.opendocument.text-web':
+                    case 'application/vnd.oasis.opendocument.text-master':
+                        return 'fa-file-word-o';
+                    /* MS excel */
+                    case 'application/vnd.ms-excel':
+                    case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                    case 'application/vnd.openxmlformats-officedocument.spreadsheetml.template':
+                    case 'application/vnd.sun.xml.calc':
+                    case 'application/vnd.sun.xml.calc.template':
+                    case 'application/vnd.stardivision.calc':
+                    case 'application/vnd.oasis.opendocument.spreadsheet':
+                    case 'application/vnd.oasis.opendocument.spreadsheet-template':
+                        return 'fa-file-excel-o';
+                    /* MS powerpoint */
+                    case 'application/vnd.ms-powerpoint':
+                    case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+                    case 'application/vnd.openxmlformats-officedocument.presentationml.template':
+                    case 'application/vnd.openxmlformats-officedocument.presentationml.slideshow':
+                    case 'application/vnd.sun.xml.impress':
+                    case 'application/vnd.sun.xml.impress.template':
+                    case 'application/vnd.stardivision.impress':
+                    case 'application/vnd.oasis.opendocument.presentation':
+                    case 'application/vnd.oasis.opendocument.presentation-template':
+                        return 'fa-file-powerpoint-o';
+                    /* calc */
+                    case 'application/vnd.sun.xml.draw':
+                    case 'application/vnd.sun.xml.draw.template':
+                    case 'application/vnd.stardivision.draw':
+                    case 'application/vnd.oasis.opendocument.chart':
+                        return 'fa-paint-brush';
+                    case 'application/vnd.oasis.opendocument.graphics':
+                    case 'application/vnd.oasis.opendocument.graphics-template':
+                    case 'application/vnd.sun.xml.math':
+                    case 'application/vnd.stardivision.math':
+                    case 'application/vnd.oasis.opendocument.formula':
+                    case 'application/vnd.oasis.opendocument.database':
+                        return 'fa-calculator';
+
                 }
             },
             ['is_safe' => ['html']]

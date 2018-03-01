@@ -16,13 +16,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
 namespace FireflyIII\Import\Mapper;
 
-use FireflyIII\Models\TransactionCurrency;
+use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 
 /**
  * Class TransactionCurrencies.
@@ -34,15 +34,17 @@ class TransactionCurrencies implements MapperInterface
      */
     public function getMap(): array
     {
-        $currencies = TransactionCurrency::get();
+        /** @var CurrencyRepositoryInterface $repository */
+        $repository = app(CurrencyRepositoryInterface::class);
+        $currencies = $repository->get();
         $list       = [];
         foreach ($currencies as $currency) {
-            $list[$currency->id] = $currency->name . ' (' . $currency->code . ')';
+            $currencyId        = intval($currency->id);
+            $list[$currencyId] = $currency->name . ' (' . $currency->code . ')';
         }
-
         asort($list);
 
-        $list = [0 => trans('csv.map_do_not_map')] + $list;
+        $list = [0 => trans('import.map_do_not_map')] + $list;
 
         return $list;
     }

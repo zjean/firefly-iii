@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -48,7 +48,7 @@ class JournalLinkRequest extends Request
         $parts                            = explode('_', $linkType);
         $return['link_type_id']           = intval($parts[0]);
         $return['transaction_journal_id'] = $this->integer('link_journal_id');
-        $return['comments']               = strlen($this->string('comments')) > 0 ? $this->string('comments') : null;
+        $return['notes']                  = strlen($this->string('notes')) > 0 ? $this->string('notes') : '';
         $return['direction']              = $parts[1];
         if (0 === $return['transaction_journal_id'] && ctype_digit($this->string('link_other'))) {
             $return['transaction_journal_id'] = $this->integer('link_other');

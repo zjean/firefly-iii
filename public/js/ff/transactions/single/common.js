@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: Modernizr, accountInfo, currencyInfo, accountInfo, transferInstructions, what */
@@ -51,28 +51,32 @@ function setCommonAutocomplete() {
                 source: data,
                 afterSelect: function () {
                     this.$element.val("");
+
                 }
-            }
+            },
+            autoSelect: false,
         };
+
         $('input[name="tags"]').tagsinput(
             opt
         );
     });
 
+
     if ($('input[name="destination_account_name"]').length > 0) {
         $.getJSON('json/expense-accounts').done(function (data) {
-            $('input[name="destination_account_name"]').typeahead({source: data});
+            $('input[name="destination_account_name"]').typeahead({source: data, autoSelect: false});
         });
     }
 
     if ($('input[name="source_account_name"]').length > 0) {
         $.getJSON('json/revenue-accounts').done(function (data) {
-            $('input[name="source_account_name"]').typeahead({source: data});
+            $('input[name="source_account_name"]').typeahead({source: data, autoSelect: false});
         });
     }
 
     $.getJSON('json/categories').done(function (data) {
-        $('input[name="category"]').typeahead({source: data});
+        $('input[name="category"]').typeahead({source: data, autoSelect: false});
     });
 }
 

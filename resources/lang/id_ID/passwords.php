@@ -1,21 +1,30 @@
 <?php
-declare(strict_types=1);
-
 /**
  * passwords.php
- * Copyright (C) 2016 thegrumpydictator@gmail.com
+ * Copyright (c) 2017 thegrumpydictator@gmail.com
  *
- * This software may be modified and distributed under the terms of the
- * Creative Commons Attribution-ShareAlike 4.0 International License.
+ * This file is part of Firefly III.
  *
- * See the LICENSE file for details.
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+declare(strict_types=1);
 
 return [
-    'password' => 'Passwords must be at least six characters and match the confirmation.',
-    'user'     => 'We can\'t find a user with that e-mail address.',
-    'token'    => 'This password reset token is invalid.',
-    'sent'     => 'We have e-mailed your password reset link!',
-    'reset'    => 'Your password has been reset!',
-    'blocked'  => 'Nice try though.',
+    'password' => 'Sandi minimal harus 6 karakter dan cocok dengan konfirmasi.',
+    'user'     => 'Kami tidak dapat menemukan pengguna dengan alamat e-mail itu.',
+    'token'    => 'Token reset kata sandi ini tidak valid.',
+    'sent'     => 'Kami telah mengirimi ulang tautan reset kata sandi anda!',
+    'reset'    => 'Kata sandi anda sudah direset!',
+    'blocked'  => 'Usaha yang bagus.',
 ];

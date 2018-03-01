@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -129,9 +129,23 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
+     * @param string $name
+     * @param string $displayName
+     * @param string $description
+     *
+     * @return Role
+     */
+    public function createRole(string $name, string $displayName, string $description): Role
+    {
+        return Role::create(['name' => $name, 'display_name' => $displayName, 'description' => $description]);
+    }
+
+    /**
      * @param User $user
      *
      * @return bool
+     *
+     * @throws \Exception
      */
     public function destroy(User $user): bool
     {
@@ -164,6 +178,26 @@ class UserRepository implements UserRepositoryInterface
     public function findByEmail(string $email): ?User
     {
         return User::where('email', $email)->first();
+    }
+
+    /**
+     * Returns the first user in the DB. Generally only works when there is just one.
+     *
+     * @return null|User
+     */
+    public function first(): ?User
+    {
+        return User::first();
+    }
+
+    /**
+     * @param string $role
+     *
+     * @return Role|null
+     */
+    public function getRole(string $role): ?Role
+    {
+        return Role::where('name', $role)->first();
     }
 
     /**
@@ -203,8 +237,8 @@ class UserRepository implements UserRepositoryInterface
                                                     ->where('budgets.user_id', $user->id)->get(['budget_limits.budget_id'])->count();
         $return['export_jobs']         = $user->exportJobs()->count();
         $return['export_jobs_success'] = $user->exportJobs()->where('status', 'export_downloaded')->count();
-        $return['import_jobs']         = $user->exportJobs()->count();
-        $return['import_jobs_success'] = $user->exportJobs()->where('status', 'import_complete')->count();
+        $return['import_jobs']         = $user->importJobs()->count();
+        $return['import_jobs_success'] = $user->importJobs()->where('status', 'finished')->count();
         $return['rule_groups']         = $user->ruleGroups()->count();
         $return['rules']               = $user->rules()->count();
         $return['tags']                = $user->tags()->count();
@@ -221,6 +255,35 @@ class UserRepository implements UserRepositoryInterface
     public function hasRole(User $user, string $role): bool
     {
         return $user->hasRole($role);
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return User
+     */
+    public function store(array $data): User
+    {
+        $password = bcrypt($data['password'] ?? app('str')->random(16));
+
+        return User::create(
+            [
+                'email'    => $data['email'],
+                'password' => $password,
+            ]
+        );
+    }
+
+    /**
+     * @param User $user
+     */
+    public function unblockUser(User $user): void
+    {
+        $user->blocked      = 0;
+        $user->blocked_code = '';
+        $user->save();
+
+        return;
     }
 
     /**

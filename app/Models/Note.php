@@ -16,14 +16,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
 namespace FireflyIII\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use League\CommonMark\CommonMarkConverter;
 
 /**
  * Class Note.
@@ -42,21 +41,12 @@ class Note extends Model
             'deleted_at' => 'datetime',
         ];
     /** @var array */
-    protected $fillable = ['title', 'text'];
+    protected $fillable = ['title', 'text', 'noteable_id', 'noteable_type'];
 
     /**
-     * @return string
-     */
-    public function getMarkdownAttribute(): string
-    {
-        $converter = new CommonMarkConverter;
-
-        return $converter->convertToHtml($this->text);
-    }
-
-    /**
-     * Get all of the owning noteable models. Currently piggy bank and
-     * transaction journal.
+     * @codeCoverageIgnore
+     *
+     * Get all of the owning noteable models.
      */
     public function noteable()
     {

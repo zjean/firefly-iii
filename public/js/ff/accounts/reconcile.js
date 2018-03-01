@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** global: overviewUri, transactionsUri, indexUri,accounting */
@@ -40,6 +40,7 @@ $(function () {
             calculateBalanceDifference();
             difference = balanceDifference - selectedAmount;
             updateDifference();
+
         }
         changedBalances = true;
     });
@@ -90,9 +91,7 @@ function storeReconcile() {
 
 
     $.getJSON(uri, variables).done(function (data) {
-        if (data.is_zero === false) {
-            $('#defaultModal').empty().html(data.html).modal('show');
-        }
+        $('#defaultModal').empty().html(data.html).modal('show');
     });
 }
 
@@ -123,9 +122,6 @@ function calculateBalanceDifference() {
     var startBalance = parseFloat($('input[name="start_balance"]').val());
     var endBalance = parseFloat($('input[name="end_balance"]').val());
     balanceDifference = startBalance - endBalance;
-    //if (balanceDifference < 0) {
-    //  balanceDifference = balanceDifference * -1;
-    //}
 }
 
 /**
@@ -174,7 +170,7 @@ function placeTransactions(data) {
     // any already cleared transactions must be added to / removed from selectedAmount.
     includeClearedTransactions();
 
-    difference = balanceDifference;
+    difference = balanceDifference - selectedAmount;
     updateDifference();
 
     // enable the check buttons:
@@ -191,7 +187,6 @@ function placeTransactions(data) {
  * @returns {boolean}
  */
 function startReconcile() {
-
     reconcileStarted = true;
 
     // hide the start button.

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -129,6 +129,16 @@ class MonthReportGenerator extends Support implements ReportGeneratorInterface
     }
 
     /**
+     * @param Collection $expense
+     *
+     * @return ReportGeneratorInterface
+     */
+    public function setExpense(Collection $expense): ReportGeneratorInterface
+    {
+        return $this;
+    }
+
+    /**
      * @param Carbon $date
      *
      * @return ReportGeneratorInterface
@@ -184,7 +194,9 @@ class MonthReportGenerator extends Support implements ReportGeneratorInterface
      */
     private function summarizeByBudget(Collection $collection): array
     {
-        $result = [];
+        $result = [
+            'sum' => '0',
+        ];
         /** @var Transaction $transaction */
         foreach ($collection as $transaction) {
             $jrnlBudId         = intval($transaction->transaction_journal_budget_id);
@@ -192,6 +204,7 @@ class MonthReportGenerator extends Support implements ReportGeneratorInterface
             $budgetId          = max($jrnlBudId, $transBudId);
             $result[$budgetId] = $result[$budgetId] ?? '0';
             $result[$budgetId] = bcadd($transaction->transaction_amount, $result[$budgetId]);
+            $result['sum']     = bcadd($result['sum'], $transaction->transaction_amount);
         }
 
         return $result;

@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Firefly III.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 declare(strict_types=1);
 
@@ -25,6 +25,7 @@ namespace FireflyIII\Http\Controllers\Transaction;
 use Carbon\Carbon;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Http\Requests\MassDeleteJournalRequest;
+use FireflyIII\Http\Requests\MassEditBulkJournalRequest;
 use FireflyIII\Http\Requests\MassEditJournalRequest;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\TransactionJournal;
@@ -51,8 +52,8 @@ class MassController extends Controller
 
         $this->middleware(
             function ($request, $next) {
-                View::share('title', trans('firefly.transactions'));
-                View::share('mainTitleIcon', 'fa-repeat');
+                app('view')->share('title', trans('firefly.transactions'));
+                app('view')->share('mainTitleIcon', 'fa-repeat');
 
                 return $next($request);
             }
@@ -70,10 +71,8 @@ class MassController extends Controller
 
         // put previous url in session
         $this->rememberPreviousUri('transactions.mass-delete.uri');
-        Session::flash('gaEventCategory', 'transactions');
-        Session::flash('gaEventAction', 'mass-delete');
 
-        return view('transactions.mass-delete', compact('journals', 'subTitle'));
+        return view('transactions.mass.delete', compact('journals', 'subTitle'));
     }
 
     /**
@@ -133,7 +132,7 @@ class MassController extends Controller
         // skip transactions that have multiple destinations, multiple sources or are an opening balance.
         $filtered = new Collection;
         $messages = [];
-        // @var TransactionJournal
+        /** @var TransactionJournal $journal */
         foreach ($journals as $journal) {
             $sources      = $journal->sourceAccountList();
             $destinations = $journal->destinationAccountList();
@@ -166,8 +165,6 @@ class MassController extends Controller
 
         // put previous url in session
         $this->rememberPreviousUri('transactions.mass-edit.uri');
-        Session::flash('gaEventCategory', 'transactions');
-        Session::flash('gaEventAction', 'mass-edit');
 
         // collect some useful meta data for the mass edit:
         $filtered->each(
@@ -217,7 +214,7 @@ class MassController extends Controller
         if (is_array($journalIds)) {
             foreach ($journalIds as $journalId) {
                 $journal = $repository->find(intval($journalId));
-                if ($journal) {
+                if (!is_null($journal)) {
                     // get optional fields:
                     $what              = strtolower($journal->transactionTypeStr());
                     $sourceAccountId   = $request->get('source_account_id')[$journal->id] ?? 0;
@@ -268,4 +265,5 @@ class MassController extends Controller
         // redirect to previous URL:
         return redirect($this->getPreviousUri('transactions.mass-edit.uri'));
     }
+
 }
