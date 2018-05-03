@@ -37,7 +37,6 @@ use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Support\Collection;
-use Response;
 
 /**
  * Separate controller because many helper functions are shared.
@@ -84,11 +83,11 @@ class BudgetReportController extends Controller
         $helper->setBudgets($budgets);
         $helper->setStart($start);
         $helper->setEnd($end);
-        $helper->setCollectOtherObjects(1 === intval($others));
+        $helper->setCollectOtherObjects(1 === (int)$others);
         $chartData = $helper->generate('expense', 'account');
         $data      = $this->generator->pieChart($chartData);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -108,11 +107,11 @@ class BudgetReportController extends Controller
         $helper->setBudgets($budgets);
         $helper->setStart($start);
         $helper->setEnd($end);
-        $helper->setCollectOtherObjects(1 === intval($others));
+        $helper->setCollectOtherObjects(1 === (int)$others);
         $chartData = $helper->generate('expense', 'budget');
         $data      = $this->generator->pieChart($chartData);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -132,7 +131,7 @@ class BudgetReportController extends Controller
         $cache->addProperty($start);
         $cache->addProperty($end);
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
         $format       = app('navigation')->preferredCarbonLocalizedFormat($start, $end);
         $function     = app('navigation')->preferredEndOfPeriod($start, $end);
@@ -142,20 +141,20 @@ class BudgetReportController extends Controller
         // prep chart data:
         foreach ($budgets as $budget) {
             $chartData[$budget->id]           = [
-                'label'   => strval(trans('firefly.spent_in_specific_budget', ['budget' => $budget->name])),
+                'label'   => (string)trans('firefly.spent_in_specific_budget', ['budget' => $budget->name]),
                 'type'    => 'bar',
                 'yAxisID' => 'y-axis-0',
                 'entries' => [],
             ];
             $chartData[$budget->id . '-sum']  = [
-                'label'   => strval(trans('firefly.sum_of_expenses_in_budget', ['budget' => $budget->name])),
+                'label'   => (string)trans('firefly.sum_of_expenses_in_budget', ['budget' => $budget->name]),
                 'type'    => 'line',
                 'fill'    => false,
                 'yAxisID' => 'y-axis-1',
                 'entries' => [],
             ];
             $chartData[$budget->id . '-left'] = [
-                'label'   => strval(trans('firefly.left_in_budget_limit', ['budget' => $budget->name])),
+                'label'   => (string)trans('firefly.left_in_budget_limit', ['budget' => $budget->name]),
                 'type'    => 'bar',
                 'fill'    => false,
                 'yAxisID' => 'y-axis-0',
@@ -183,7 +182,7 @@ class BudgetReportController extends Controller
 
                 if (count($budgetLimits) > 0) {
                     $budgetLimitId                                       = $budgetLimits->first()->id;
-                    $leftOfLimits[$budgetLimitId]                        = $leftOfLimits[$budgetLimitId] ?? strval($budgetLimits->sum('amount'));
+                    $leftOfLimits[$budgetLimitId]                        = $leftOfLimits[$budgetLimitId] ?? (string)$budgetLimits->sum('amount');
                     $leftOfLimits[$budgetLimitId]                        = bcadd($leftOfLimits[$budgetLimitId], $currentExpenses);
                     $chartData[$budget->id . '-left']['entries'][$label] = $leftOfLimits[$budgetLimitId];
                 }
@@ -195,7 +194,7 @@ class BudgetReportController extends Controller
         $data = $this->generator->multiSet($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -245,9 +244,7 @@ class BudgetReportController extends Controller
         $collector->addFilter(OpposingAccountFilter::class);
         $collector->addFilter(PositiveAmountFilter::class);
 
-        $transactions = $collector->getJournals();
-
-        return $transactions;
+        return $collector->getJournals();
     }
 
     /**
@@ -261,8 +258,8 @@ class BudgetReportController extends Controller
         $grouped = [];
         /** @var Transaction $transaction */
         foreach ($set as $transaction) {
-            $jrnlBudId          = intval($transaction->transaction_journal_budget_id);
-            $transBudId         = intval($transaction->transaction_budget_id);
+            $jrnlBudId          = (int)$transaction->transaction_journal_budget_id;
+            $transBudId         = (int)$transaction->transaction_budget_id;
             $budgetId           = max($jrnlBudId, $transBudId);
             $grouped[$budgetId] = $grouped[$budgetId] ?? '0';
             $grouped[$budgetId] = bcadd($transaction->transaction_amount, $grouped[$budgetId]);

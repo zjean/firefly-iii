@@ -24,6 +24,7 @@ var countConversions = 0;
 
 $(document).ready(function () {
     "use strict";
+    console.log('in common.js document.ready');
     setCommonAutocomplete();
     runModernizer();
 });
@@ -45,14 +46,15 @@ function runModernizer() {
  * Auto complete things in both edit and create routines:
  */
 function setCommonAutocomplete() {
+    console.log('In setCommonAutoComplete()');
     $.getJSON('json/tags').done(function (data) {
         var opt = {
             typeahead: {
                 source: data,
                 afterSelect: function () {
                     this.$element.val("");
-
-                }
+                },
+                autoSelect: false,
             },
             autoSelect: false,
         };
@@ -82,12 +84,13 @@ function setCommonAutocomplete() {
 
 /**
  * When the user changes the currency in the amount drop down, it may jump from being
- * the native currency to a foreign currency. This triggers the display of several
+ * the native currency to a foreign currency. Thi   s triggers the display of several
  * information things that make sure that the user always supplies the amount in the native currency.
  *
  * @returns {boolean}
  */
 function selectsForeignCurrency() {
+    console.log('In selectsForeignCurrency()');
     var foreignCurrencyId = parseInt($('input[name="amount_currency_id_amount"]').val());
     var selectedAccountId = getAccountId();
     var nativeCurrencyId = parseInt(accountInfo[selectedAccountId].preferredCurrency);
@@ -146,7 +149,11 @@ function updateNativeAmount(data) {
         countConversions++;
         return;
     }
-    $('#ffInput_native_amount').val(data.amount);
+    console.log('Returned amount is: ' + data.amount);
+
+    if (data.amount !== 0) {
+        $('#ffInput_native_amount').val(data.amount);
+    }
 }
 
 /**
@@ -222,5 +229,9 @@ function convertSourceToDestination() {
  * @param data
  */
 function updateDestinationAmount(data) {
-    $('#ffInput_destination_amount').val(data.amount);
+    console.log('Returned amount is: ' + data.amount);
+
+    if (data.amount !== 0) {
+        $('#ffInput_destination_amount').val(data.amount);
+    }
 }

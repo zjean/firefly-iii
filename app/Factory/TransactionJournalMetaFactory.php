@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * TransactionJournalMetaFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,12 +20,13 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
 use Carbon\Carbon;
+use Exception;
 use FireflyIII\Models\TransactionJournalMeta;
+use Log;
 
 /**
  * Class TransactionJournalMetaFactory
@@ -34,16 +36,39 @@ class TransactionJournalMetaFactory
     /**
      * @param array $data
      *
-     * @return TransactionJournalMeta
+     * @return TransactionJournalMeta|null
      */
-    public function updateOrCreate(array $data): TransactionJournalMeta
+    public function updateOrCreate(array $data): ?TransactionJournalMeta
     {
         $value = $data['data'];
+        /** @var TransactionJournalMeta $entry */
+        $entry = $data['journal']->transactionJournalMeta()->where('name', $data['name'])->first();
+        if (null === $value && null !== $entry) {
+            try {
+                $entry->delete();
+            } catch (Exception $e) { // @codeCoverageIgnore
+                Log::error(sprintf('Could not delete transaction journal meta: %s', $e->getMessage())); // @codeCoverageIgnore
+            }
+
+            return null;
+        }
+
         if ($data['data'] instanceof Carbon) {
             $value = $data['data']->toW3cString();
         }
+        if ((string)$value === '') {
+            // don't store blank strings.
+            if (null !== $entry) {
+                try {
+                    $entry->delete();
+                } catch (Exception $e) { // @codeCoverageIgnore
+                    Log::error(sprintf('Could not delete transaction journal meta: %s', $e->getMessage())); // @codeCoverageIgnore
+                }
+            }
 
-        $entry = $data['journal']->transactionJournalMeta()->where('name', $data['name'])->first();
+            return null;
+        }
+
         if (null === $entry) {
             $entry = new TransactionJournalMeta();
             $entry->transactionJournal()->associate($data['journal']);

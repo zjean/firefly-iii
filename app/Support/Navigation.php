@@ -65,7 +65,7 @@ class Navigation
             throw new FireflyException(sprintf('Cannot do addPeriod for $repeat_freq "%s"', $repeatFreq));
         }
         if (isset($modifierMap[$repeatFreq])) {
-            $add = $add * $modifierMap[$repeatFreq];
+            $add *= $modifierMap[$repeatFreq];
         }
         $function = $functionMap[$repeatFreq];
         $date->$function($add);
@@ -91,7 +91,7 @@ class Navigation
     public function blockPeriods(\Carbon\Carbon $start, \Carbon\Carbon $end, string $range): array
     {
         if ($end < $start) {
-            list($start, $end) = [$end, $start];
+            [$start, $end] = [$end, $start];
         }
         $periods = [];
         /*
@@ -99,7 +99,7 @@ class Navigation
          */
         $perMonthEnd   = clone $end;
         $perMonthStart = clone $end;
-        $perMonthStart->startOfyear()->subYear();
+        $perMonthStart->startOfYear()->subYear();
         $perMonthStart = $start->lt($perMonthStart) ? $perMonthStart : $start;
 
         // loop first set:
@@ -262,17 +262,17 @@ class Navigation
         // define period to increment
         $increment     = 'addDay';
         $format        = $this->preferredCarbonFormat($start, $end);
-        $displayFormat = strval(trans('config.month_and_day'));
+        $displayFormat = (string)trans('config.month_and_day');
         // increment by month (for year)
         if ($start->diffInMonths($end) > 1) {
             $increment     = 'addMonth';
-            $displayFormat = strval(trans('config.month'));
+            $displayFormat = (string)trans('config.month');
         }
 
         // increment by year (for multi year)
         if ($start->diffInMonths($end) > 12) {
             $increment     = 'addYear';
-            $displayFormat = strval(trans('config.year'));
+            $displayFormat = (string)trans('config.year');
         }
 
         $begin   = clone $start;
@@ -316,7 +316,7 @@ class Navigation
         ];
 
         if (isset($formatMap[$repeatFrequency])) {
-            return $date->formatLocalized(strval($formatMap[$repeatFrequency]));
+            return $date->formatLocalized((string)$formatMap[$repeatFrequency]);
         }
         if ('3M' === $repeatFrequency || 'quarter' === $repeatFrequency) {
             $quarter = ceil($theDate->month / 3);
@@ -362,13 +362,13 @@ class Navigation
      */
     public function preferredCarbonLocalizedFormat(Carbon $start, Carbon $end): string
     {
-        $format = strval(trans('config.month_and_day'));
+        $format = (string)trans('config.month_and_day');
         if ($start->diffInMonths($end) > 1) {
-            $format = strval(trans('config.month'));
+            $format = (string)trans('config.month');
         }
 
         if ($start->diffInMonths($end) > 12) {
-            $format = strval(trans('config.year'));
+            $format = (string)trans('config.year');
         }
 
         return $format;
@@ -537,7 +537,7 @@ class Navigation
             return $date;
         }
         if (isset($modifierMap[$repeatFreq])) {
-            $subtract = $subtract * $modifierMap[$repeatFreq];
+            $subtract *= $modifierMap[$repeatFreq];
             $date->subMonths($subtract);
             Log::debug(sprintf('%s is in modifier map with value %d, execute subMonths with argument %d', $repeatFreq, $modifierMap[$repeatFreq], $subtract));
             Log::debug(sprintf('subtractPeriod: resulting date is %s', $date->format('Y-m-d')));

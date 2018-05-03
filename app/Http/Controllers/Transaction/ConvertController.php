@@ -22,11 +22,9 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers\Transaction;
 
-use ExpandedForm;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Models\Account;
-use FireflyIII\Models\AccountType;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
@@ -40,8 +38,8 @@ use View;
  */
 class ConvertController extends Controller
 {
-    /** @var AccountRepositoryInterface */
-    private $accounts;
+    /** @var JournalRepositoryInterface */
+    private $repository;
 
     /**
      * ConvertController constructor.
@@ -53,7 +51,7 @@ class ConvertController extends Controller
         // some useful repositories:
         $this->middleware(
             function ($request, $next) {
-                $this->accounts = app(AccountRepositoryInterface::class);
+                $this->repository = app(JournalRepositoryInterface::class);
 
                 app('view')->share('title', trans('firefly.transactions'));
                 app('view')->share('mainTitleIcon', 'fa-exchange');
@@ -76,9 +74,7 @@ class ConvertController extends Controller
             return $this->redirectToAccount($journal);
         }
         // @codeCoverageIgnoreEnd
-
-        $positiveAmount = $journal->amountPositive();
-        $assetAccounts  = ExpandedForm::makeSelectList($this->accounts->getActiveAccountsByType([AccountType::DEFAULT, AccountType::ASSET]));
+        $positiveAmount = $this->repository->getJournalTotal($journal);
         $sourceType     = $journal->transactionType;
         $subTitle       = trans('firefly.convert_to_' . $destinationType->type, ['description' => $journal->description]);
         $subTitleIcon   = 'fa-exchange';
@@ -98,8 +94,8 @@ class ConvertController extends Controller
         }
 
         // get source and destination account:
-        $sourceAccount      = $journal->sourceAccountList()->first();
-        $destinationAccount = $journal->destinationAccountList()->first();
+        $sourceAccount      = $this->repository->getJournalSourceAccounts($journal)->first();
+        $destinationAccount = $this->repository->getJournalDestinationAccounts($journal)->first();
 
         return view(
             'transactions.convert',
@@ -107,7 +103,6 @@ class ConvertController extends Controller
                 'sourceType',
                 'destinationType',
                 'journal',
-                'assetAccounts',
                 'positiveAmount',
                 'sourceAccount',
                 'destinationAccount',
@@ -183,8 +178,8 @@ class ConvertController extends Controller
     {
         /** @var AccountRepositoryInterface $accountRepository */
         $accountRepository  = app(AccountRepositoryInterface::class);
-        $sourceAccount      = $journal->sourceAccountList()->first();
-        $destinationAccount = $journal->destinationAccountList()->first();
+        $sourceAccount      = $this->repository->getJournalSourceAccounts($journal)->first();
+        $destinationAccount = $this->repository->getJournalDestinationAccounts($journal)->first();
         $sourceType         = $journal->transactionType;
         $joined             = $sourceType->type . '-' . $destinationType->type;
         switch ($joined) {
@@ -196,23 +191,22 @@ class ConvertController extends Controller
                 break;
             case TransactionType::WITHDRAWAL . '-' . TransactionType::TRANSFER:
                 // two
-                $destination = $accountRepository->find(intval($data['destination_account_asset']));
+                $destination = $accountRepository->findNull((int)$data['destination_account_asset']);
                 break;
             case TransactionType::DEPOSIT . '-' . TransactionType::WITHDRAWAL:
             case TransactionType::TRANSFER . '-' . TransactionType::WITHDRAWAL:
                 // three and five
                 if ('' === $data['destination_account_expense'] || null === $data['destination_account_expense']) {
                     // destination is a cash account.
-                    $destination = $accountRepository->getCashAccount();
-
-                    return $destination;
+                    return $accountRepository->getCashAccount();
                 }
                 $data        = [
-                    'name'           => $data['destination_account_expense'],
-                    'accountType'    => 'expense',
-                    'virtualBalance' => 0,
-                    'active'         => true,
-                    'iban'           => null,
+                    'name'            => $data['destination_account_expense'],
+                    'accountType'     => 'expense',
+                    'account_type_id' => null,
+                    'virtualBalance'  => 0,
+                    'active'          => true,
+                    'iban'            => null,
                 ];
                 $destination = $accountRepository->store($data);
                 break;
@@ -239,8 +233,8 @@ class ConvertController extends Controller
     {
         /** @var AccountRepositoryInterface $accountRepository */
         $accountRepository  = app(AccountRepositoryInterface::class);
-        $sourceAccount      = $journal->sourceAccountList()->first();
-        $destinationAccount = $journal->destinationAccountList()->first();
+        $sourceAccount      = $this->repository->getJournalSourceAccounts($journal)->first();
+        $destinationAccount = $this->repository->getJournalDestinationAccounts($journal)->first();
         $sourceType         = $journal->transactionType;
         $joined             = $sourceType->type . '-' . $destinationType->type;
         switch ($joined) {
@@ -251,17 +245,16 @@ class ConvertController extends Controller
 
                 if ('' === $data['source_account_revenue'] || null === $data['source_account_revenue']) {
                     // destination is a cash account.
-                    $destination = $accountRepository->getCashAccount();
-
-                    return $destination;
+                    return $accountRepository->getCashAccount();
                 }
 
                 $data   = [
-                    'name'           => $data['source_account_revenue'],
-                    'accountType'    => 'revenue',
-                    'virtualBalance' => 0,
-                    'active'         => true,
-                    'iban'           => null,
+                    'name'            => $data['source_account_revenue'],
+                    'accountType'     => 'revenue',
+                    'virtualBalance'  => 0,
+                    'active'          => true,
+                    'account_type_id' => null,
+                    'iban'            => null,
                 ];
                 $source = $accountRepository->store($data);
                 break;
@@ -273,7 +266,7 @@ class ConvertController extends Controller
                 $source = $destinationAccount;
                 break;
             case TransactionType::DEPOSIT . '-' . TransactionType::TRANSFER:
-                $source = $accountRepository->find(intval($data['source_account_asset']));
+                $source = $accountRepository->findNull((int)$data['source_account_asset']);
                 break;
         }
 

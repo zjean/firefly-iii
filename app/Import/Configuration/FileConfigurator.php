@@ -53,14 +53,12 @@ class FileConfigurator implements ConfiguratorInterface
             'file-type'             => 'csv', // assume
             'has-config-file'       => true,
             'apply-rules'           => true,
-            'match-bills'           => false,
             'auto-start'            => false,
         ];
     /** @var ImportJob */
     private $job;
     /** @var ImportJobRepositoryInterface */
     private $repository;
-
 
     // give job default config:
     /** @var string */
@@ -85,7 +83,7 @@ class FileConfigurator implements ConfiguratorInterface
      */
     public function configureJob(array $data): bool
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call configureJob() without a job.');
         }
         /** @var ConfigurationInterface $object */
@@ -106,7 +104,7 @@ class FileConfigurator implements ConfiguratorInterface
      */
     public function getNextData(): array
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call getNextData() without a job.');
         }
         /** @var ConfigurationInterface $object */
@@ -123,7 +121,7 @@ class FileConfigurator implements ConfiguratorInterface
      */
     public function getNextView(): string
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call getNextView() without a job.');
         }
         $config = $this->getConfig();
@@ -145,11 +143,12 @@ class FileConfigurator implements ConfiguratorInterface
      * Return possible warning to user.
      *
      * @return string
+     *
      * @throws FireflyException
      */
     public function getWarningMessage(): string
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call getWarningMessage() without a job.');
         }
 
@@ -158,16 +157,17 @@ class FileConfigurator implements ConfiguratorInterface
 
     /**
      * @return bool
+     *
      * @throws FireflyException
      */
     public function isJobConfigured(): bool
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call isJobConfigured() without a job.');
         }
         $config = $this->getConfig();
         $stage  = $config['stage'] ?? 'initial';
-        if ($stage === 'ready') {
+        if ('ready' === $stage) {
             Log::debug('isJobConfigured returns true');
 
             return true;
@@ -252,6 +252,7 @@ class FileConfigurator implements ConfiguratorInterface
      * Shorthand method to return the extended status.
      *
      * @codeCoverageIgnore
+     *
      * @return array
      */
     private function getExtendedStatus(): array

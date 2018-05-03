@@ -63,7 +63,7 @@ class TagController extends Controller
         $this->middleware(
             function ($request, $next) {
                 $this->repository = app(TagRepositoryInterface::class);
-                app('view')->share('title', strval(trans('firefly.tags')));
+                app('view')->share('title', (string)trans('firefly.tags'));
                 app('view')->share('mainTitleIcon', 'fa-tags');
 
                 return $next($request);
@@ -118,7 +118,7 @@ class TagController extends Controller
         $tagName = $tag->tag;
         $this->repository->destroy($tag);
 
-        Session::flash('success', strval(trans('firefly.deleted_tag', ['tag' => $tagName])));
+        Session::flash('success', (string)trans('firefly.deleted_tag', ['tag' => $tagName]));
         Preferences::mark();
 
         return redirect($this->getPreviousUri('tags.delete.uri'));
@@ -171,6 +171,7 @@ class TagController extends Controller
         $now               = new Carbon;
         $clouds            = [];
         $clouds['no-date'] = $repository->tagCloud(null);
+
         while ($now > $start) {
             $year          = $now->year;
             $clouds[$year] = $repository->tagCloud($year);
@@ -195,8 +196,8 @@ class TagController extends Controller
         // default values:
         $subTitle     = $tag->tag;
         $subTitleIcon = 'fa-tag';
-        $page         = intval($request->get('page'));
-        $pageSize     = intval(Preferences::get('listPageSize', 50)->data);
+        $page         = (int)$request->get('page');
+        $pageSize     = (int)Preferences::get('listPageSize', 50)->data;
         $range        = Preferences::get('viewRange', '1M')->data;
         $start        = null;
         $end          = null;
@@ -260,10 +261,10 @@ class TagController extends Controller
         $data = $request->collectTagData();
         $this->repository->store($data);
 
-        Session::flash('success', strval(trans('firefly.created_tag', ['tag' => $data['tag']])));
+        Session::flash('success', (string)trans('firefly.created_tag', ['tag' => $data['tag']]));
         Preferences::mark();
 
-        if (1 === intval($request->get('create_another'))) {
+        if (1 === (int)$request->get('create_another')) {
             // @codeCoverageIgnoreStart
             Session::put('tags.create.fromStore', true);
 
@@ -285,10 +286,10 @@ class TagController extends Controller
         $data = $request->collectTagData();
         $this->repository->update($tag, $data);
 
-        Session::flash('success', strval(trans('firefly.updated_tag', ['tag' => $data['tag']])));
+        Session::flash('success', (string)trans('firefly.updated_tag', ['tag' => $data['tag']]));
         Preferences::mark();
 
-        if (1 === intval($request->get('return_to_edit'))) {
+        if (1 === (int)$request->get('return_to_edit')) {
             // @codeCoverageIgnoreStart
             Session::put('tags.edit.fromUpdate', true);
 
@@ -333,8 +334,8 @@ class TagController extends Controller
                 'string' => $end->format('Y-m-d'),
                 'name'   => app('navigation')->periodShow($end, $range),
                 'date'   => clone $end,
-                'spent'  => $this->repository->spentInperiod($tag, $end, $currentEnd),
-                'earned' => $this->repository->earnedInperiod($tag, $end, $currentEnd),
+                'spent'  => $this->repository->spentInPeriod($tag, $end, $currentEnd),
+                'earned' => $this->repository->earnedInPeriod($tag, $end, $currentEnd),
             ];
             $collection->push($arr);
 

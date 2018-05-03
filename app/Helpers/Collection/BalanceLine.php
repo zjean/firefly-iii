@@ -35,15 +35,15 @@ class BalanceLine
     /**
      *
      */
-    const ROLE_DEFAULTROLE = 1;
+    public const ROLE_DEFAULTROLE = 1;
     /**
      *
      */
-    const ROLE_TAGROLE = 2;
+    public const ROLE_TAGROLE = 2;
     /**
      *
      */
-    const ROLE_DIFFROLE = 3;
+    public const ROLE_DIFFROLE = 3;
 
     /** @var Collection */
     protected $balanceEntries;
@@ -162,13 +162,13 @@ class BalanceLine
             return $this->getBudget()->name;
         }
         if (self::ROLE_DEFAULTROLE === $this->getRole()) {
-            return strval(trans('firefly.no_budget'));
+            return (string)trans('firefly.no_budget');
         }
         if (self::ROLE_TAGROLE === $this->getRole()) {
-            return strval(trans('firefly.coveredWithTags'));
+            return (string)trans('firefly.coveredWithTags');
         }
         if (self::ROLE_DIFFROLE === $this->getRole()) {
-            return strval(trans('firefly.leftUnbalanced'));
+            return (string)trans('firefly.leftUnbalanced');
         }
 
         return '';

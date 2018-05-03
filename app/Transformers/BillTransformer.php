@@ -24,7 +24,6 @@ declare(strict_types=1);
 namespace FireflyIII\Transformers;
 
 use Carbon\Carbon;
-use FireflyIII\Helpers\Collector\JournalCollector;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Models\Bill;
 use FireflyIII\Models\Note;
@@ -94,7 +93,7 @@ class BillTransformer extends TransformerAbstract
      */
     public function includeTransactions(Bill $bill): FractalCollection
     {
-        $pageSize = intval(app('preferences')->getForUser($bill->user, 'listPageSize', 50)->data);
+        $pageSize = (int)app('preferences')->getForUser($bill->user, 'listPageSize', 50)->data;
 
         // journals always use collector and limited using URL parameters.
         $collector = app(JournalCollectorInterface::class);
@@ -102,7 +101,7 @@ class BillTransformer extends TransformerAbstract
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         $collector->setAllAssetAccounts();
         $collector->setBills(new Collection([$bill]));
-        if (!is_null($this->parameters->get('start')) && !is_null($this->parameters->get('end'))) {
+        if (null !== $this->parameters->get('start') && null !== $this->parameters->get('end')) {
             $collector->setRange($this->parameters->get('start'), $this->parameters->get('end'));
         }
         $collector->setLimit($pageSize)->setPage($this->parameters->get('page'));
@@ -140,14 +139,16 @@ class BillTransformer extends TransformerAbstract
             'updated_at'          => $bill->updated_at->toAtomString(),
             'created_at'          => $bill->created_at->toAtomString(),
             'name'                => $bill->name,
+            'currency_id'         => $bill->transaction_currency_id,
+            'currency_code'       => $bill->transactionCurrency->code,
             'match'               => explode(',', $bill->match),
             'amount_min'          => round($bill->amount_min, 2),
             'amount_max'          => round($bill->amount_max, 2),
             'date'                => $bill->date->format('Y-m-d'),
             'repeat_freq'         => $bill->repeat_freq,
             'skip'                => (int)$bill->skip,
-            'automatch'           => intval($bill->automatch) === 1,
-            'active'              => intval($bill->active) === 1,
+            'automatch'           => (int)$bill->automatch === 1,
+            'active'              => (int)$bill->active === 1,
             'attachments_count'   => $bill->attachments()->count(),
             'pay_dates'           => $payDates,
             'paid_dates'          => $paidData['paid_dates'],
@@ -162,7 +163,7 @@ class BillTransformer extends TransformerAbstract
         ];
         /** @var Note $note */
         $note = $bill->notes()->first();
-        if (!is_null($note)) {
+        if (null !== $note) {
             $data['notes'] = $note->text;
         }
 
@@ -223,7 +224,7 @@ class BillTransformer extends TransformerAbstract
     protected function paidData(Bill $bill): array
     {
         Log::debug(sprintf('Now in paidData for bill #%d', $bill->id));
-        if (is_null($this->parameters->get('start')) || is_null($this->parameters->get('end'))) {
+        if (null === $this->parameters->get('start') || null === $this->parameters->get('end')) {
             Log::debug('parameters are NULL, return empty array');
 
             return [
@@ -268,7 +269,7 @@ class BillTransformer extends TransformerAbstract
      */
     protected function payDates(Bill $bill): array
     {
-        if (is_null($this->parameters->get('start')) || is_null($this->parameters->get('end'))) {
+        if (null === $this->parameters->get('start') || null === $this->parameters->get('end')) {
             return [];
         }
         $set          = new Collection;

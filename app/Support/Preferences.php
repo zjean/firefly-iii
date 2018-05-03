@@ -23,9 +23,11 @@ declare(strict_types=1);
 namespace FireflyIII\Support;
 
 use Cache;
+use Exception;
 use FireflyIII\Models\Preference;
 use FireflyIII\User;
 use Illuminate\Support\Collection;
+use Log;
 use Session;
 
 /**
@@ -50,8 +52,6 @@ class Preferences
      * @param $name
      *
      * @return bool
-     *
-     * @throws \Exception
      */
     public function delete(string $name): bool
     {
@@ -59,7 +59,11 @@ class Preferences
         if (Cache::has($fullName)) {
             Cache::forget($fullName);
         }
-        Preference::where('user_id', auth()->user()->id)->where('name', $name)->delete();
+        try {
+            Preference::where('user_id', auth()->user()->id)->where('name', $name)->delete();
+        } catch (Exception $e) {
+            // don't care.
+        }
 
         return true;
     }
@@ -71,9 +75,7 @@ class Preferences
      */
     public function findByName(string $name): Collection
     {
-        $set = Preference::where('name', $name)->get();
-
-        return $set;
+        return Preference::where('name', $name)->get();
     }
 
     /**
@@ -131,6 +133,14 @@ class Preferences
         }
 
         $preference = Preference::where('user_id', $user->id)->where('name', $name)->first(['id', 'name', 'data']);
+        if (null !== $preference && null === $preference->data) {
+            try {
+                $preference->delete();
+            } catch (Exception $e) {
+                Log::debug(sprintf('Could not delete preference #%d', $preference->id));
+            }
+            $preference = false;
+        }
 
         if ($preference) {
             Cache::forever($fullName, $preference);
@@ -153,8 +163,11 @@ class Preferences
     {
         $lastActivity = microtime();
         $preference   = $this->get('lastActivity', microtime());
-        if (null !== $preference) {
+        if (null !== $preference && null !== $preference->data) {
             $lastActivity = $preference->data;
+        }
+        if (\is_array($lastActivity)) {
+            $lastActivity = implode(',', $lastActivity);
         }
 
         return md5($lastActivity);
@@ -195,7 +208,7 @@ class Preferences
     /**
      * @param \FireflyIII\User $user
      * @param                  $name
-     * @param string           $value
+     * @param mixed           $value
      *
      * @return Preference
      */

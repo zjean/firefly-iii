@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * AccountRequest.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,7 +20,6 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Api\V1\Requests;
 
@@ -47,6 +47,7 @@ class AccountRequest extends Request
             'name'                 => $this->string('name'),
             'active'               => $this->boolean('active'),
             'accountType'          => $this->string('type'),
+            'account_type_id'      => null,
             'currency_id'          => $this->integer('currency_id'),
             'currency_code'        => $this->string('currency_code'),
             'virtualBalance'       => $this->string('virtual_balance'),
@@ -69,9 +70,9 @@ class AccountRequest extends Request
      */
     public function rules(): array
     {
-        $accountRoles   = join(',', config('firefly.accountRoles'));
-        $types          = join(',', array_keys(config('firefly.subTitlesByIdentifier')));
-        $ccPaymentTypes = join(',', array_keys(config('firefly.ccTypes')));
+        $accountRoles   = implode(',', config('firefly.accountRoles'));
+        $types          = implode(',', array_keys(config('firefly.subTitlesByIdentifier')));
+        $ccPaymentTypes = implode(',', array_keys(config('firefly.ccTypes')));
         $rules          = [
             'name'                    => 'required|min:1|uniqueAccountForUser',
             'opening_balance'         => 'numeric|required_with:opening_balance_date|nullable',
@@ -97,6 +98,7 @@ class AccountRequest extends Request
                 $account                 = $this->route()->parameter('account');
                 $rules['name']           .= ':' . $account->id;
                 $rules['account_number'] .= ':' . $account->id;
+                $rules['type']           = 'in:' . $types;
                 break;
         }
 

@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace FireflyIII\TransactionRules\Triggers;
 
 use FireflyIII\Models\TransactionJournal;
+use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Log;
 
 /**
@@ -65,15 +66,20 @@ final class AmountExactly extends AbstractTrigger implements TriggerInterface
      */
     public function triggered(TransactionJournal $journal): bool
     {
-        $amount  = $journal->destination_amount ?? $journal->amountPositive();
+        /** @var JournalRepositoryInterface $repos */
+        $repos = app(JournalRepositoryInterface::class);
+        $repos->setUser($journal->user);
+
+
+        $amount  = $journal->destination_amount ?? $repos->getJournalTotal($journal);
         $compare = $this->triggerValue;
         $result  = bccomp($amount, $compare);
         if (0 === $result) {
-            Log::debug(sprintf('RuleTrigger AmountExactly for journal #%d: %d matches %d exactly, so return true', $journal->id, $amount, $compare));
+            Log::debug(sprintf('RuleTrigger AmountExactly for journal #%d: %f matches %f exactly, so return true', $journal->id, $amount, $compare));
 
             return true;
         }
-        Log::debug(sprintf('RuleTrigger AmountExactly for journal #%d: %d matches %d NOT exactly, so return false', $journal->id, $amount, $compare));
+        Log::debug(sprintf('RuleTrigger AmountExactly for journal #%d: %f matches %f NOT exactly, so return false', $journal->id, $amount, $compare));
 
         return false;
     }

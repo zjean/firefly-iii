@@ -44,9 +44,9 @@ class UserCompany extends BunqObject
      */
     private $avatar;
     /** @var string */
-    private $cocNumber = '';
+    private $cocNumber;
     /** @var string */
-    private $counterBankIban = '';
+    private $counterBankIban;
     /** @var Carbon */
     private $created;
     /**
@@ -58,46 +58,47 @@ class UserCompany extends BunqObject
      */
     private $directorAlias;
     /** @var string */
-    private $displayName = '';
+    private $displayName;
     /** @var int */
-    private $id = 0;
+    private $id;
     /** @var string */
-    private $language = '';
+    private $language;
     /** @var string */
-    private $name = '';
+    private $name;
     /** @var array */
     private $notificationFilters = [];
     /** @var string */
-    private $publicNickName = '';
+    private $publicNickName;
     /** @var string */
-    private $publicUuid = '';
+    private $publicUuid;
     /** @var string */
-    private $region = '';
+    private $region;
     /** @var string */
-    private $sectorOfIndustry = '';
+    private $sectorOfIndustry;
     /** @var int */
-    private $sessionTimeout = 0;
+    private $sessionTimeout;
     /** @var string */
-    private $status = '';
+    private $status;
     /** @var string */
-    private $subStatus = '';
+    private $subStatus;
     /** @var string */
-    private $typeOfBusinessEntity = '';
+    private $typeOfBusinessEntity;
     /** @var array */
     private $ubos = [];
     /** @var Carbon */
     private $updated;
     /** @var int */
-    private $versionTos = 0;
+    private $versionTos;
 
     /**
      * UserCompany constructor.
      *
      * @param array $data
+     *
      */
     public function __construct(array $data)
     {
-        $this->id                   = intval($data['id']);
+        $this->id                   = (int)$data['id'];
         $this->created              = Carbon::createFromFormat('Y-m-d H:i:s.u', $data['created']);
         $this->updated              = Carbon::createFromFormat('Y-m-d H:i:s.u', $data['updated']);
         $this->status               = $data['status'];
@@ -107,13 +108,26 @@ class UserCompany extends BunqObject
         $this->publicNickName       = $data['public_nick_name'];
         $this->language             = $data['language'];
         $this->region               = $data['region'];
-        $this->sessionTimeout       = intval($data['session_timeout']);
-        $this->versionTos           = intval($data['version_terms_of_service']);
+        $this->sessionTimeout       = (int)$data['session_timeout'];
+        $this->versionTos           = (int)$data['version_terms_of_service'];
         $this->cocNumber            = $data['chamber_of_commerce_number'];
         $this->typeOfBusinessEntity = $data['type_of_business_entity'] ?? '';
         $this->sectorOfIndustry     = $data['sector_of_industry'] ?? '';
         $this->counterBankIban      = $data['counter_bank_iban'];
         $this->name                 = $data['name'];
+
+        // TODO alias
+        // TODO avatar
+        // TODO daily_limit_without_confirmation_login
+        // TODO notification_filters
+        // TODO address_main
+        // TODO address_postal
+        // TODO director_alias
+        // TODO ubo
+        // TODO customer
+        // TODO customer_limit
+        // TODO billing_contract
+        // TODO pack_membership
     }
 
     /**
@@ -122,5 +136,46 @@ class UserCompany extends BunqObject
     public function getId(): int
     {
         return $this->id;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $data = [
+            'id'                         => $this->id,
+            'created'                    => $this->created->format('Y-m-d H:i:s.u'),
+            'updated'                    => $this->updated->format('Y-m-d H:i:s.u'),
+            'status'                     => $this->status,
+            'sub_status'                 => $this->subStatus,
+            'public_uuid'                => $this->publicUuid,
+            'display_name'               => $this->displayName,
+            'public_nick_name'           => $this->publicNickName,
+            'language'                   => $this->language,
+            'region'                     => $this->region,
+            'session_timeout'            => $this->sessionTimeout,
+            'version_terms_of_service'   => $this->versionTos,
+            'chamber_of_commerce_number' => $this->cocNumber,
+            'type_of_business_entity'    => $this->typeOfBusinessEntity,
+            'sector_of_industry'         => $this->sectorOfIndustry,
+            'counter_bank_iban'          => $this->counterBankIban,
+            'name'                       => $this->name,
+        ];
+
+        // TODO alias
+        // TODO avatar
+        // TODO daily_limit_without_confirmation_login
+        // TODO notification_filters
+        // TODO address_main
+        // TODO address_postal
+        // TODO director_alias
+        // TODO ubo
+        // TODO customer
+        // TODO customer_limit
+        // TODO billing_contract
+        // TODO pack_membership
+
+        return $data;
     }
 }

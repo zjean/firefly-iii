@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * validation.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,11 +19,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
     'iban'                           => 'This is not a valid IBAN.',
+    'source_equals_destination'      => 'The source account equals the destination account',
     'unique_account_number_for_user' => 'It looks like this account number is already in use.',
+    'unique_iban_for_user'           => 'It looks like this IBAN is already in use.',
     'deleted_user'                   => 'Due to security constraints, you cannot register using this email address.',
     'rule_trigger_value'             => 'This value is invalid for the selected trigger.',
     'rule_action_value'              => 'This value is invalid for the selected action.',
@@ -30,10 +32,11 @@ return [
     'file_attached'                  => 'Succesfully uploaded file ":name".',
     'must_exist'                     => 'The ID in field :attribute does not exist in the database.',
     'all_accounts_equal'             => 'All accounts in this field must be equal.',
+    'invalid_selection'              => 'Your selection is invalid',
     'belongs_user'                   => 'This value is invalid for this field.',
     'at_least_one_transaction'       => 'Need at least one transaction.',
     'require_currency_info'          => 'The content of this field is invalid without currency information.',
-    'equal_description'              => 'Transaction description should not equal journal description.',
+    'equal_description'              => 'Transaction description should not equal global description.',
     'file_invalid_mime'              => 'File ":name" is of type ":mime" which is not accepted as a new upload.',
     'file_too_large'                 => 'File ":name" is too large.',
     'belongs_to_user'                => 'The value of :attribute is unknown',

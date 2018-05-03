@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace FireflyIII\TransactionRules\Triggers;
 
 use FireflyIII\Models\TransactionJournal;
+use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Log;
 
 /**
@@ -49,7 +50,7 @@ final class AmountMore extends AbstractTrigger implements TriggerInterface
     public static function willMatchEverything($value = null)
     {
         if (null !== $value) {
-            $res = 0 === bccomp('0', strval($value));
+            $res = 0 === bccomp('0', (string)$value);
             if (true === $res) {
                 Log::error(sprintf('Cannot use %s with a value equal to 0.', self::class));
             }
@@ -71,16 +72,20 @@ final class AmountMore extends AbstractTrigger implements TriggerInterface
      */
     public function triggered(TransactionJournal $journal): bool
     {
-        $amount  = $journal->destination_amount ?? $journal->amountPositive();
+        /** @var JournalRepositoryInterface $repos */
+        $repos = app(JournalRepositoryInterface::class);
+        $repos->setUser($journal->user);
+
+        $amount  = $journal->destination_amount ?? $repos->getJournalTotal($journal);
         $compare = $this->triggerValue;
         $result  = bccomp($amount, $compare);
         if (1 === $result) {
-            Log::debug(sprintf('RuleTrigger AmountMore for journal #%d: %d is more than %d, so return true', $journal->id, $amount, $compare));
+            Log::debug(sprintf('RuleTrigger AmountMore for journal #%d: %f is more than %f, so return true', $journal->id, $amount, $compare));
 
             return true;
         }
 
-        Log::debug(sprintf('RuleTrigger AmountMore for journal #%d: %d is NOT more than %d, so return false', $journal->id, $amount, $compare));
+        Log::debug(sprintf('RuleTrigger AmountMore for journal #%d: %f is NOT more than %f, so return false', $journal->id, $amount, $compare));
 
         return false;
     }

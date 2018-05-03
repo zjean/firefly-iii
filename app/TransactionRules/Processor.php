@@ -49,6 +49,8 @@ final class Processor
     public $triggers;
     /** @var int Found triggers */
     private $foundTriggers = 0;
+    /** @var bool */
+    private $strict = true;
 
     /**
      * Processor constructor.
@@ -67,13 +69,16 @@ final class Processor
      * @param bool $includeActions
      *
      * @return Processor
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public static function make(Rule $rule, $includeActions = true)
     {
         Log::debug(sprintf('Making new rule from Rule %d', $rule->id));
-        $self       = new self;
-        $self->rule = $rule;
-        $triggerSet = $rule->ruleTriggers()->orderBy('order', 'ASC')->get();
+        Log::debug(sprintf('Rule is strict: %s', var_export($rule->strict, true)));
+        $self         = new self;
+        $self->rule   = $rule;
+        $self->strict = $rule->strict;
+        $triggerSet   = $rule->ruleTriggers()->orderBy('order', 'ASC')->get();
         /** @var RuleTrigger $trigger */
         foreach ($triggerSet as $trigger) {
             Log::debug(sprintf('Push trigger %d', $trigger->id));
@@ -127,7 +132,7 @@ final class Processor
     {
         $self = new self;
         foreach ($triggers as $entry) {
-            $entry['value'] = null === $entry['value'] ? '' : $entry['value'];
+            $entry['value'] = $entry['value'] ?? '';
             $trigger        = TriggerFactory::makeTriggerFromStrings($entry['type'], $entry['value'], $entry['stopProcessing']);
             $self->triggers->push($trigger);
         }
@@ -173,6 +178,7 @@ final class Processor
      * @param Transaction $transaction
      *
      * @return bool
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function handleTransaction(Transaction $transaction): bool
     {
@@ -207,6 +213,7 @@ final class Processor
      * @param TransactionJournal $journal
      *
      * @return bool
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function handleTransactionJournal(TransactionJournal $journal): bool
     {
@@ -229,6 +236,7 @@ final class Processor
      * Run the actions
      *
      * @return bool
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     private function actions()
     {
@@ -270,6 +278,12 @@ final class Processor
             if ($trigger->triggered($this->journal)) {
                 Log::debug('Is a match!');
                 ++$hitTriggers;
+                // is non-strict? then return true!
+                if (!$this->strict) {
+                    Log::debug('Rule is set as non-strict, return true!');
+
+                    return true;
+                }
             }
             if ($trigger->stopProcessing) {
                 Log::debug('Stop processing this trigger and break.');

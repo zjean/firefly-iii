@@ -28,9 +28,12 @@ use FireflyIII\Exceptions\FireflyException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 use Log;
+use FireflyIII\User;
 
 /**
  * Class Preference.
+ *
+ * @property mixed $data
  */
 class Preference extends Model
 {
@@ -57,6 +60,7 @@ class Preference extends Model
      */
     public function getDataAttribute($value)
     {
+        $result = null;
         try {
             $data = Crypt::decrypt($value);
         } catch (DecryptException $e) {
@@ -65,27 +69,32 @@ class Preference extends Model
                 sprintf('Could not decrypt preference #%d. If this error persists, please run "php artisan cache:clear" on the command line.', $this->id)
             );
         }
-        $unserialized = false;
+        $serialized = true;
         try {
-            $unserialized = unserialize($data);
-        } catch (Exception $e) {
-            // don't care, assume is false.
+            unserialize($data, ['allowed_classes' => false]);
+        } /** @noinspection BadExceptionsProcessingInspection */ catch (Exception $e) {
+            $serialized = false;
         }
-        if (!(false === $unserialized)) {
-            return $unserialized;
+        if (!$serialized) {
+            $result = json_decode($data, true);
+        }
+        if ($serialized) {
+            Log::error(sprintf('Preference #%d ("%s") was stored as serialised object. It will be deleted and recreated.', $this->id, $this->name));
         }
 
-        return json_decode($data, true);
+        return $result;
     }
 
     /**
      * @codeCoverageIgnore
      *
      * @param $value
+     *
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     public function setDataAttribute($value)
     {
-        $this->attributes['data'] = Crypt::encrypt(serialize($value));
+        $this->attributes['data'] = Crypt::encrypt(json_encode($value));
     }
 
     /**
@@ -94,6 +103,6 @@ class Preference extends Model
      */
     public function user()
     {
-        return $this->belongsTo('FireflyIII\User');
+        return $this->belongsTo(User::class);
     }
 }

@@ -22,9 +22,9 @@ declare(strict_types=1);
 
 namespace FireflyIII\Services\Password;
 
+use Exception;
 use Log;
 use Requests;
-use Requests_Exception;
 
 /**
  * Class PwndVerifier.
@@ -46,14 +46,11 @@ class PwndVerifier implements Verifier
 
         try {
             $result = Requests::get($uri, ['originalPasswordIsAHash' => 'true'], $opt);
-        } catch (Requests_Exception $e) {
+        } catch (Exception $e) {
             return true;
         }
         Log::debug(sprintf('Status code returned is %d', $result->status_code));
-        if (404 === $result->status_code) {
-            return true;
-        }
 
-        return false;
+        return 404 === $result->status_code;
     }
 }

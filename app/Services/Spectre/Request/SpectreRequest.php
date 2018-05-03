@@ -22,12 +22,11 @@ declare(strict_types=1);
 
 namespace FireflyIII\Services\Spectre\Request;
 
+use Exception;
 use FireflyIII\Exceptions\FireflyException;
-use FireflyIII\Services\Spectre\Exception\SpectreException;
 use FireflyIII\User;
 use Log;
 use Requests;
-use Requests_Exception;
 use Requests_Response;
 
 /**
@@ -44,9 +43,9 @@ abstract class SpectreRequest
     /** @var string */
     protected $serviceSecret = '';
     /** @var string */
-    private $privateKey = '';
+    private $privateKey;
     /** @var string */
-    private $server = '';
+    private $server;
     /** @var User */
     private $user;
 
@@ -55,6 +54,8 @@ abstract class SpectreRequest
      *
      * @param User $user
      *
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Illuminate\Container\EntryNotFoundException
      */
     public function __construct(User $user)
@@ -180,7 +181,6 @@ abstract class SpectreRequest
      * @return array
      *
      * @throws FireflyException
-     * @throws SpectreException
      */
     protected function sendSignedSpectreGet(string $uri, array $data): array
     {
@@ -197,11 +197,11 @@ abstract class SpectreRequest
         Log::debug('Final headers for spectre signed get request:', $headers);
         try {
             $response = Requests::get($fullUri, $headers);
-        } catch (Requests_Exception $e) {
+        } catch (Exception $e) {
             throw new FireflyException(sprintf('Request Exception: %s', $e->getMessage()));
         }
         $this->detectError($response);
-        $statusCode = intval($response->status_code);
+        $statusCode = (int)$response->status_code;
 
         $body                        = $response->body;
         $array                       = json_decode($body, true);
@@ -224,7 +224,6 @@ abstract class SpectreRequest
      * @return array
      *
      * @throws FireflyException
-     * @throws SpectreException
      */
     protected function sendSignedSpectrePost(string $uri, array $data): array
     {
@@ -241,7 +240,7 @@ abstract class SpectreRequest
         Log::debug('Final headers for spectre signed POST request:', $headers);
         try {
             $response = Requests::post($fullUri, $headers, $body);
-        } catch (Requests_Exception $e) {
+        } catch (Exception $e) {
             throw new FireflyException(sprintf('Request Exception: %s', $e->getMessage()));
         }
         $this->detectError($response);
@@ -258,7 +257,6 @@ abstract class SpectreRequest
      * @param Requests_Response $response
      *
      * @throws FireflyException
-     * @throws SpectreException
      */
     private function detectError(Requests_Response $response): void
     {
@@ -275,7 +273,7 @@ abstract class SpectreRequest
             throw new FireflyException(sprintf('Error of class %s: %s', $errorClass, $message));
         }
 
-        $statusCode = intval($response->status_code);
+        $statusCode = (int)$response->status_code;
         if (200 !== $statusCode) {
             throw new FireflyException(sprintf('Status code %d: %s', $statusCode, $response->body));
         }

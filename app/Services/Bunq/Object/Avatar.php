@@ -27,4 +27,34 @@ namespace FireflyIII\Services\Bunq\Object;
  */
 class Avatar extends BunqObject
 {
+    /** @var string */
+    private $anchorUuid;
+    /** @var Image */
+    private $image;
+    /** @var string */
+    private $uuid;
+
+    /**
+     * Avatar constructor.
+     *
+     * @param array $data
+     */
+    public function __construct(array $data)
+    {
+        $this->uuid       = $data['uuid'];
+        $this->anchorUuid = $data['anchor_uuid'];
+        $this->image      = new Image($data['image']);
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'uuid'        => $this->uuid,
+            'anchor_uuid' => $this->anchorUuid,
+            'image'       => $this->image->toArray(),
+        ];
+    }
 }

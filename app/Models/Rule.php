@@ -46,19 +46,23 @@ class Rule extends Model
             'active'          => 'boolean',
             'order'           => 'int',
             'stop_processing' => 'boolean',
+            'strict'          => 'boolean',
         ];
+    /** @var array */
+    protected $fillable = ['rule_group_id', 'order', 'active', 'title', 'description', 'user_id','strict'];
 
     /**
      * @param string $value
      *
      * @return Rule
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value): Rule
     {
         if (auth()->check()) {
-            $ruleId = intval($value);
+            $ruleId = (int)$value;
             $rule   = auth()->user()->rules()->find($ruleId);
-            if (!is_null($rule)) {
+            if (null !== $rule) {
                 return $rule;
             }
         }
@@ -90,6 +94,14 @@ class Rule extends Model
     public function ruleTriggers()
     {
         return $this->hasMany('FireflyIII\Models\RuleTrigger');
+    }
+
+    /**
+     * @param $value
+     */
+    public function setDescriptionAttribute($value)
+    {
+        $this->attributes['description'] = e($value);
     }
 
     /**

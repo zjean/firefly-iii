@@ -29,13 +29,10 @@ use FireflyIII\Events\UpdatedTransactionJournal;
 use FireflyIII\Helpers\Attachments\AttachmentHelperInterface;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Http\Requests\JournalFormRequest;
-use FireflyIII\Models\Account;
-use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Note;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
-use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
@@ -51,9 +48,6 @@ use View;
  */
 class SingleController extends Controller
 {
-    /** @var AccountRepositoryInterface */
-    private $accounts;
-
     /** @var AttachmentHelperInterface */
     private $attachments;
 
@@ -82,7 +76,6 @@ class SingleController extends Controller
         // some useful repositories:
         $this->middleware(
             function ($request, $next) {
-                $this->accounts    = app(AccountRepositoryInterface::class);
                 $this->budgets     = app(BudgetRepositoryInterface::class);
                 $this->piggyBanks  = app(PiggyBankRepositoryInterface::class);
                 $this->attachments = app(AttachmentHelperInterface::class);
@@ -104,13 +97,12 @@ class SingleController extends Controller
      */
     public function cloneTransaction(TransactionJournal $journal)
     {
-        $source       = $journal->sourceAccountList()->first();
-        $destination  = $journal->destinationAccountList()->first();
-        $budget       = $journal->budgets()->first();
-        $budgetId     = null === $budget ? 0 : $budget->id;
-        $category     = $journal->categories()->first();
-        $categoryName = null === $category ? '' : $category->name;
-        $tags         = join(',', $journal->tags()->get()->pluck('tag')->toArray());
+        $source       = $this->repository->getJournalSourceAccounts($journal)->first();
+        $destination  = $this->repository->getJournalDestinationAccounts($journal)->first();
+        $budgetId     = $this->repository->getJournalBudgetId($journal);
+        $categoryName = $this->repository->getJournalCategoryName($journal);
+
+        $tags = implode(',', $this->repository->getTags($journal));
         /** @var Transaction $transaction */
         $transaction   = $journal->transactions()->first();
         $amount        = app('steam')->positive($transaction->amount);
@@ -163,7 +155,6 @@ class SingleController extends Controller
     {
         $what           = strtolower($what);
         $what           = $request->old('what') ?? $what;
-        $assetAccounts  = $this->groupedActiveAccountList();
         $budgets        = ExpandedForm::makeSelectListWithEmpty($this->budgets->getActiveBudgets());
         $piggyBanks     = $this->piggyBanks->getPiggyBanksWithAmount();
         $piggies        = ExpandedForm::makeSelectListWithEmpty($piggyBanks);
@@ -171,6 +162,14 @@ class SingleController extends Controller
         $subTitle       = trans('form.add_new_' . $what);
         $subTitleIcon   = 'fa-plus';
         $optionalFields = Preferences::get('transaction_journal_optional_fields', [])->data;
+        $source         = (int)$request->get('source');
+
+        if (($what === 'withdrawal' || $what === 'transfer') && $source > 0) {
+            $preFilled['source_account_id'] = $source;
+        }
+        if ($what === 'deposit' && $source > 0) {
+            $preFilled['destination_account_id'] = $source;
+        }
 
         Session::put('preFilled', $preFilled);
 
@@ -184,7 +183,7 @@ class SingleController extends Controller
 
         return view(
             'transactions.single.create',
-            compact('assetAccounts', 'subTitleIcon', 'budgets', 'what', 'piggies', 'subTitle', 'optionalFields', 'preFilled')
+            compact('subTitleIcon', 'budgets', 'what', 'piggies', 'subTitle', 'optionalFields', 'preFilled')
         );
     }
 
@@ -228,7 +227,7 @@ class SingleController extends Controller
         }
         // @codeCoverageIgnoreEnd
         $type = $transactionJournal->transactionTypeStr();
-        Session::flash('success', strval(trans('firefly.deleted_' . strtolower($type), ['description' => $transactionJournal->description])));
+        Session::flash('success', (string)trans('firefly.deleted_' . strtolower($type), ['description' => $transactionJournal->description]));
 
         $this->repository->destroy($transactionJournal);
 
@@ -238,57 +237,61 @@ class SingleController extends Controller
     }
 
     /**
-     * @param TransactionJournal $journal
+     * @param TransactionJournal         $journal
+     *
+     * @param JournalRepositoryInterface $repository
      *
      * @return mixed
      */
-    public function edit(TransactionJournal $journal)
+    public function edit(TransactionJournal $journal, JournalRepositoryInterface $repository)
     {
-        // @codeCoverageIgnoreStart
-        if ($this->isOpeningBalance($journal)) {
+        $transactionType = $repository->getTransactionType($journal);
+
+        // redirect to account:
+        if ($transactionType === TransactionType::OPENING_BALANCE) {
             return $this->redirectToAccount($journal);
         }
-        // @codeCoverageIgnoreEnd
+        // redirect to reconcile edit:
+        if ($transactionType === TransactionType::RECONCILIATION) {
+            return redirect(route('accounts.reconcile.edit', [$journal->id]));
+        }
+
+        // redirect to split edit:
         if ($this->isSplitJournal($journal)) {
             return redirect(route('transactions.split.edit', [$journal->id]));
         }
 
-        $what          = strtolower($journal->transactionTypeStr());
-        $assetAccounts = $this->groupedAccountList();
-        $budgetList    = ExpandedForm::makeSelectListWithEmpty($this->budgets->getBudgets());
-
-        if (TransactionType::RECONCILIATION === $journal->transactionType->type) {
-            return redirect(route('accounts.reconcile.edit', [$journal->id]));
-        }
+        $what       = strtolower($transactionType);
+        $budgetList = ExpandedForm::makeSelectListWithEmpty($this->budgets->getBudgets());
 
         // view related code
         $subTitle = trans('breadcrumbs.edit_journal', ['description' => $journal->description]);
 
         // journal related code
-        $sourceAccounts      = $journal->sourceAccountList();
-        $destinationAccounts = $journal->destinationAccountList();
+        $sourceAccounts      = $repository->getJournalSourceAccounts($journal);
+        $destinationAccounts = $repository->getJournalDestinationAccounts($journal);
         $optionalFields      = Preferences::get('transaction_journal_optional_fields', [])->data;
-        $pTransaction        = $journal->positiveTransaction();
-        $foreignCurrency     = null !== $pTransaction->foreignCurrency ? $pTransaction->foreignCurrency : $pTransaction->transactionCurrency;
+        $pTransaction        = $repository->getFirstPosTransaction($journal);
+        $foreignCurrency     = $pTransaction->foreignCurrency ?? $pTransaction->transactionCurrency;
         $preFilled           = [
-            'date'                     => $journal->dateAsString(),
-            'interest_date'            => $journal->dateAsString('interest_date'),
-            'book_date'                => $journal->dateAsString('book_date'),
-            'process_date'             => $journal->dateAsString('process_date'),
-            'category'                 => $journal->categoryAsString(),
-            'budget_id'                => $journal->budgetId(),
-            'tags'                     => join(',', $journal->tags->pluck('tag')->toArray()),
+            'date'                     => $repository->getJournalDate($journal, null), //  $journal->dateAsString()
+            'interest_date'            => $repository->getJournalDate($journal, 'interest_date'),
+            'book_date'                => $repository->getJournalDate($journal, 'book_date'),
+            'process_date'             => $repository->getJournalDate($journal, 'process_date'),
+            'category'                 => $repository->getJournalCategoryName($journal),
+            'budget_id'                => $repository->getJournalBudgetId($journal),
+            'tags'                     => implode(',', $repository->getTags($journal)),
             'source_account_id'        => $sourceAccounts->first()->id,
             'source_account_name'      => $sourceAccounts->first()->edit_name,
             'destination_account_id'   => $destinationAccounts->first()->id,
             'destination_account_name' => $destinationAccounts->first()->edit_name,
 
             // new custom fields:
-            'due_date'                 => $journal->dateAsString('due_date'),
-            'payment_date'             => $journal->dateAsString('payment_date'),
-            'invoice_date'             => $journal->dateAsString('invoice_date'),
-            'interal_reference'        => $journal->getMeta('internal_reference'),
-            'notes'                    => '',
+            'due_date'                 => $repository->getJournalDate($journal, 'due_date'),
+            'payment_date'             => $repository->getJournalDate($journal, 'payment_date'),
+            'invoice_date'             => $repository->getJournalDate($journal, 'invoice_date'),
+            'interal_reference'        => $repository->getMetaField($journal, 'internal_reference'),
+            'notes'                    => $repository->getNoteText($journal),
 
             // amount fields
             'amount'                   => $pTransaction->amount,
@@ -301,11 +304,6 @@ class SingleController extends Controller
             'foreign_currency'         => $foreignCurrency,
             'destination_currency'     => $foreignCurrency,
         ];
-        /** @var Note $note */
-        $note = $this->repository->getNote($journal);
-        if (null !== $note) {
-            $preFilled['notes'] = $note->text;
-        }
 
         // amounts for withdrawals and deposits:
         // amount, native_amount, source_amount, destination_amount
@@ -324,7 +322,7 @@ class SingleController extends Controller
 
         return view(
             'transactions.single.edit',
-            compact('journal', 'optionalFields', 'assetAccounts', 'what', 'budgetList', 'subTitle')
+            compact('journal', 'optionalFields', 'what', 'budgetList', 'subTitle')
         )->with('data', $preFilled);
     }
 
@@ -336,18 +334,16 @@ class SingleController extends Controller
      */
     public function store(JournalFormRequest $request, JournalRepositoryInterface $repository)
     {
-        $doSplit       = 1 === intval($request->get('split_journal'));
-        $createAnother = 1 === intval($request->get('create_another'));
+        $doSplit       = 1 === (int)$request->get('split_journal');
+        $createAnother = 1 === (int)$request->get('create_another');
         $data          = $request->getJournalData();
-
-        // todo call factory instead of repository
-
-
         $journal       = $repository->store($data);
+
+
         if (null === $journal->id) {
             // error!
-            Log::error('Could not store transaction journal: ', $journal->getErrors()->toArray());
-            Session::flash('error', $journal->getErrors()->first());
+            Log::error('Could not store transaction journal.');
+            Session::flash('error', (string)trans('firefly.unknown_journal_error'));
 
             return redirect(route('transactions.create', [$request->input('what')]))->withInput();
         }
@@ -358,17 +354,17 @@ class SingleController extends Controller
 
         // store the journal only, flash the rest.
         Log::debug(sprintf('Count of error messages is %d', $this->attachments->getErrors()->count()));
-        if (count($this->attachments->getErrors()->get('attachments')) > 0) {
+        if (\count($this->attachments->getErrors()->get('attachments')) > 0) {
             Session::flash('error', $this->attachments->getErrors()->get('attachments'));
         }
         // flash messages
-        if (count($this->attachments->getMessages()->get('attachments')) > 0) {
+        if (\count($this->attachments->getMessages()->get('attachments')) > 0) {
             Session::flash('info', $this->attachments->getMessages()->get('attachments'));
         }
 
         event(new StoredTransactionJournal($journal, $data['piggy_bank_id']));
 
-        Session::flash('success', strval(trans('firefly.stored_journal', ['description' => $journal->description])));
+        Session::flash('success', (string)trans('firefly.stored_journal', ['description' => $journal->description]));
         Preferences::mark();
 
         // @codeCoverageIgnoreStart
@@ -420,12 +416,12 @@ class SingleController extends Controller
         event(new UpdatedTransactionJournal($journal));
         // update, get events by date and sort DESC
 
-        $type = strtolower($journal->transactionTypeStr());
-        Session::flash('success', strval(trans('firefly.updated_' . $type, ['description' => $data['description']])));
+        $type = strtolower($this->repository->getTransactionType($journal));
+        Session::flash('success', (string)trans('firefly.updated_' . $type, ['description' => $data['description']]));
         Preferences::mark();
 
         // @codeCoverageIgnoreStart
-        if (1 === intval($request->get('return_to_edit'))) {
+        if (1 === (int)$request->get('return_to_edit')) {
             Session::put('transactions.edit.fromUpdate', true);
 
             return redirect(route('transactions.edit', [$journal->id]))->withInput(['return_to_edit' => 1]);
@@ -437,46 +433,6 @@ class SingleController extends Controller
     }
 
     /**
-     * @return array
-     */
-    private function groupedAccountList(): array
-    {
-        $accounts = $this->accounts->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET]);
-        $return   = [];
-        /** @var Account $account */
-        foreach ($accounts as $account) {
-            $type = $account->getMeta('accountRole');
-            if (0 === strlen($type)) {
-                $type = 'no_account_type'; // @codeCoverageIgnore
-            }
-            $key                        = strval(trans('firefly.opt_group_' . $type));
-            $return[$key][$account->id] = $account->name;
-        }
-
-        return $return;
-    }
-
-    /**
-     * @return array
-     */
-    private function groupedActiveAccountList(): array
-    {
-        $accounts = $this->accounts->getActiveAccountsByType([AccountType::DEFAULT, AccountType::ASSET]);
-        $return   = [];
-        /** @var Account $account */
-        foreach ($accounts as $account) {
-            $type = $account->getMeta('accountRole');
-            if (0 === strlen($type)) {
-                $type = 'no_account_type'; // @codeCoverageIgnore
-            }
-            $key                        = strval(trans('firefly.opt_group_' . $type));
-            $return[$key][$account->id] = $account->name;
-        }
-
-        return $return;
-    }
-
-    /**
      * @param TransactionJournal $journal
      *
      * @return bool
@@ -485,10 +441,6 @@ class SingleController extends Controller
     {
         $count = $this->repository->countTransactions($journal);
 
-        if ($count > 2) {
-            return true; // @codeCoverageIgnore
-        }
-
-        return false;
+        return $count > 2;
     }
 }

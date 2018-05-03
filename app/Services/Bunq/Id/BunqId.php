@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Services\Bunq\Id;
 
+use Log;
 /**
  * Class BunqId.
  */
@@ -30,6 +31,18 @@ class BunqId
 {
     /** @var int */
     private $id = 0;
+
+    /**
+     * BunqId constructor.
+     *
+     * @param null $data
+     */
+    public function __construct($data = null)
+    {
+        if (null !== $data) {
+            $this->id = $data['id'];
+        }
+    }
 
     /**
      * @return int
@@ -45,5 +58,15 @@ class BunqId
     public function setId(int $id)
     {
         $this->id = $id;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+        ];
     }
 }

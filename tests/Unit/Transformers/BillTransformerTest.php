@@ -49,15 +49,16 @@ class BillTransformerTest extends TestCase
 
         $bill        = Bill::create(
             [
-                'user_id'     => $this->user()->id,
-                'name'        => 'Some bill ' . rand(1, 10000),
-                'match'       => 'word,' . rand(1, 10000),
-                'amount_min'  => 12.34,
-                'amount_max'  => 45.67,
-                'date'        => '2018-01-02',
-                'repeat_freq' => 'weekly',
-                'skip'        => 0,
-                'active'      => 1,
+                'user_id'                 => $this->user()->id,
+                'name'                    => 'Some bill ' . random_int(1, 10000),
+                'match'                   => 'word,' . random_int(1, 10000),
+                'amount_min'              => 12.34,
+                'amount_max'              => 45.67,
+                'transaction_currency_id' => 1,
+                'date'                    => '2018-01-02',
+                'repeat_freq'             => 'weekly',
+                'skip'                    => 0,
+                'active'                  => 1,
             ]
         );
         $transformer = new BillTransformer(new ParameterBag);
@@ -77,18 +78,19 @@ class BillTransformerTest extends TestCase
 
         $bill     = Bill::create(
             [
-                'user_id'     => $this->user()->id,
-                'name'        => 'Some bill ' . rand(1, 10000),
-                'match'       => 'word,' . rand(1, 10000),
-                'amount_min'  => 12.34,
-                'amount_max'  => 45.67,
-                'date'        => '2018-01-02',
-                'repeat_freq' => 'weekly',
-                'skip'        => 0,
-                'active'      => 1,
+                'user_id'                 => $this->user()->id,
+                'name'                    => 'Some bill ' . random_int(1, 10000),
+                'match'                   => 'word,' . random_int(1, 10000),
+                'amount_min'              => 12.34,
+                'amount_max'              => 45.67,
+                'date'                    => '2018-01-02',
+                'transaction_currency_id' => 1,
+                'repeat_freq'             => 'weekly',
+                'skip'                    => 0,
+                'active'                  => 1,
             ]
         );
-        $noteText = 'I are a note ' . rand(1, 10000);
+        $noteText = 'I are a note ' . random_int(1, 10000);
         Note::create(
             [
                 'noteable_id'   => $bill->id,
@@ -121,15 +123,16 @@ class BillTransformerTest extends TestCase
         $repository->shouldReceive('getPaidDatesInRange')->andReturn(new Collection([new Carbon('2018-01-02')]));
         $bill       = Bill::create(
             [
-                'user_id'     => $this->user()->id,
-                'name'        => 'Some bill ' . rand(1, 10000),
-                'match'       => 'word,' . rand(1, 10000),
-                'amount_min'  => 12.34,
-                'amount_max'  => 45.67,
-                'date'        => '2018-01-02',
-                'repeat_freq' => 'monthly',
-                'skip'        => 0,
-                'active'      => 1,
+                'user_id'                 => $this->user()->id,
+                'name'                    => 'Some bill ' . random_int(1, 10000),
+                'match'                   => 'word,' . random_int(1, 10000),
+                'amount_min'              => 12.34,
+                'amount_max'              => 45.67,
+                'date'                    => '2018-01-02',
+                'transaction_currency_id' => 1,
+                'repeat_freq'             => 'monthly',
+                'skip'                    => 0,
+                'active'                  => 1,
             ]
         );
         $parameters = new ParameterBag();

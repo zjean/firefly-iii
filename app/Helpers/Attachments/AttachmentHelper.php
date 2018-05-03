@@ -50,12 +50,13 @@ class AttachmentHelper implements AttachmentHelperInterface
     /** @var \Illuminate\Contracts\Filesystem\Filesystem */
     protected $uploadDisk;
 
+
     /**
-     *
+     * AttachmentHelper constructor.
      */
     public function __construct()
     {
-        $this->maxUploadSize = intval(config('firefly.maxUploadSize'));
+        $this->maxUploadSize = (int)config('firefly.maxUploadSize');
         $this->allowedMimes  = (array)config('firefly.allowedMimes');
         $this->errors        = new MessageBag;
         $this->messages      = new MessageBag;
@@ -70,7 +71,7 @@ class AttachmentHelper implements AttachmentHelperInterface
      */
     public function getAttachmentLocation(Attachment $attachment): string
     {
-        $path = sprintf('%s%sat-%d.data', storage_path('upload'), DIRECTORY_SEPARATOR, intval($attachment->id));
+        $path = sprintf('%s%sat-%d.data', storage_path('upload'), DIRECTORY_SEPARATOR, (int)$attachment->id);
 
         return $path;
     }
@@ -154,6 +155,7 @@ class AttachmentHelper implements AttachmentHelperInterface
      * @param Model        $model
      *
      * @return Attachment
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     protected function processFile(UploadedFile $file, Model $model): Attachment
     {
@@ -205,7 +207,7 @@ class AttachmentHelper implements AttachmentHelperInterface
         Log::debug('Now in validMime()');
         $mime = e($file->getMimeType());
         $name = e($file->getClientOriginalName());
-        Log::debug(sprintf('Name is %, and mime is %s', $name, $mime));
+        Log::debug(sprintf('Name is %s, and mime is %s', $name, $mime));
         Log::debug('Valid mimes are', $this->allowedMimes);
 
         if (!in_array($mime, $this->allowedMimes)) {

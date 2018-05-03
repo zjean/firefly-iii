@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\TransactionRules\Triggers;
 
+use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Triggers\HasNoCategory;
 use Tests\TestCase;
@@ -36,7 +37,7 @@ class HasNoCategoryTest extends TestCase
      */
     public function testTriggeredCategory()
     {
-        $journal  = TransactionJournal::find(31);
+        $journal  = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $category = $journal->user->categories()->first();
         $journal->categories()->detach();
         $journal->categories()->save($category);
@@ -52,8 +53,16 @@ class HasNoCategoryTest extends TestCase
      */
     public function testTriggeredNoCategory()
     {
-        $journal = TransactionJournal::find(32);
+        $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $journal->categories()->detach();
+
+        // also detach transactions:
+        /** @var Transaction $transaction */
+        foreach ($journal->transactions as $transaction) {
+            $transaction->categories()->detach();
+            $this->assertEquals(0, $transaction->categories()->count());
+        }
+
         $this->assertEquals(0, $journal->categories()->count());
 
         $trigger = HasNoCategory::makeFromStrings('', false);
@@ -66,7 +75,7 @@ class HasNoCategoryTest extends TestCase
      */
     public function testTriggeredTransaction()
     {
-        $journal     = TransactionJournal::find(33);
+        $journal     = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $transaction = $journal->transactions()->first();
         $category    = $journal->user->categories()->first();
 

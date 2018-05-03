@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * CsvExporter.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 namespace FireflyIII\Export\Exporter;
 
@@ -35,14 +35,6 @@ class CsvExporter extends BasicExporter implements ExporterInterface
     private $fileName;
 
     /**
-     * CsvExporter constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * @return string
      */
     public function getFileName(): string
@@ -53,7 +45,6 @@ class CsvExporter extends BasicExporter implements ExporterInterface
     /**
      * @return bool
      *
-     * @throws \TypeError
      */
     public function run(): bool
     {

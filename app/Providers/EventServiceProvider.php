@@ -22,17 +22,17 @@ declare(strict_types=1);
 
 namespace FireflyIII\Providers;
 
+use FireflyIII\Events\AdminRequestedTestMessage;
 use FireflyIII\Events\RegisteredUser;
+use FireflyIII\Events\RequestedNewPassword;
 use FireflyIII\Events\RequestedVersionCheckStatus;
-use FireflyIII\Models\Account;
+use FireflyIII\Events\StoredTransactionJournal;
+use FireflyIII\Events\UpdatedTransactionJournal;
+use FireflyIII\Events\UserChangedEmail;
 use FireflyIII\Models\PiggyBank;
 use FireflyIII\Models\PiggyBankRepetition;
-use FireflyIII\Models\Transaction;
-use FireflyIII\Models\TransactionJournal;
-use FireflyIII\Models\TransactionJournalMeta;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Log;
 
 /**
  * Class EventServiceProvider.
@@ -48,41 +48,38 @@ class EventServiceProvider extends ServiceProvider
     protected $listen
         = [
             // is a User related event.
-            RegisteredUser::class                         => [
+            RegisteredUser::class              => [
                 'FireflyIII\Handlers\Events\UserEventHandler@sendRegistrationMail',
                 'FireflyIII\Handlers\Events\UserEventHandler@attachUserRole',
             ],
             // is a User related event.
-            Login::class                                  => [
+            Login::class                       => [
                 'FireflyIII\Handlers\Events\UserEventHandler@checkSingleUserIsAdmin',
 
             ],
-            RequestedVersionCheckStatus::class            => [
+            RequestedVersionCheckStatus::class => [
                 'FireflyIII\Handlers\Events\VersionCheckEventHandler@checkForUpdates',
             ],
 
             // is a User related event.
-            'FireflyIII\Events\RequestedNewPassword'      => [
+            RequestedNewPassword::class        => [
                 'FireflyIII\Handlers\Events\UserEventHandler@sendNewPassword',
             ],
             // is a User related event.
-            'FireflyIII\Events\UserChangedEmail'          => [
+            UserChangedEmail::class            => [
                 'FireflyIII\Handlers\Events\UserEventHandler@sendEmailChangeConfirmMail',
                 'FireflyIII\Handlers\Events\UserEventHandler@sendEmailChangeUndoMail',
             ],
             // admin related
-            'FireflyIII\Events\AdminRequestedTestMessage' => [
+            AdminRequestedTestMessage::class   => [
                 'FireflyIII\Handlers\Events\AdminEventHandler@sendTestMessage',
             ],
             // is a Transaction Journal related event.
-            'FireflyIII\Events\StoredTransactionJournal'  => [
-                'FireflyIII\Handlers\Events\StoredJournalEventHandler@scanBills',
-                'FireflyIII\Handlers\Events\StoredJournalEventHandler@connectToPiggyBank',
+            StoredTransactionJournal::class    => [
                 'FireflyIII\Handlers\Events\StoredJournalEventHandler@processRules',
             ],
             // is a Transaction Journal related event.
-            'FireflyIII\Events\UpdatedTransactionJournal' => [
-                'FireflyIII\Handlers\Events\UpdatedJournalEventHandler@scanBills',
+            UpdatedTransactionJournal::class   => [
                 'FireflyIII\Handlers\Events\UpdatedJournalEventHandler@processRules',
             ],
         ];
@@ -109,8 +106,8 @@ class EventServiceProvider extends ServiceProvider
             function (PiggyBank $piggyBank) {
                 $repetition = new PiggyBankRepetition;
                 $repetition->piggyBank()->associate($piggyBank);
-                $repetition->startdate     = null === $piggyBank->startdate ? null : $piggyBank->startdate;
-                $repetition->targetdate    = null === $piggyBank->targetdate ? null : $piggyBank->targetdate;
+                $repetition->startdate     = $piggyBank->startdate;
+                $repetition->targetdate    = $piggyBank->targetdate;
                 $repetition->currentamount = 0;
                 $repetition->save();
             }
@@ -122,39 +119,6 @@ class EventServiceProvider extends ServiceProvider
      */
     protected function registerDeleteEvents()
     {
-        Account::deleted(
-            function (Account $account) {
-                Log::debug('Now trigger account delete response #' . $account->id);
-                /** @var Transaction $transaction */
-                foreach ($account->transactions()->get() as $transaction) {
-                    Log::debug('Now at transaction #' . $transaction->id);
-                    $journal = $transaction->transactionJournal()->first();
-                    if (null !== $journal) {
-                        Log::debug('Call for deletion of journal #' . $journal->id);
-                        $journal->delete();
-                    }
-                }
-            }
-        );
 
-        TransactionJournal::deleted(
-            function (TransactionJournal $journal) {
-                Log::debug(sprintf('Now triggered journal delete response #%d', $journal->id));
-
-                /** @var Transaction $transaction */
-                foreach ($journal->transactions()->get() as $transaction) {
-                    Log::debug(sprintf('Will now delete transaction #%d', $transaction->id));
-                    $transaction->delete();
-                }
-
-                // also delete journal_meta entries.
-
-                /** @var TransactionJournalMeta $meta */
-                foreach ($journal->transactionJournalMeta()->get() as $meta) {
-                    Log::debug(sprintf('Will now delete meta-entry #%d', $meta->id));
-                    $meta->delete();
-                }
-            }
-        );
     }
 }

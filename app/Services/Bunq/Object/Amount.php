@@ -28,9 +28,9 @@ namespace FireflyIII\Services\Bunq\Object;
 class Amount extends BunqObject
 {
     /** @var string */
-    private $currency = '';
+    private $currency;
     /** @var string */
-    private $value = '';
+    private $value;
 
     /**
      * Amount constructor.
@@ -59,5 +59,16 @@ class Amount extends BunqObject
     public function getValue(): string
     {
         return $this->value;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'currency' => $this->currency,
+            'value'    => $this->value,
+        ];
     }
 }

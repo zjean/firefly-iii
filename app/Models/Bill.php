@@ -23,19 +23,19 @@ declare(strict_types=1);
 namespace FireflyIII\Models;
 
 use Crypt;
+use FireflyIII\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Watson\Validating\ValidatingTrait;
 
 /**
  * Class Bill.
  */
 class Bill extends Model
 {
-    use SoftDeletes, ValidatingTrait;
+    use SoftDeletes;
     /**
      * The attributes that should be casted to native types.
      *
@@ -58,27 +58,24 @@ class Bill extends Model
      */
     protected $fillable
         = ['name', 'match', 'amount_min', 'match_encrypted', 'name_encrypted', 'user_id', 'amount_max', 'date', 'repeat_freq', 'skip',
-           'automatch', 'active',];
+           'automatch', 'active', 'transaction_currency_id'];
     /**
      * @var array
      */
     protected $hidden = ['amount_min_encrypted', 'amount_max_encrypted', 'name_encrypted', 'match_encrypted'];
-    /**
-     * @var array
-     */
-    protected $rules = ['name' => 'required|between:1,200'];
 
     /**
      * @param string $value
      *
      * @return Bill
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value): Bill
     {
         if (auth()->check()) {
-            $billId = intval($value);
+            $billId = (int)$value;
             $bill   = auth()->user()->bills()->find($billId);
-            if (!is_null($bill)) {
+            if (null !== $bill) {
                 return $bill;
             }
         }
@@ -100,10 +97,11 @@ class Bill extends Model
      * @param $value
      *
      * @return string
+     * @throws \Illuminate\Contracts\Encryption\DecryptException
      */
     public function getMatchAttribute($value)
     {
-        if (1 === intval($this->match_encrypted)) {
+        if (1 === (int)$this->match_encrypted) {
             return Crypt::decrypt($value);
         }
 
@@ -116,10 +114,11 @@ class Bill extends Model
      * @param $value
      *
      * @return string
+     * @throws \Illuminate\Contracts\Encryption\DecryptException
      */
     public function getNameAttribute($value)
     {
-        if (1 === intval($this->name_encrypted)) {
+        if (1 === (int)$this->name_encrypted) {
             return Crypt::decrypt($value);
         }
 
@@ -142,7 +141,7 @@ class Bill extends Model
      */
     public function setAmountMaxAttribute($value)
     {
-        $this->attributes['amount_max'] = strval($value);
+        $this->attributes['amount_max'] = (string)$value;
     }
 
     /**
@@ -152,13 +151,14 @@ class Bill extends Model
      */
     public function setAmountMinAttribute($value)
     {
-        $this->attributes['amount_min'] = strval($value);
+        $this->attributes['amount_min'] = (string)$value;
     }
 
     /**
      * @param $value
      *
      * @codeCoverageIgnore
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     public function setMatchAttribute($value)
     {
@@ -171,6 +171,7 @@ class Bill extends Model
      * @param $value
      *
      * @codeCoverageIgnore
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     public function setNameAttribute($value)
     {
@@ -181,11 +182,20 @@ class Bill extends Model
 
     /**
      * @codeCoverageIgnore
+     * @return BelongsTo
+     */
+    public function transactionCurrency(): BelongsTo
+    {
+        return $this->belongsTo(TransactionCurrency::class);
+    }
+
+    /**
+     * @codeCoverageIgnore
      * @return HasMany
      */
     public function transactionJournals(): HasMany
     {
-        return $this->hasMany('FireflyIII\Models\TransactionJournal');
+        return $this->hasMany(TransactionJournal::class);
     }
 
     /**
@@ -194,6 +204,6 @@ class Bill extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo('FireflyIII\User');
+        return $this->belongsTo(User::class);
     }
 }

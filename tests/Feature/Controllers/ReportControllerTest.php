@@ -41,6 +41,7 @@ use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use Illuminate\Support\Collection;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -53,13 +54,27 @@ use Tests\TestCase;
 class ReportControllerTest extends TestCase
 {
     /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
+
+    /**
      * @covers \FireflyIII\Http\Controllers\ReportController::accountReport()
      */
     public function testAccountReport()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $budgetRepository->shouldReceive('cleanupBudgets');
+
         $generator    = $this->mock(AcYRG::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+
 
         $generator->shouldReceive('setStartDate')->once();
         $generator->shouldReceive('setEndDate')->once();
@@ -77,6 +92,9 @@ class ReportControllerTest extends TestCase
      */
     public function testAuditReport()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $budgetRepository->shouldReceive('cleanupBudgets');
+
         $generator    = $this->mock(AYRG::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
@@ -96,6 +114,9 @@ class ReportControllerTest extends TestCase
      */
     public function testBudgetReport()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $budgetRepository->shouldReceive('cleanupBudgets');
+
         $generator    = $this->mock(BYRG::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
@@ -115,6 +136,9 @@ class ReportControllerTest extends TestCase
      */
     public function testCategoryReport()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $budgetRepository->shouldReceive('cleanupBudgets');
+
         $generator    = $this->mock(CYRG::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
@@ -134,6 +158,9 @@ class ReportControllerTest extends TestCase
      */
     public function testDefaultReport()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $budgetRepository->shouldReceive('cleanupBudgets');
+
         $generator    = $this->mock(SYRG::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
@@ -152,6 +179,9 @@ class ReportControllerTest extends TestCase
      */
     public function testDefaultReportBadDate()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $budgetRepository->shouldReceive('cleanupBudgets');
+
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
@@ -167,6 +197,9 @@ class ReportControllerTest extends TestCase
      */
     public function testIndex()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $budgetRepository->shouldReceive('cleanupBudgets');
+
         $helper       = $this->mock(ReportHelperInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
@@ -186,6 +219,8 @@ class ReportControllerTest extends TestCase
      */
     public function testOptions()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
@@ -200,6 +235,8 @@ class ReportControllerTest extends TestCase
      */
     public function testOptionsAccount()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+
         $account       = new Account();
         $account->name = 'Something';
         $account->id   = 3;
@@ -222,6 +259,8 @@ class ReportControllerTest extends TestCase
      */
     public function testOptionsBudget()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $budgetRepos = $this->mock(BudgetRepositoryInterface::class);
@@ -240,6 +279,8 @@ class ReportControllerTest extends TestCase
      */
     public function testOptionsCategory()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
@@ -257,6 +298,8 @@ class ReportControllerTest extends TestCase
      */
     public function testOptionsTag()
     {
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $tag      = factory(Tag::class)->make();
@@ -269,11 +312,17 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexAccountOK()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->times(3);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
         $data = [
@@ -286,16 +335,22 @@ class ReportControllerTest extends TestCase
         $this->be($this->user());
         $response = $this->post(route('reports.index.post'), $data);
         $response->assertStatus(302);
-        $response->assertRedirect(route('reports.report.account', ['1', '4', '20160101', '20160131']));
+        $response->assertRedirect(route('reports.report.account', ['1', '1', '20160101', '20160131']));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexAuditOK()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -310,12 +365,19 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexBudgetError()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
+
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -332,12 +394,20 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexBudgetOK()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
+
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
+        $budgetRepository->shouldReceive('findNull')->andReturn($this->user()->budgets()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -353,12 +423,19 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexCategoryError()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
+
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -375,12 +452,19 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexCategoryOK()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $categoryRepos->shouldReceive('findNull')->andReturn($this->user()->categories()->find(1))->twice();
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -396,12 +480,18 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexDefaultOK()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -416,12 +506,18 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexDefaultStartEnd()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -436,12 +532,18 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexTagError()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -458,12 +560,20 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexTagOK()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
+        $tag              = $this->user()->tags()->find(1);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+        $accountRepos->shouldReceive('findNull')->andReturn($this->user()->accounts()->find(1))->twice();
+        $tagRepos->shouldReceive('findByTag')->andReturn($tag)->twice();
 
         $data = [
             'accounts'    => ['1'],
@@ -475,15 +585,20 @@ class ReportControllerTest extends TestCase
         $this->be($this->user());
         $response = $this->post(route('reports.index.post'), $data);
         $response->assertStatus(302);
-        $response->assertRedirect(route('reports.report.tag', ['1', 'housing', '20160101', '20160131']));
+        $response->assertRedirect(route('reports.report.tag', ['1', $tag->tag, '20160101', '20160131']));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Controllers\ReportController::postIndex
+     * @covers       \FireflyIII\Http\Requests\ReportFormRequest
      */
     public function testPostIndexZeroAccounts()
     {
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
         $data = [
@@ -504,8 +619,18 @@ class ReportControllerTest extends TestCase
      */
     public function testTagReport()
     {
-        $generator    = $this->mock(TYRG::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos     = $this->mock(AccountRepositoryInterface::class);
+        $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
+        $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos    = $this->mock(CategoryRepositoryInterface::class);
+        $tagRepos         = $this->mock(TagRepositoryInterface::class);
+        $generator        = $this->mock(TYRG::class);
+        $tag              = $this->user()->tags()->find(1);
+
+        $tagRepos->shouldReceive('setUser');
+        $tagRepos->shouldReceive('get')->andReturn(new Collection([$tag]));
+
+        $budgetRepository->shouldReceive('cleanupBudgets');
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $generator->shouldReceive('setStartDate')->once();
         $generator->shouldReceive('setEndDate')->once();
@@ -514,7 +639,7 @@ class ReportControllerTest extends TestCase
         $generator->shouldReceive('generate')->once()->andReturn('here-be-report');
 
         $this->be($this->user());
-        $response = $this->get(route('reports.report.tag', [1, 'TagJanuary', '20160101', '20161231']));
+        $response = $this->get(route('reports.report.tag', [1, $tag->tag, '20160101', '20161231']));
         $response->assertStatus(200);
     }
 }

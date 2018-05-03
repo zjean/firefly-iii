@@ -34,7 +34,6 @@ use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\ExportJob\ExportJobRepositoryInterface;
 use Illuminate\Http\Response as LaravelResponse;
 use Preferences;
-use Response;
 use View;
 
 /**
@@ -104,7 +103,7 @@ class ExportController extends Controller
      */
     public function getStatus(ExportJob $job)
     {
-        return Response::json(['status' => trans('firefly.' . $job->status)]);
+        return response()->json(['status' => trans('firefly.' . $job->status)]);
     }
 
     /**
@@ -193,6 +192,6 @@ class ExportController extends Controller
         $jobs->changeStatus($job, 'export_status_created_zip_file');
         $jobs->changeStatus($job, 'export_status_finished');
 
-        return Response::json('ok');
+        return response()->json('ok');
     }
 }

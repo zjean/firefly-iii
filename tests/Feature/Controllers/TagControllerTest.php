@@ -30,6 +30,7 @@ use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -42,11 +43,22 @@ use Tests\TestCase;
 class TagControllerTest extends TestCase
 {
     /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
+
+    /**
      * @covers \FireflyIII\Http\Controllers\TagController::create
      */
     public function testCreate()
     {
         // mock stuff
+        $tagRepos     = $this->mock(TagRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
@@ -62,6 +74,7 @@ class TagControllerTest extends TestCase
     public function testDelete()
     {
         // mock stuff
+        $tagRepos     = $this->mock(TagRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
@@ -94,6 +107,7 @@ class TagControllerTest extends TestCase
     public function testEdit()
     {
         // mock stuff
+        $tagRepos     = $this->mock(TagRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
@@ -239,7 +253,8 @@ class TagControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\TagController::store
+     * @covers       \FireflyIII\Http\Controllers\TagController::store
+     * @covers       \FireflyIII\Http\Requests\TagFormRequest
      */
     public function testStore()
     {
@@ -252,8 +267,10 @@ class TagControllerTest extends TestCase
 
         $this->session(['tags.create.uri' => 'http://localhost']);
         $data = [
-            'tag'     => 'Hello new tag' . rand(999, 10000),
-            'tagMode' => 'nothing',
+            'tag'                  => 'Hello new tag' . random_int(999, 10000),
+            'tagMode'              => 'nothing',
+            'tag_position_has_tag' => 'true',
+
         ];
         $this->be($this->user());
         $response = $this->post(route('tags.store'), $data);
@@ -262,7 +279,8 @@ class TagControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\TagController::update
+     * @covers       \FireflyIII\Http\Controllers\TagController::update
+     * @covers       \FireflyIII\Http\Requests\TagFormRequest
      */
     public function testUpdate()
     {
@@ -273,12 +291,13 @@ class TagControllerTest extends TestCase
 
         $this->session(['tags.edit.uri' => 'http://localhost']);
         $data = [
-            'tag'     => 'Hello updated tag' . rand(999, 10000),
+            'id'      => 1,
+            'tag'     => 'Hello updated tag' . random_int(999, 10000),
             'tagMode' => 'nothing',
         ];
 
         $repository->shouldReceive('update');
-        $repository->shouldReceive('find')->andReturn(new Tag);
+        $repository->shouldReceive('find')->andReturn(Tag::first());
 
         $this->be($this->user());
         $response = $this->post(route('tags.update', [1]), $data);

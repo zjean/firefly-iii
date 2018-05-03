@@ -22,9 +22,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Controllers;
 
+use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
+use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -36,6 +39,16 @@ use Tests\TestCase;
  */
 class NewUserControllerTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
+
     /**
      * @covers \FireflyIII\Http\Controllers\NewUserController::index
      * @covers \FireflyIII\Http\Controllers\NewUserController::__construct
@@ -80,15 +93,18 @@ class NewUserControllerTest extends TestCase
     public function testSubmit()
     {
         // mock stuff
-        $accountRepos = $this->mock(AccountRepositoryInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
-        $accountRepos->shouldReceive('store')->times(2);
+        $accountRepos->shouldReceive('store')->times(3);
+        $currencyRepos->shouldReceive('findNull')->andReturn(TransactionCurrency::find(1));
 
         $data = [
             'bank_name'                       => 'New bank',
             'savings_balance'                 => '1000',
             'bank_balance'                    => '100',
+            'language'                        => 'en_US',
             'amount_currency_id_bank_balance' => 1,
         ];
         $this->be($this->emptyUser());
@@ -103,10 +119,12 @@ class NewUserControllerTest extends TestCase
     public function testSubmitSingle()
     {
         // mock stuff
-        $accountRepos = $this->mock(AccountRepositoryInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
-        $accountRepos->shouldReceive('store')->twice();
+        $accountRepos->shouldReceive('store')->times(3);
+        $currencyRepos->shouldReceive('findNull')->andReturn(TransactionCurrency::find(1));
 
         $data = [
             'bank_name'                       => 'New bank',

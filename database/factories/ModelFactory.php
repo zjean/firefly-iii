@@ -118,17 +118,18 @@ $factory->define(
     FireflyIII\Models\Bill::class,
     function (Faker\Generator $faker) {
         return [
-            'created_at'      => new Carbon,
-            'updated_at'      => new Carbon,
-            'user_id'         => 1,
-            'name'            => $faker->words(3, true),
-            'match'           => $faker->words(3, true),
-            'amount_min'      => '100.00',
-            'amount_max'      => '100.00',
-            'date'            => '2017-01-01',
-            'repeat_freq'     => 'monthly',
-            'skip'            => 0,
-            'automatch'       => 1
+            'created_at'              => new Carbon,
+            'updated_at'              => new Carbon,
+            'user_id'                 => 1,
+            'transaction_currency_id' => 1,
+            'name'                    => $faker->words(3, true),
+            'match'                   => $faker->words(3, true),
+            'amount_min'              => '100.00',
+            'amount_max'              => '100.00',
+            'date'                    => '2017-01-01',
+            'repeat_freq'             => 'monthly',
+            'skip'                    => 0,
+            'automatch'               => 1,
         ];
     }
 );
@@ -239,8 +240,8 @@ $factory->define(
     FireflyIII\Models\Transaction::class,
     function (Faker\Generator $faker) {
         return [
-            'transaction_amount'          => strval($faker->randomFloat(2, -100, 100)),
-            'destination_amount'          => strval($faker->randomFloat(2, -100, 100)),
+            'transaction_amount'          => (string)$faker->randomFloat(2, -100, 100),
+            'destination_amount'          => (string)$faker->randomFloat(2, -100, 100),
             'opposing_account_id'         => $faker->numberBetween(1, 10),
             'source_account_id'           => $faker->numberBetween(1, 10),
             'opposing_account_name'       => $faker->words(3, true),
@@ -249,7 +250,7 @@ $factory->define(
             'destination_account_id'      => $faker->numberBetween(1, 10),
             'date'                        => new Carbon,
             'destination_account_name'    => $faker->words(3, true),
-            'amount'                      => strval($faker->randomFloat(2, -100, 100)),
+            'amount'                      => (string)$faker->randomFloat(2, -100, 100),
             'budget_id'                   => 0,
             'category'                    => $faker->words(3, true),
             'transaction_journal_id'      => $faker->numberBetween(1, 10),

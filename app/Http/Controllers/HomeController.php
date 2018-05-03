@@ -28,6 +28,7 @@ use Exception;
 use FireflyIII\Events\RequestedVersionCheckStatus;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Http\Middleware\Installer;
 use FireflyIII\Http\Middleware\IsDemoUser;
 use FireflyIII\Http\Middleware\IsSandStormUser;
 use FireflyIII\Models\AccountType;
@@ -38,7 +39,6 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
 use Log;
 use Preferences;
-use Response;
 use Route as RouteFacade;
 use View;
 
@@ -55,8 +55,10 @@ class HomeController extends Controller
         parent::__construct();
         app('view')->share('title', 'Firefly III');
         app('view')->share('mainTitleIcon', 'fa-fire');
+        $this->middleware(Installer::class);
         $this->middleware(IsDemoUser::class)->except(['dateRange', 'index']);
         $this->middleware(IsSandStormUser::class)->only('routes');
+
     }
 
     /**
@@ -75,7 +77,7 @@ class HomeController extends Controller
 
         // check if the label is "everything" or "Custom range" which will betray
         // a possible problem with the budgets.
-        if ($label === strval(trans('firefly.everything')) || $label === strval(trans('firefly.customRange'))) {
+        if ($label === (string)trans('firefly.everything') || $label === (string)trans('firefly.customRange')) {
             $isCustomRange = true;
             Log::debug('Range is now marked as "custom".');
         }
@@ -83,7 +85,7 @@ class HomeController extends Controller
         $diff = $start->diffInDays($end);
 
         if ($diff > 50) {
-            $request->session()->flash('warning', strval(trans('firefly.warning_much_data', ['days' => $diff])));
+            $request->session()->flash('warning', (string)trans('firefly.warning_much_data', ['days' => $diff]));
         }
 
         $request->session()->put('is_custom_range', $isCustomRange);
@@ -93,7 +95,7 @@ class HomeController extends Controller
         $request->session()->put('end', $end);
         Log::debug(sprintf('Set end to %s', $end->format('Y-m-d H:i:s')));
 
-        return Response::json(['ok' => 'ok']);
+        return response()->json(['ok' => 'ok']);
     }
 
 
@@ -133,6 +135,7 @@ class HomeController extends Controller
             Artisan::call('twig:clean');
         } catch (Exception $e) {
             // dont care
+            Log::debug('Called twig:clean.');
         }
         Log::debug('Call view:clear...');
         Artisan::call('view:clear');
@@ -165,7 +168,6 @@ class HomeController extends Controller
         /** @var Carbon $end */
         $end      = session('end', Carbon::now()->endOfMonth());
         $accounts = $repository->getAccountsById($frontPage->data);
-        $showDeps = Preferences::get('showDepositsFrontpage', false)->data;
         $today    = new Carbon;
 
         // zero bills? Hide some elements from view.
@@ -185,7 +187,7 @@ class HomeController extends Controller
 
         return view(
             'index',
-            compact('count', 'subTitle', 'transactions', 'showDeps', 'billCount', 'start', 'end', 'today')
+            compact('count', 'subTitle', 'transactions', 'billCount', 'start', 'end', 'today')
         );
     }
 

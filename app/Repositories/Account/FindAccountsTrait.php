@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace FireflyIII\Repositories\Account;
 
 use FireflyIII\Exceptions\FireflyException;
+use FireflyIII\Factory\AccountFactory;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
 use FireflyIII\User;
@@ -40,10 +41,12 @@ trait FindAccountsTrait
     /**
      * @param $accountId
      *
+     * @deprecated
      * @return Account
      */
     public function find(int $accountId): Account
     {
+        /** @var Account $account */
         $account = $this->user->accounts()->find($accountId);
         if (null === $account) {
             return new Account;
@@ -56,6 +59,8 @@ trait FindAccountsTrait
      * @param string $number
      * @param array  $types
      *
+     *
+     * @deprecated
      * @return Account
      */
     public function findByAccountNumber(string $number, array $types): Account
@@ -83,6 +88,7 @@ trait FindAccountsTrait
      * @param string $iban
      * @param array  $types
      *
+     * @deprecated
      * @return Account
      */
     public function findByIban(string $iban, array $types): Account
@@ -103,6 +109,32 @@ trait FindAccountsTrait
         }
 
         return new Account;
+    }
+
+    /**
+     * @param string $iban
+     * @param array  $types
+     *
+     * @return Account|null
+     */
+    public function findByIbanNull(string $iban, array $types): ?Account
+    {
+        $query = $this->user->accounts()->where('iban', '!=', '')->whereNotNull('iban');
+
+        if (count($types) > 0) {
+            $query->leftJoin('account_types', 'accounts.account_type_id', '=', 'account_types.id');
+            $query->whereIn('account_types.type', $types);
+        }
+
+        $accounts = $query->get(['accounts.*']);
+        /** @var Account $account */
+        foreach ($accounts as $account) {
+            if ($account->iban === $iban) {
+                return $account;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -212,18 +244,15 @@ trait FindAccountsTrait
     /**
      * @return Account
      *
-     * @throws FireflyException
      */
     public function getCashAccount(): Account
     {
-        $type            = AccountType::where('type', AccountType::CASH)->first();
-        $account         = Account::firstOrCreateEncrypted(
-            ['user_id' => $this->user->id, 'account_type_id' => $type->id, 'name' => 'Cash account']
-        );
-        $account->active = true;
-        $account->save();
+        $type = AccountType::where('type', AccountType::CASH)->first();
+        /** @var AccountFactory $factory */
+        $factory = app(AccountFactory::class);
+        $factory->setUser($this->user);
 
-        return $account;
+        return $factory->findOrCreate('Cash account', $type->type);
     }
 
     /**
@@ -241,29 +270,18 @@ trait FindAccountsTrait
         $name     = $account->name . ' reconciliation';
         $type     = AccountType::where('type', AccountType::RECONCILIATION)->first();
         $accounts = $this->user->accounts()->where('account_type_id', $type->id)->get();
-        /** @var Account $account */
-        foreach ($accounts as $account) {
-            if ($account->name === $name) {
-                return $account;
+        /** @var Account $current */
+        foreach ($accounts as $current) {
+            if ($current->name === $name) {
+                return $current;
             }
         }
-        // assume nothing was found. create it!
-        $data    = [
-            'accountType'    => 'reconcile',
-            'name'           => $name,
-            'iban'           => null,
-            'virtualBalance' => '0',
-            'active'         => true,
-        ];
-        $account = $this->storeAccount($data);
+        /** @var AccountFactory $factory */
+        $factory = app(AccountFactory::class);
+        $factory->setUser($account->user);
+        $account = $factory->findOrCreate($name, $type->type);
 
         return $account;
     }
 
-    /**
-     * @param array $data
-     *
-     * @return Account
-     */
-    abstract protected function storeAccount(array $data): Account;
 }

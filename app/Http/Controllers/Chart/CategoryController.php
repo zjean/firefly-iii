@@ -32,7 +32,6 @@ use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Support\Collection;
 use Preferences;
-use Response;
 
 /**
  * Class CategoryController.
@@ -67,7 +66,7 @@ class CategoryController extends Controller
         $cache->addProperty('chart.category.all');
         $cache->addProperty($category->id);
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
 
         $start = $repository->firstUseDate($category);
@@ -82,17 +81,17 @@ class CategoryController extends Controller
         $accounts  = $accountRepository->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET]);
         $chartData = [
             [
-                'label'   => strval(trans('firefly.spent')),
+                'label'   => (string)trans('firefly.spent'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.earned')),
+                'label'   => (string)trans('firefly.earned'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.sum')),
+                'label'   => (string)trans('firefly.sum'),
                 'entries' => [],
                 'type'    => 'line',
                 'fill'    => false,
@@ -114,7 +113,7 @@ class CategoryController extends Controller
         $data = $this->generator->multiSet($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -133,7 +132,7 @@ class CategoryController extends Controller
         $cache->addProperty($end);
         $cache->addProperty('chart.category.frontpage');
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
         $chartData  = [];
         $categories = $repository->getCategories();
@@ -146,15 +145,15 @@ class CategoryController extends Controller
             }
         }
 
-        $chartData[strval(trans('firefly.no_category'))] = bcmul($repository->spentInPeriodWithoutCategory(new Collection, $start, $end), '-1');
+        $chartData[(string)trans('firefly.no_category')] = bcmul($repository->spentInPeriodWithoutCategory(new Collection, $start, $end), '-1');
 
         // sort
         arsort($chartData);
 
-        $data = $this->generator->singleSet(strval(trans('firefly.spent')), $chartData);
+        $data = $this->generator->singleSet((string)trans('firefly.spent'), $chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -182,17 +181,17 @@ class CategoryController extends Controller
         $periods   = app('navigation')->listOfPeriods($start, $end);
         $chartData = [
             [
-                'label'   => strval(trans('firefly.spent')),
+                'label'   => (string)trans('firefly.spent'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.earned')),
+                'label'   => (string)trans('firefly.earned'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.sum')),
+                'label'   => (string)trans('firefly.sum'),
                 'entries' => [],
                 'type'    => 'line',
                 'fill'    => false,
@@ -212,7 +211,7 @@ class CategoryController extends Controller
         $data = $this->generator->multiSet($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -238,17 +237,17 @@ class CategoryController extends Controller
         $periods   = app('navigation')->listOfPeriods($start, $end);
         $chartData = [
             [
-                'label'   => strval(trans('firefly.spent')),
+                'label'   => (string)trans('firefly.spent'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.earned')),
+                'label'   => (string)trans('firefly.earned'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.sum')),
+                'label'   => (string)trans('firefly.sum'),
                 'entries' => [],
                 'type'    => 'line',
                 'fill'    => false,
@@ -267,7 +266,7 @@ class CategoryController extends Controller
         $data = $this->generator->multiSet($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -284,7 +283,7 @@ class CategoryController extends Controller
         $end   = app('navigation')->endOfPeriod($date, $range);
         $data  = $this->makePeriodChart($repository, $category, $start, $end);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -314,17 +313,17 @@ class CategoryController extends Controller
         // chart data
         $chartData = [
             [
-                'label'   => strval(trans('firefly.spent')),
+                'label'   => (string)trans('firefly.spent'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.earned')),
+                'label'   => (string)trans('firefly.earned'),
                 'entries' => [],
                 'type'    => 'bar',
             ],
             [
-                'label'   => strval(trans('firefly.sum')),
+                'label'   => (string)trans('firefly.sum'),
                 'entries' => [],
                 'type'    => 'line',
                 'fill'    => false,

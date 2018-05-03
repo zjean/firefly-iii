@@ -25,6 +25,7 @@ namespace Tests\Feature\Controllers\Import;
 use FireflyIII\Import\Configuration\FileConfigurator;
 use FireflyIII\Models\ImportJob;
 use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,15 @@ use Tests\TestCase;
  */
 class ConfigurationControllerTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
     /**
      * @covers \FireflyIII\Http\Controllers\Import\ConfigurationController::__construct
      * @covers \FireflyIII\Http\Controllers\Import\ConfigurationController::index
@@ -88,6 +98,7 @@ class ConfigurationControllerTest extends TestCase
         $job          = $this->user()->importJobs()->where('key', 'configuring')->first();
         $data         = ['some' => 'config'];
         $configurator = $this->mock(FileConfigurator::class);
+        $repository   = $this->mock(ImportJobRepositoryInterface::class);
         $configurator->shouldReceive('setJob')->once();
         $configurator->shouldReceive('isJobConfigured')->once()->andReturn(false);
         $configurator->shouldReceive('configureJob')->once()->withArgs([$data]);
@@ -108,6 +119,7 @@ class ConfigurationControllerTest extends TestCase
         $job          = $this->user()->importJobs()->where('key', 'configuring')->first();
         $data         = ['some' => 'config'];
         $configurator = $this->mock(FileConfigurator::class);
+        $repository   = $this->mock(ImportJobRepositoryInterface::class);
         $configurator->shouldReceive('setJob')->once();
         $configurator->shouldReceive('isJobConfigured')->once()->andReturn(true);
 

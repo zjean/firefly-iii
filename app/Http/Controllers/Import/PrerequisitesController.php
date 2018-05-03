@@ -66,10 +66,10 @@ class PrerequisitesController extends Controller
      */
     public function index(string $bank)
     {
-        if (true === !(config(sprintf('import.enabled.%s', $bank)))) {
+        if (true === !config(sprintf('import.enabled.%s', $bank))) {
             throw new FireflyException(sprintf('Cannot import from "%s" at this time.', $bank)); // @codeCoverageIgnore
         }
-        $class = strval(config(sprintf('import.prerequisites.%s', $bank)));
+        $class = (string)config(sprintf('import.prerequisites.%s', $bank));
         if (!class_exists($class)) {
             throw new FireflyException(sprintf('No class to handle "%s".', $bank)); // @codeCoverageIgnore
         }
@@ -80,7 +80,7 @@ class PrerequisitesController extends Controller
 
         if ($object->hasPrerequisites()) {
             $view       = $object->getView();
-            $parameters = ['title' => strval(trans('firefly.import_index_title')), 'mainTitleIcon' => 'fa-archive'];
+            $parameters = ['title' => (string)trans('firefly.import_index_title'), 'mainTitleIcon' => 'fa-archive'];
             $parameters = array_merge($object->getViewParameters(), $parameters);
 
             return view($view, $parameters);
@@ -109,11 +109,11 @@ class PrerequisitesController extends Controller
     {
         Log::debug(sprintf('Now in postPrerequisites for %s', $bank));
 
-        if (true === !(config(sprintf('import.enabled.%s', $bank)))) {
+        if (true === !config(sprintf('import.enabled.%s', $bank))) {
             throw new FireflyException(sprintf('Cannot import from "%s" at this time.', $bank)); // @codeCoverageIgnore
         }
 
-        $class = strval(config(sprintf('import.prerequisites.%s', $bank)));
+        $class = (string)config(sprintf('import.prerequisites.%s', $bank));
         if (!class_exists($class)) {
             throw new FireflyException(sprintf('Cannot find class %s', $class)); // @codeCoverageIgnore
         }
@@ -128,6 +128,7 @@ class PrerequisitesController extends Controller
         Log::debug('Going to store entered prerequisites.');
         // store post data
         $result = $object->storePrerequisites($request);
+        Log::debug(sprintf('Result of storePrerequisites has message count: %d', $result->count()));
 
         if ($result->count() > 0) {
             $request->session()->flash('error', $result->first());

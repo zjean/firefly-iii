@@ -34,7 +34,6 @@ use FireflyIII\Support\Binder\AccountList;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use InvalidArgumentException;
-use Response;
 use View;
 
 /**
@@ -82,11 +81,6 @@ class ReportController extends Controller
      * @return \Illuminate\Http\JsonResponse
      *
      * @throws FireflyException
-     * @throws \Throwable
-     * @throws \Throwable
-     * @throws \Throwable
-     * @throws \Throwable
-     * @throws \Throwable
      */
     public function general(Request $request)
     {
@@ -116,7 +110,7 @@ class ReportController extends Controller
                 break;
         }
 
-        return Response::json(['html' => $html]);
+        return response()->json(['html' => $html]);
     }
 
     /**
@@ -125,13 +119,12 @@ class ReportController extends Controller
      * @return string
      *
      * @throws FireflyException
-     * @throws \Throwable
      */
     private function balanceAmount(array $attributes): string
     {
-        $role    = intval($attributes['role']);
-        $budget  = $this->budgetRepository->find(intval($attributes['budgetId']));
-        $account = $this->accountRepository->find(intval($attributes['accountId']));
+        $role    = (int)$attributes['role'];
+        $budget  = $this->budgetRepository->findNull((int)$attributes['budgetId']);
+        $account = $this->accountRepository->findNull((int)$attributes['accountId']);
 
         switch (true) {
             case BalanceLine::ROLE_DEFAULTROLE === $role && null !== $budget->id:
@@ -141,11 +134,11 @@ class ReportController extends Controller
             case BalanceLine::ROLE_DEFAULTROLE === $role && null === $budget->id:
                 // normal row without a budget:
                 $journals     = $this->popupHelper->balanceForNoBudget($account, $attributes);
-                $budget->name = strval(trans('firefly.no_budget'));
+                $budget->name = (string)trans('firefly.no_budget');
                 break;
             case BalanceLine::ROLE_DIFFROLE === $role:
                 $journals     = $this->popupHelper->balanceDifference($account, $attributes);
-                $budget->name = strval(trans('firefly.leftUnbalanced'));
+                $budget->name = (string)trans('firefly.leftUnbalanced');
                 break;
             case BalanceLine::ROLE_TAGROLE === $role:
                 // row with tag info.
@@ -163,11 +156,11 @@ class ReportController extends Controller
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     private function budgetSpentAmount(array $attributes): string
     {
-        $budget   = $this->budgetRepository->find(intval($attributes['budgetId']));
+        $budget   = $this->budgetRepository->findNull((int)$attributes['budgetId']);
         $journals = $this->popupHelper->byBudget($budget, $attributes);
         $view     = view('popup.report.budget-spent-amount', compact('journals', 'budget'))->render();
 
@@ -181,11 +174,11 @@ class ReportController extends Controller
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     private function categoryEntry(array $attributes): string
     {
-        $category = $this->categoryRepository->find(intval($attributes['categoryId']));
+        $category = $this->categoryRepository->findNull((int)$attributes['categoryId']);
         $journals = $this->popupHelper->byCategory($category, $attributes);
         $view     = view('popup.report.category-entry', compact('journals', 'category'))->render();
 
@@ -199,11 +192,11 @@ class ReportController extends Controller
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     private function expenseEntry(array $attributes): string
     {
-        $account  = $this->accountRepository->find(intval($attributes['accountId']));
+        $account  = $this->accountRepository->findNull((int)$attributes['accountId']);
         $journals = $this->popupHelper->byExpenses($account, $attributes);
         $view     = view('popup.report.expense-entry', compact('journals', 'account'))->render();
 
@@ -217,11 +210,11 @@ class ReportController extends Controller
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     private function incomeEntry(array $attributes): string
     {
-        $account  = $this->accountRepository->find(intval($attributes['accountId']));
+        $account  = $this->accountRepository->findNull((int)$attributes['accountId']);
         $journals = $this->popupHelper->byIncome($account, $attributes);
         $view     = view('popup.report.income-entry', compact('journals', 'account'))->render();
 

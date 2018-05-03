@@ -1,4 +1,26 @@
 <?php
+declare(strict_types=1);
+
+
+/**
+ * BelongsUser.php
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
+ *
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace FireflyIII\Rules;
 
@@ -50,11 +72,11 @@ class BelongsUser implements Rule
         if (!auth()->check()) {
             return true; // @codeCoverageIgnore
         }
-        $attribute = strval($attribute);
+        $attribute = (string)$attribute;
         switch ($attribute) {
             case 'piggy_bank_id':
                 $count = PiggyBank::leftJoin('accounts', 'accounts.id', '=', 'piggy_banks.account_id')
-                                  ->where('piggy_banks.id', '=', intval($value))
+                                  ->where('piggy_banks.id', '=', (int)$value)
                                   ->where('accounts.user_id', '=', auth()->user()->id)->count();
 
                 return $count === 1;
@@ -65,7 +87,7 @@ class BelongsUser implements Rule
                 return $count === 1;
                 break;
             case 'bill_id':
-                $count = Bill::where('id', '=', intval($value))->where('user_id', '=', auth()->user()->id)->count();
+                $count = Bill::where('id', '=', (int)$value)->where('user_id', '=', auth()->user()->id)->count();
 
                 return $count === 1;
             case 'bill_name':
@@ -74,12 +96,12 @@ class BelongsUser implements Rule
                 return $count === 1;
                 break;
             case 'budget_id':
-                $count = Budget::where('id', '=', intval($value))->where('user_id', '=', auth()->user()->id)->count();
+                $count = Budget::where('id', '=', (int)$value)->where('user_id', '=', auth()->user()->id)->count();
 
                 return $count === 1;
                 break;
             case 'category_id':
-                $count = Category::where('id', '=', intval($value))->where('user_id', '=', auth()->user()->id)->count();
+                $count = Category::where('id', '=', (int)$value)->where('user_id', '=', auth()->user()->id)->count();
 
                 return $count === 1;
                 break;
@@ -90,7 +112,7 @@ class BelongsUser implements Rule
                 break;
             case 'source_id':
             case 'destination_id':
-                $count = Account::where('id', '=', intval($value))->where('user_id', '=', auth()->user()->id)->count();
+                $count = Account::where('id', '=', (int)$value)->where('user_id', '=', auth()->user()->id)->count();
 
                 return $count === 1;
                 break;
@@ -121,7 +143,7 @@ class BelongsUser implements Rule
         }
         $count = 0;
         foreach ($objects as $object) {
-            if (trim(strval($object->$field)) === trim($value)) {
+            if (trim((string)$object->$field) === trim($value)) {
                 $count++;
             }
         }

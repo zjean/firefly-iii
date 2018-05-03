@@ -199,8 +199,8 @@ class CurrencyController extends Controller
      */
     public function index(Request $request)
     {
-        $page       = 0 === intval($request->get('page')) ? 1 : intval($request->get('page'));
-        $pageSize   = intval(Preferences::get('listPageSize', 50)->data);
+        $page       = 0 === (int)$request->get('page') ? 1 : (int)$request->get('page');
+        $pageSize   = (int)Preferences::get('listPageSize', 50)->data;
         $collection = $this->repository->get();
         $total      = $collection->count();
         $collection = $collection->sortBy(
@@ -241,7 +241,7 @@ class CurrencyController extends Controller
         $currency = $this->repository->store($data);
         $request->session()->flash('success', trans('firefly.created_currency', ['name' => $currency->name]));
 
-        if (1 === intval($request->get('create_another'))) {
+        if (1 === (int)$request->get('create_another')) {
             // @codeCoverageIgnoreStart
             $request->session()->put('currencies.create.fromStore', true);
 
@@ -273,7 +273,7 @@ class CurrencyController extends Controller
         $request->session()->flash('success', trans('firefly.updated_currency', ['name' => $currency->name]));
         Preferences::mark();
 
-        if (1 === intval($request->get('return_to_edit'))) {
+        if (1 === (int)$request->get('return_to_edit')) {
             // @codeCoverageIgnoreStart
             $request->session()->put('currencies.edit.fromUpdate', true);
 

@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Requests;
 
-use Steam;
+use Illuminate\Validation\Validator;
 
 /**
  * Class SplitJournalFormRequest.
@@ -41,23 +41,64 @@ class SplitJournalFormRequest extends Request
     /**
      * @return array
      */
-    public function getSplitData(): array
+    public function getAll(): array
     {
         $data = [
-            'id'                               => $this->integer('id'),
-            'journal_description'              => $this->string('journal_description'),
-            'journal_currency_id'              => $this->integer('journal_currency_id'),
-            'journal_source_account_id'        => $this->integer('journal_source_account_id'),
-            'journal_source_account_name'      => $this->string('journal_source_account_name'),
-            'journal_destination_account_id'   => $this->integer('journal_destination_account_id'),
-            'journal_destination_account_name' => $this->string('journal_source_destination_name'),
-            'date'                             => $this->date('date'),
-            'what'                             => $this->string('what'),
-            'interest_date'                    => $this->date('interest_date'),
-            'book_date'                        => $this->date('book_date'),
-            'process_date'                     => $this->date('process_date'),
-            'transactions'                     => $this->getTransactionData(),
+            'description'     => $this->string('journal_description'),
+            'type'            => $this->string('what'),
+            'date'            => $this->date('date'),
+            'tags'            => explode(',', $this->string('tags')),
+            'bill_id'         => null,
+            'bill_name'       => null,
+            'piggy_bank_id'   => null,
+            'piggy_bank_name' => null,
+            'notes'           => $this->string('notes'),
+            'transactions'    => [],
         ];
+        // switch type to get correct source / destination info:
+        $sourceId        = null;
+        $sourceName      = null;
+        $destinationId   = null;
+        $destinationName = null;
+
+        foreach ($this->get('transactions') as $index => $transaction) {
+            switch ($data['type']) {
+                case 'withdrawal':
+                    $sourceId        = $this->integer('journal_source_account_id');
+                    $destinationName = $transaction['destination_name'] ?? '';
+                    break;
+                case 'deposit':
+                    $sourceName    = $transaction['source_name'] ?? '';
+                    $destinationId = $this->integer('journal_destination_account_id');
+                    break;
+                case 'transfer':
+                    $sourceId      = $this->integer('journal_source_account_id');
+                    $destinationId = $this->integer('journal_destination_account_id');
+                    break;
+            }
+            $foreignAmount          = $transaction['foreign_amount'] ?? null;
+            $foreignCurrencyId      = (int)($transaction['foreign_currency_id'] ?? 0.0);
+            $set                    = [
+                'source_id'             => $sourceId,
+                'source_name'           => $sourceName,
+                'destination_id'        => $destinationId,
+                'destination_name'      => $destinationName,
+                'foreign_amount'        => $foreignAmount,
+                'foreign_currency_id'   => $foreignCurrencyId,
+                'foreign_currency_code' => null,
+                'reconciled'            => false,
+                'identifier'            => $index,
+                'currency_id'           => $this->integer('journal_currency_id'),
+                'currency_code'         => null,
+                'description'           => $transaction['transaction_description'] ?? '',
+                'amount'                => $transaction['amount'],
+                'budget_id'             => (int)($transaction['budget_id'] ?? 0.0),
+                'budget_name'           => null,
+                'category_id'           => null,
+                'category_name'         => $transaction['category_name'] ?? '',
+            ];
+            $data['transactions'][] = $set;
+        }
 
         return $data;
     }
@@ -68,59 +109,57 @@ class SplitJournalFormRequest extends Request
     public function rules(): array
     {
         return [
-            'what'                                    => 'required|in:withdrawal,deposit,transfer',
-            'journal_description'                     => 'required|between:1,255',
-            'id'                                      => 'numeric|belongsToUser:transaction_journals,id',
-            'journal_source_account_id'               => 'numeric|belongsToUser:accounts,id',
-            'journal_source_account_name.*'           => 'between:1,255',
-            'journal_currency_id'                     => 'required|exists:transaction_currencies,id',
-            'date'                                    => 'required|date',
-            'interest_date'                           => 'date|nullable',
-            'book_date'                               => 'date|nullable',
-            'process_date'                            => 'date|nullable',
-            'transactions.*.description'              => 'required|between:1,255',
-            'transactions.*.destination_account_id'   => 'numeric|belongsToUser:accounts,id',
-            'transactions.*.destination_account_name' => 'between:1,255|nullable',
-            'transactions.*.amount'                   => 'required|numeric',
-            'transactions.*.budget_id'                => 'belongsToUser:budgets,id',
-            'transactions.*.category'                 => 'between:1,255|nullable',
-            'transactions.*.piggy_bank_id'            => 'between:1,255|nullable',
+            'what'                                   => 'required|in:withdrawal,deposit,transfer',
+            'journal_description'                    => 'required|between:1,255',
+            'id'                                     => 'numeric|belongsToUser:transaction_journals,id',
+            'journal_source_account_id'              => 'numeric|belongsToUser:accounts,id',
+            'journal_source_account_name.*'          => 'between:1,255',
+            'journal_currency_id'                    => 'required|exists:transaction_currencies,id',
+            'date'                                   => 'required|date',
+            'interest_date'                          => 'date|nullable',
+            'book_date'                              => 'date|nullable',
+            'process_date'                           => 'date|nullable',
+            'transactions.*.transaction_description' => 'required|between:1,255',
+            'transactions.*.destination_account_id'  => 'numeric|belongsToUser:accounts,id',
+            'transactions.*.destination_name'        => 'between:1,255|nullable',
+            'transactions.*.amount'                  => 'required|numeric',
+            'transactions.*.budget_id'               => 'belongsToUser:budgets,id',
+            'transactions.*.category_name'           => 'between:1,255|nullable',
+            'transactions.*.piggy_bank_id'           => 'between:1,255|nullable',
         ];
     }
 
     /**
-     * @return array
+     * Configure the validator instance.
+     *
+     * @param  Validator $validator
+     *
+     * @return void
      */
-    private function getTransactionData(): array
+    public function withValidator(Validator $validator): void
     {
-        $descriptions    = $this->getArray('description', 'string');
-        $categories      = $this->getArray('category', 'string');
-        $amounts         = $this->getArray('amount', 'float');
-        $budgets         = $this->getArray('amount', 'integer');
-        $srcAccountIds   = $this->getArray('source_account_id', 'integer');
-        $srcAccountNames = $this->getArray('source_account_name', 'string');
-        $dstAccountIds   = $this->getArray('destination_account_id', 'integer');
-        $dstAccountNames = $this->getArray('destination_account_name', 'string');
-        $piggyBankIds    = $this->getArray('piggy_bank_id', 'integer');
+        $validator->after(
+            function (Validator $validator) {
+                $this->sameAccounts($validator);
+            }
+        );
+    }
 
-        $return = [];
-        // description is leading because it is one of the mandatory fields.
-        foreach ($descriptions as $index => $description) {
-            $category    = $categories[$index] ?? '';
-            $transaction = [
-                'description'              => $description,
-                'amount'                   => Steam::positive($amounts[$index]),
-                'budget_id'                => $budgets[$index] ?? 0,
-                'category'                 => $category,
-                'source_account_id'        => $srcAccountIds[$index] ?? $this->get('journal_source_account_id'),
-                'source_account_name'      => $srcAccountNames[$index] ?? '',
-                'piggy_bank_id'            => $piggyBankIds[$index] ?? 0,
-                'destination_account_id'   => $dstAccountIds[$index] ?? $this->get('journal_destination_account_id'),
-                'destination_account_name' => $dstAccountNames[$index] ?? '',
-            ];
-            $return[]    = $transaction;
+    /**
+     * @param Validator $validator
+     */
+    protected function sameAccounts(Validator $validator): void
+    {
+        $data         = $this->getAll();
+        $transactions = $data['transactions'] ?? [];
+        /** @var array $array */
+        foreach ($transactions as $array) {
+            if ($array['destination_id'] !== null && $array['source_id'] !== null && $array['destination_id'] === $array['source_id']) {
+                $validator->errors()->add('journal_source_account_id', trans('validation.source_equals_destination'));
+                $validator->errors()->add('journal_destination_account_id', trans('validation.source_equals_destination'));
+            }
         }
 
-        return $return;
     }
+
 }

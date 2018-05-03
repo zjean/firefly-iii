@@ -50,9 +50,6 @@ class RuleRepository implements RuleRepositoryInterface
      *
      * @return bool
      *
-     * @throws \Exception
-     * @throws \Exception
-     * @throws \Exception
      */
     public function destroy(Rule $rule): bool
     {
@@ -99,7 +96,7 @@ class RuleRepository implements RuleRepositoryInterface
      */
     public function getHighestOrderInRuleGroup(RuleGroup $ruleGroup): int
     {
-        return intval($ruleGroup->rules()->max('order'));
+        return (int)$ruleGroup->rules()->max('order');
     }
 
     /**
@@ -129,13 +126,13 @@ class RuleRepository implements RuleRepositoryInterface
         $order = $rule->order;
 
         // find the rule with order+1 and give it order-1
-        $other = $rule->ruleGroup->rules()->where('order', ($order + 1))->first();
+        $other = $rule->ruleGroup->rules()->where('order', $order + 1)->first();
         if ($other) {
-            $other->order = $other->order - 1;
+            --$other->order;
             $other->save();
         }
 
-        $rule->order = ($rule->order + 1);
+        ++$rule->order;
         $rule->save();
         $this->resetRulesInGroupOrder($rule->ruleGroup);
 
@@ -152,13 +149,13 @@ class RuleRepository implements RuleRepositoryInterface
         $order = $rule->order;
 
         // find the rule with order-1 and give it order+1
-        $other = $rule->ruleGroup->rules()->where('order', ($order - 1))->first();
+        $other = $rule->ruleGroup->rules()->where('order', $order - 1)->first();
         if ($other) {
-            $other->order = ($other->order + 1);
+            ++$other->order;
             $other->save();
         }
 
-        $rule->order = ($rule->order - 1);
+        --$rule->order;
         $rule->save();
         $this->resetRulesInGroupOrder($rule->ruleGroup);
 
@@ -261,7 +258,8 @@ class RuleRepository implements RuleRepositoryInterface
         $rule->rule_group_id   = $data['rule_group_id'];
         $rule->order           = ($order + 1);
         $rule->active          = 1;
-        $rule->stop_processing = 1 === intval($data['stop_processing']);
+        $rule->strict          = $data['strict'] ?? false;
+        $rule->stop_processing = 1 === (int)$data['stop_processing'];
         $rule->title           = $data['title'];
         $rule->description     = strlen($data['description']) > 0 ? $data['description'] : null;
 
@@ -290,7 +288,7 @@ class RuleRepository implements RuleRepositoryInterface
         $ruleAction->active          = 1;
         $ruleAction->stop_processing = $values['stopProcessing'];
         $ruleAction->action_type     = $values['action'];
-        $ruleAction->action_value    = null === $values['value'] ? '' : $values['value'];
+        $ruleAction->action_value    = $values['value'] ?? '';
         $ruleAction->save();
 
         return $ruleAction;
@@ -310,7 +308,7 @@ class RuleRepository implements RuleRepositoryInterface
         $ruleTrigger->active          = 1;
         $ruleTrigger->stop_processing = $values['stopProcessing'];
         $ruleTrigger->trigger_type    = $values['action'];
-        $ruleTrigger->trigger_value   = null === $values['value'] ? '' : $values['value'];
+        $ruleTrigger->trigger_value   = $values['value'] ?? '';
         $ruleTrigger->save();
 
         return $ruleTrigger;
@@ -329,6 +327,7 @@ class RuleRepository implements RuleRepositoryInterface
         $rule->active          = $data['active'];
         $rule->stop_processing = $data['stop_processing'];
         $rule->title           = $data['title'];
+        $rule->strict          = $data['strict'] ?? false;
         $rule->description     = $data['description'];
         $rule->save();
 

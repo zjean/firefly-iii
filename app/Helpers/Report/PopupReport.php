@@ -28,6 +28,7 @@ use FireflyIII\Models\Budget;
 use FireflyIII\Models\Category;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionType;
+use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Illuminate\Support\Collection;
 
 /**
@@ -56,11 +57,8 @@ class PopupReport implements PopupReportInterface
         return $journals->filter(
             function (Transaction $transaction) {
                 $tags = $transaction->transactionJournal->tags()->where('tagMode', 'balancingAct')->count();
-                if (0 === $tags) {
-                    return true;
-                }
 
-                return false;
+                return 0 === $tags;
             }
         );
     }
@@ -77,9 +75,8 @@ class PopupReport implements PopupReportInterface
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
         $collector->setAccounts(new Collection([$account]))->setRange($attributes['startDate'], $attributes['endDate'])->setBudget($budget);
-        $journals = $collector->getJournals();
 
-        return $journals;
+        return $collector->getJournals();
     }
 
     /**
@@ -120,9 +117,8 @@ class PopupReport implements PopupReportInterface
         if (null !== $budget->id) {
             $collector->setBudget($budget);
         }
-        $journals = $collector->getJournals();
 
-        return $journals;
+        return $collector->getJournals();
     }
 
     /**
@@ -138,9 +134,8 @@ class PopupReport implements PopupReportInterface
         $collector->setAccounts($attributes['accounts'])->setTypes([TransactionType::WITHDRAWAL, TransactionType::TRANSFER])
                   ->setRange($attributes['startDate'], $attributes['endDate'])->withOpposingAccount()
                   ->setCategory($category);
-        $journals = $collector->getJournals();
 
-        return $journals;
+        return $collector->getJournals();
     }
 
     /**
@@ -182,6 +177,9 @@ class PopupReport implements PopupReportInterface
      */
     public function byIncome(Account $account, array $attributes): Collection
     {
+        /** @var JournalRepositoryInterface $repository */
+        $repository = app(JournalRepositoryInterface::class);
+        $repository->setUser($account->user);
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
         $collector->setAccounts(new Collection([$account]))->setRange($attributes['startDate'], $attributes['endDate'])
@@ -191,9 +189,10 @@ class PopupReport implements PopupReportInterface
 
         // filter the set so the destinations outside of $attributes['accounts'] are not included.
         $journals = $journals->filter(
-            function (Transaction $transaction) use ($report) {
+            function (Transaction $transaction) use ($report, $repository) {
                 // get the destinations:
-                $destinations = $transaction->transactionJournal->destinationAccountList()->pluck('id')->toArray();
+                $journal      = $transaction->transactionJournal;
+                $destinations = $repository->getJournalDestinationAccounts($journal)->pluck('id')->toArray();
 
                 // do these intersect with the current list?
                 return !empty(array_intersect($report, $destinations));

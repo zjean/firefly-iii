@@ -23,9 +23,12 @@ declare(strict_types=1);
 namespace FireflyIII\Repositories\Currency;
 
 use Carbon\Carbon;
+use FireflyIII\Factory\TransactionCurrencyFactory;
 use FireflyIII\Models\CurrencyExchangeRate;
 use FireflyIII\Models\Preference;
 use FireflyIII\Models\TransactionCurrency;
+use FireflyIII\Services\Internal\Destroy\CurrencyDestroyService;
+use FireflyIII\Services\Internal\Update\CurrencyUpdateService;
 use FireflyIII\User;
 use Illuminate\Support\Collection;
 use Log;
@@ -38,6 +41,13 @@ class CurrencyRepository implements CurrencyRepositoryInterface
 {
     /** @var User */
     private $user;
+
+    /**
+     * CurrencyRepository constructor.
+     */
+    public function __construct()
+    {
+    }
 
     /**
      * @param TransactionCurrency $currency
@@ -63,12 +73,8 @@ class CurrencyRepository implements CurrencyRepositoryInterface
 
         // is the default currency for the system
         $defaultSystemCode = config('firefly.default_currency', 'EUR');
-        if ($currency->code === $defaultSystemCode) {
-            return false;
-        }
 
-        // can be deleted
-        return true;
+        return !($currency->code === $defaultSystemCode);
     }
 
     /**
@@ -89,7 +95,9 @@ class CurrencyRepository implements CurrencyRepositoryInterface
     public function destroy(TransactionCurrency $currency): bool
     {
         if ($this->user->hasRole('owner')) {
-            $currency->forceDelete();
+            /** @var CurrencyDestroyService $service */
+            $service = app(CurrencyDestroyService::class);
+            $service->destroy($currency);
         }
 
         return true;
@@ -99,6 +107,8 @@ class CurrencyRepository implements CurrencyRepositoryInterface
      * Find by ID.
      *
      * @param int $currencyId
+     *
+     * @deprecated
      *
      * @return TransactionCurrency
      */
@@ -114,6 +124,8 @@ class CurrencyRepository implements CurrencyRepositoryInterface
 
     /**
      * Find by currency code.
+     *
+     * @deprecated
      *
      * @param string $currencyCode
      *
@@ -131,6 +143,7 @@ class CurrencyRepository implements CurrencyRepositoryInterface
 
     /**
      * Find by currency code, return NULL if unfound.
+     * Used in Import Currency!
      *
      * @param string $currencyCode
      *
@@ -146,6 +159,8 @@ class CurrencyRepository implements CurrencyRepositoryInterface
      *
      * @param string $currencyName
      *
+     * @deprecated
+     *
      * @return TransactionCurrency
      */
     public function findByName(string $currencyName): TransactionCurrency
@@ -159,7 +174,22 @@ class CurrencyRepository implements CurrencyRepositoryInterface
     }
 
     /**
+     * Find by currency name or return null.
+     * Used in Import Currency!
+     *
+     * @param string $currencyName
+     *
+     * @return TransactionCurrency
+     */
+    public function findByNameNull(string $currencyName): ?TransactionCurrency
+    {
+        return TransactionCurrency::whereName($currencyName)->first();
+    }
+
+    /**
      * Find by currency symbol.
+     *
+     * @deprecated
      *
      * @param string $currencySymbol
      *
@@ -176,7 +206,21 @@ class CurrencyRepository implements CurrencyRepositoryInterface
     }
 
     /**
+     * Find by currency symbol or return NULL
+     * Used in Import Currency!
+     *
+     * @param string $currencySymbol
+     *
+     * @return TransactionCurrency
+     */
+    public function findBySymbolNull(string $currencySymbol): ?TransactionCurrency
+    {
+        return TransactionCurrency::whereSymbol($currencySymbol)->first();
+    }
+
+    /**
      * Find by ID, return NULL if not found.
+     * Used in Import Currency!
      *
      * @param int $currencyId
      *
@@ -184,10 +228,7 @@ class CurrencyRepository implements CurrencyRepositoryInterface
      */
     public function findNull(int $currencyId): ?TransactionCurrency
     {
-        /** @var TransactionCurrency $res */
-        $res = TransactionCurrency::find($currencyId);
-
-        return $res;
+        return TransactionCurrency::find($currencyId);
     }
 
     /**
@@ -268,17 +309,10 @@ class CurrencyRepository implements CurrencyRepositoryInterface
      */
     public function store(array $data): TransactionCurrency
     {
-        /** @var TransactionCurrency $currency */
-        $currency = TransactionCurrency::create(
-            [
-                'name'           => $data['name'],
-                'code'           => $data['code'],
-                'symbol'         => $data['symbol'],
-                'decimal_places' => $data['decimal_places'],
-            ]
-        );
+        /** @var TransactionCurrencyFactory $factory */
+        $factory = app(TransactionCurrencyFactory::class);
 
-        return $currency;
+        return $factory->create($data);
     }
 
     /**
@@ -289,12 +323,9 @@ class CurrencyRepository implements CurrencyRepositoryInterface
      */
     public function update(TransactionCurrency $currency, array $data): TransactionCurrency
     {
-        $currency->code           = $data['code'];
-        $currency->symbol         = $data['symbol'];
-        $currency->name           = $data['name'];
-        $currency->decimal_places = $data['decimal_places'];
-        $currency->save();
+        /** @var CurrencyUpdateService $service */
+        $service = app(CurrencyUpdateService::class);
 
-        return $currency;
+        return $service->update($currency, $data);
     }
 }

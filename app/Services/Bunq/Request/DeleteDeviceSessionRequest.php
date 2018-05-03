@@ -34,12 +34,11 @@ class DeleteDeviceSessionRequest extends BunqRequest
     private $sessionToken;
 
     /**
-     * @throws \Exception
      */
     public function call(): void
     {
         Log::debug('Going to send bunq delete session request.');
-        $uri                                     = sprintf('/v1/session/%d', $this->sessionToken->getId());
+        $uri                                     = sprintf('session/%d', $this->sessionToken->getId());
         $headers                                 = $this->getDefaultHeaders();
         $headers['X-Bunq-Client-Authentication'] = $this->sessionToken->getToken();
         $this->sendSignedBunqDelete($uri, $headers);

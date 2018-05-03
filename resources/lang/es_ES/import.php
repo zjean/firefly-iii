@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * import.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,52 +20,51 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
     // status of import:
     'status_wait_title'                    => 'Por favor espere...',
     'status_wait_text'                     => 'Esta caja va a desaparecer en un momento.',
     'status_fatal_title'                   => 'Un error fatal ha ocurrido',
-    'status_fatal_text'                    => 'Un error fatal ocurrió, que la rutina de importación no se puede recuperar. Por favor vea la explicación en el rojo a continuación.',
-    'status_fatal_more'                    => 'Si el error es un tiempo en espera, la importación se detendrá a mitad de camino. Para algunas configuraciones de servidor, es simplemente que el servidor se detuvo mientras la importación se sigue ejecutando en segundo plano. Para verificar esto, revise los archivos de registro. Si el problema persiste, considere importar a través de la linea de comando.',
+    'status_fatal_text'                    => 'Un error fatal ocurrió, del cual la rutina de importación no se puede recuperar. Por favor, vea la explicación en rojo a continuación.',
+    'status_fatal_more'                    => 'Si el error es de tiempo en espera, la importación se detendrá a mitad de camino. Para algunas configuraciones de servidor, es simplemente que el servidor se detuvo mientras la importación se sigue ejecutando en segundo plano. Para verificar esto, revise los archivos de logs. Si el problema persiste, considere importar a través de la linea de comando.',
     'status_ready_title'                   => 'La Importación esta lista para comenzar',
-    'status_ready_text'                    => 'La importación esta lista para comenzar. Toda la configuración que necesitaba hacer ya esta hecha. Por favor descargue el archivo de configuración. Le ayudara con la importación en caso de que no vaya según lo planeado. Para realmente ejecutar la importación, usted puede ejecutar el siguiente comando en su consola, o ejecutar la importación basada en web. Dependiendo de su configuración, la importación de la consola le dará mas comentarios de retroalimentacion.',
-    'status_ready_noconfig_text'           => 'La importación esta lista para comenzar. Toda la configuración que usted necesitaba hacer ya esta hecha. para ejecutar realmente la importación puede ejecutar el siguiente comando en su consola o ejecutar la importación basada en la web. Dependiendo de su configuración, la importación de la consola le dará mas retroalimentacion.',
+    'status_ready_text'                    => 'La importación está lista para comenzar. Toda la configuración que necesitaba hacer ya está hecha. Por favor descargue el archivo de configuración. Le ayudará con la importación en caso de que no vaya según lo planeado. Para ejecutar la importación, puede ejecutar el siguiente comando en su consola, o utilizar la importación a través de la interfaz web. Dependiendo de su configuración, la importación de la consola le ofrecerá más comentarios de ayuda.',
+    'status_ready_noconfig_text'           => 'La importación está lista para comenzar. Toda la configuración que necesitaba hacer ya está hecha. Para ejecutar la importación, puede ejecutar el siguiente comando en su consola, o utilizar la importación a través de la interfaz web. Dependiendo de su configuración, la importación de la consola le ofrecerá más comentarios de ayuda.',
     'status_ready_config'                  => 'Configuración de descarga',
     'status_ready_start'                   => 'Comenzar la importación',
-    'status_ready_share'                   => 'Por favor considere descargar su configuración y compartirla en <strong><a href="https://github.com/firefly-iii/import-configurations/wiki">centro de configuración de importación</a></strong>. Esto le permitirá a otros usuarios de Firefly III importar sus archivos de manera mas fácil.',
+    'status_ready_share'                   => 'Por favor considere descargar su configuración y compartirla en <strong><a href="https://github.com/firefly-iii/import-configurations/wiki">centro de configuración de importación</a></strong>. Esto permitirá a otros usuarios de Firefly III importar sus archivos de manera más fácil.',
     'status_job_new'                       => 'El trabajo es completamente nuevo.',
     'status_job_configuring'               => 'La importación se está configurando.',
     'status_job_configured'                => 'La importación está configurada.',
-    'status_job_running'                   => 'La importación se esta ejecutando.. por favor espere..',
+    'status_job_running'                   => 'La importación se está ejecutando... Por favor, espere.',
     'status_job_error'                     => 'El trabajo generó un error.',
     'status_job_finished'                  => '¡La importación ha terminado!',
-    'status_running_title'                 => 'La importación se esta ejecutando',
+    'status_running_title'                 => 'La importación se está ejecutando',
     'status_running_placeholder'           => 'Por favor espere por la actualización...',
     'status_finished_title'                => 'Rutina de importación terminada',
     'status_finished_text'                 => 'La rutina de importación ha importado sus datos.',
     'status_errors_title'                  => 'Errores durante la importación',
-    'status_errors_single'                 => 'Ha ocurrido un error durante la importación. no parece ser fatal.',
-    'status_errors_multi'                  => 'Algunos errores ocurrieron durante la importación. Estos no parecen ser fatales.',
-    'status_bread_crumb'                   => 'Estado de importación',
-    'status_sub_title'                     => 'Estado de importación',
+    'status_errors_single'                 => 'Ha ocurrido un error durante la importación. No parece ser fatal.',
+    'status_errors_multi'                  => 'Algunos errores ocurrieron durante la importación. No parecen ser fatales.',
+    'status_bread_crumb'                   => 'Estado de la importación',
+    'status_sub_title'                     => 'Estado de la importación',
     'config_sub_title'                     => 'Configure su importación',
     'status_finished_job'                  => 'Las :count transacciones importadas pueden ser encontradas en la etiqueta <a href=":link" class="label label-success" style="font-size:100%;font-weight:normal;">.',
-    'status_finished_no_tag'               => 'Firefly III no ha recogido ninguna revistas de su archivo de importación.',
+    'status_finished_no_tag'               => 'Firefly III has not collected any transactions from your import file.',
     'import_with_key'                      => 'Importar con la clave \':key\'',
 
     // file, upload something
-    'file_upload_title'                    => 'Confirguracion de importacion (1/4) suba su archivo',
-    'file_upload_text'                     => 'Esta rutina le ayudara a usted a importar archivos de su banco a firefly III. Por favor chequee las paginas de ayuda en la esquina superior derecha.',
+    'file_upload_title'                    => 'Confirguración de importación (1/4) - Suba su archivo',
+    'file_upload_text'                     => 'Esta rutina le ayudará a importar archivos de su banco a Firefly III. Por favor revise las páginas de ayuda en la esquina superior derecha.',
     'file_upload_fields'                   => 'Campos',
-    'file_upload_help'                     => 'Seleccionar sus archivos',
-    'file_upload_config_help'              => 'Si previamente ha importado datos en Firefly III, usted puede tener un archivo de configuración, el cual preestablecera valores de configuración para usted. para algunos bancos, otros usuarios han proporcionado amablemente su archivo <a href="https://github.com/firefly-iii/import-configurations/wiki">configuración</a>',
-    'file_upload_type_help'                => 'Selecciona el tipo de archivo que subirá',
+    'file_upload_help'                     => 'Seleccione sus archivos',
+    'file_upload_config_help'              => 'Si previamente ha importado datos en Firefly III, puede tener un archivo de configuración, el cual preestablecerá valores de configuración para usted. Para algunos bancos, otros usuarios han proporcionado amablemente sus <a href="https://github.com/firefly-iii/import-configurations/wiki">archivos de configuración</a>',
+    'file_upload_type_help'                => 'Seleccione el tipo de archivo que subirá',
     'file_upload_submit'                   => 'Subir archivos',
 
     // file, upload types
-    'import_file_type_csv'                 => 'CSV ( valores separados por comas)',
+    'import_file_type_csv'                 => 'CSV (valores separados por comas)',
 
     // file, initial config for CSV
     'csv_initial_title'                    => 'Configuración de importación (2/4) - Configuración básica CSV de importación',
@@ -97,6 +98,7 @@ return [
     // not csv, but normal warning
     'roles_warning'                        => 'Por lo menos, marque una columna como la columna de importe. también es aconsejable seleccionar una columna para la descripción. la fecha y la cuenta contraria.',
     'foreign_amount_warning'               => 'Si usted marca una columna que contiene un importe en una moneda extranjera, usted también debe establecer la columna que contiene que moneda es.',
+
     // file, map data
     'file_map_title'                       => 'Configuración de importación (4/4) - Conecta datos de importación a los datos de Firefly III',
     'file_map_text'                        => 'En las siguientes tablas, el valor de la izquierda muestra información encontrada en el Csv cargado. Es su tarea mapear este valor, si es posible, a un valor ya presente en su base de datos. Firefly Iii respetara este mapeo. Si no hay un valor hacia el cual mapear o no se desea mapear un valor especifico, no seleccione ninguno.',
@@ -131,28 +133,40 @@ return [
     'column_date-book'                     => 'Fecha de registro de la transacción',
     'column_date-process'                  => 'Fecha del proceso de transacción',
     'column_date-transaction'              => 'Fecha',
+    'column_date-due'                      => 'Transaction due date',
+    'column_date-payment'                  => 'Transaction payment date',
+    'column_date-invoice'                  => 'Transaction invoice date',
     'column_description'                   => 'Descripción',
     'column_opposing-iban'                 => 'Cuenta opuesta (IBAN)',
+    'column_opposing-bic'                  => 'Opposing account (BIC)',
     'column_opposing-id'                   => 'ID de cuenta opuesta (coincide FF3)',
     'column_external-id'                   => 'Identificación externa',
     'column_opposing-name'                 => 'Cuenta opuesta (nombre)',
     'column_rabo-debit-credit'             => 'Indicador especifico débito/crédito de Rabobank',
     'column_ing-debit-credit'              => 'Indicador especifico débito/crédito de ING',
-    'column_sepa-ct-id'                    => 'ID transferencia de crédito extremo a extremo',
-    'column_sepa-ct-op'                    => 'Transferencia de crédito a cuenta opuesta SEPA',
-    'column_sepa-db'                       => 'SEPA débito directo',
+    'column_sepa-ct-id'                    => 'SEPA end-to-end Identifier',
+    'column_sepa-ct-op'                    => 'SEPA Opposing Account Identifier',
+    'column_sepa-db'                       => 'SEPA Mandate Identifier',
+    'column_sepa-cc'                       => 'SEPA Clearing Code',
+    'column_sepa-ci'                       => 'SEPA Creditor Identifier',
+    'column_sepa-ep'                       => 'SEPA External Purpose',
+    'column_sepa-country'                  => 'SEPA Country Code',
     'column_tags-comma'                    => 'Etiquetas ( separadas por comas)',
     'column_tags-space'                    => 'Etiquetas ( separadas por espacio)',
     'column_account-number'                => 'Cuenta de archivos ( numero de cuenta)',
     'column_opposing-number'               => 'Cuenta opuesta (numero de cuenta)',
     'column_note'                          => 'Nota (s)',
+    'column_internal-reference'            => 'Internal reference',
 
     // prerequisites
     'prerequisites'                        => 'Prerequisitos',
 
     // bunq
     'bunq_prerequisites_title'             => 'Pre requisitos para una importación de bunq',
-    'bunq_prerequisites_text'              => 'Para importar de bunq, usted necesita obtener una clave API. usted puede hacerlo a través de la aplicación.',
+    'bunq_prerequisites_text'              => 'In order to import from bunq, you need to obtain an API key. You can do this through the app. Please note that the import function for bunq is in BETA. It has only been tested against the sandbox API.',
+    'bunq_do_import'                       => 'Yes, import from this account',
+    'bunq_accounts_title'                  => 'Bunq accounts',
+    'bunq_accounts_text'                   => 'These are the accounts associated with your bunq account. Please select the accounts from which you want to import, and in which account the transactions must be imported.',
 
     // Spectre
     'spectre_title'                        => 'Importar usando Spectre',
@@ -187,4 +201,3 @@ return [
     // various other strings:
     'imported_from_account'                => 'Importado de ":account"',
 ];
-

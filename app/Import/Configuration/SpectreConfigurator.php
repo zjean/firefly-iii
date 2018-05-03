@@ -55,11 +55,12 @@ class SpectreConfigurator implements ConfiguratorInterface
      * @param array $data
      *
      * @return bool
+     *
      * @throws FireflyException
      */
     public function configureJob(array $data): bool
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call configureJob() without a job.');
         }
         $stage = $this->getConfig()['stage'] ?? 'initial';
@@ -87,11 +88,12 @@ class SpectreConfigurator implements ConfiguratorInterface
      * Return the data required for the next step in the job configuration.
      *
      * @return array
+     *
      * @throws FireflyException
      */
     public function getNextData(): array
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call configureJob() without a job.');
         }
         $config = $this->getConfig();
@@ -114,9 +116,8 @@ class SpectreConfigurator implements ConfiguratorInterface
                 /** @var HaveAccounts $class */
                 $class = app(HaveAccounts::class);
                 $class->setJob($this->job);
-                $data = $class->getData();
 
-                return $data;
+                return $class->getData();
             default:
                 return [];
         }
@@ -124,11 +125,12 @@ class SpectreConfigurator implements ConfiguratorInterface
 
     /**
      * @return string
+     *
      * @throws FireflyException
      */
     public function getNextView(): string
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call configureJob() without a job.');
         }
         $stage = $this->getConfig()['stage'] ?? 'initial';
@@ -143,7 +145,6 @@ class SpectreConfigurator implements ConfiguratorInterface
                 return 'import.spectre.accounts';
             default:
                 return '';
-
         }
     }
 
@@ -159,11 +160,12 @@ class SpectreConfigurator implements ConfiguratorInterface
 
     /**
      * @return bool
+     *
      * @throws FireflyException
      */
     public function isJobConfigured(): bool
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call configureJob() without a job.');
         }
         $stage = $this->getConfig()['stage'] ?? 'initial';
@@ -204,7 +206,6 @@ class SpectreConfigurator implements ConfiguratorInterface
             'accounts-mapped' => '',
             'auto-start'      => true,
             'apply-rules'     => true,
-            'match-bills'     => false,
         ];
         $currentConfig = $this->repository->getConfiguration($job);
         $finalConfig   = array_merge($defaultConfig, $currentConfig);

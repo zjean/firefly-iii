@@ -98,6 +98,10 @@ class Controller extends BaseController
                         Log::debug(sprintf('Check if user has already seen intro with key "%s". Result is %d', $key, $shownDemo));
                     }
 
+                    // share language
+                    $language           = Preferences::get('language', config('firefly.default_language', 'en_US'))->data;
+
+                    View::share('language', $language);
                     View::share('shownDemo', $shownDemo);
                     View::share('current_route_name', $page);
                     View::share('original_route_name', Route::currentRouteName());
@@ -121,7 +125,7 @@ class Controller extends BaseController
      */
     protected function getPreviousUri(string $identifier): string
     {
-        $uri = strval(session($identifier));
+        $uri = (string)session($identifier);
         if (!(false === strpos($identifier, 'delete')) && !(false === strpos($uri, '/show/'))) {
             $uri = $this->redirectUri;
         }
@@ -139,7 +143,7 @@ class Controller extends BaseController
      */
     protected function isOpeningBalance(TransactionJournal $journal): bool
     {
-        return TransactionType::OPENING_BALANCE === $journal->transactionTypeStr();
+        return TransactionType::OPENING_BALANCE === $journal->transactionType->type;
     }
 
     /**
@@ -159,7 +163,7 @@ class Controller extends BaseController
             }
         }
         // @codeCoverageIgnoreStart
-        Session::flash('error', strval(trans('firefly.cannot_redirect_to_account')));
+        Session::flash('error', (string)trans('firefly.cannot_redirect_to_account'));
 
         return redirect(route('index'));
         // @codeCoverageIgnoreEnd

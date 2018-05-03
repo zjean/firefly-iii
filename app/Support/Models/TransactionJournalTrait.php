@@ -24,11 +24,9 @@ namespace FireflyIII\Support\Models;
 
 use Carbon\Carbon;
 use FireflyIII\Models\Transaction;
-use FireflyIII\Models\TransactionJournalMeta;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
@@ -64,121 +62,7 @@ trait TransactionJournalTrait
     }
 
     /**
-     * @return string
-     */
-    public function amount(): string
-    {
-        $cache = new CacheProperties;
-        $cache->addProperty($this->id);
-        $cache->addProperty('transaction-journal');
-        $cache->addProperty('amount');
-        if ($cache->has()) {
-            return $cache->get(); // @codeCoverageIgnore
-        }
-
-        // saves on queries:
-        $amount = $this->transactions()->where('amount', '>', 0)->get()->sum('amount');
-
-        if ($this->isWithdrawal()) {
-            $amount = $amount * -1;
-        }
-        $amount = strval($amount);
-        $cache->store($amount);
-
-        return $amount;
-    }
-
-    /**
-     * @return string
-     */
-    public function amountPositive(): string
-    {
-        $cache = new CacheProperties;
-        $cache->addProperty($this->id);
-        $cache->addProperty('transaction-journal');
-        $cache->addProperty('amount-positive');
-        if ($cache->has()) {
-            return $cache->get(); // @codeCoverageIgnore
-        }
-
-        // saves on queries:
-        $amount = $this->transactions()->where('amount', '>', 0)->get()->sum('amount');
-
-        $amount = strval($amount);
-        $cache->store($amount);
-
-        return $amount;
-    }
-
-    /**
-     * @return int
-     */
-    public function budgetId(): int
-    {
-        $budget = $this->budgets()->first();
-        if (null !== $budget) {
-            return $budget->id;
-        }
-
-        return 0;
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    abstract public function budgets(): BelongsToMany;
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    abstract public function categories(): BelongsToMany;
-
-    /**
-     * @return string
-     */
-    public function categoryAsString(): string
-    {
-        $category = $this->categories()->first();
-        if (null !== $category) {
-            return $category->name;
-        }
-
-        return '';
-    }
-
-    /**
-     * @param string $dateField
-     *
-     * @return string
-     */
-    public function dateAsString(string $dateField = ''): string
-    {
-        if ('' === $dateField) {
-            return $this->date->format('Y-m-d');
-        }
-        if (null !== $this->$dateField && $this->$dateField instanceof Carbon) {
-            // make field NULL
-            $carbon           = clone $this->$dateField;
-            $this->$dateField = null;
-            $this->save();
-
-            // create meta entry
-            $this->setMeta($dateField, $carbon);
-
-            // return that one instead.
-            return $carbon->format('Y-m-d');
-        }
-        $metaField = $this->getMeta($dateField);
-        if (null !== $metaField) {
-            $carbon = new Carbon($metaField);
-
-            return $carbon->format('Y-m-d');
-        }
-
-        return '';
-    }
-
-    /**
+     * @deprecated
      * @return Collection
      */
     public function destinationAccountList(): Collection
@@ -203,6 +87,7 @@ trait TransactionJournalTrait
     }
 
     /**
+     * @deprecated
      * @return Collection
      */
     public function destinationTransactionList(): Collection
@@ -221,75 +106,7 @@ trait TransactionJournalTrait
     }
 
     /**
-     * @param string $name
-     *
-     * @return string
-     */
-    abstract public function getMeta(string $name);
-
-    /**
-     * @return bool
-     */
-    abstract public function isDeposit(): bool;
-
-    /**
-     * @return bool
-     */
-    abstract public function isOpeningBalance(): bool;
-
-    /**
-     * @return bool
-     */
-    abstract public function isTransfer(): bool;
-
-    /**
-     * @return bool
-     */
-    abstract public function isWithdrawal(): bool;
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    abstract public function piggyBankEvents(): HasMany;
-
-    /**
-     * @return int
-     */
-    public function piggyBankId(): int
-    {
-        if ($this->piggyBankEvents()->count() > 0) {
-            return $this->piggyBankEvents()->orderBy('date', 'DESC')->first()->piggy_bank_id;
-        }
-
-        return 0;
-    }
-
-    /**
-     * @return Transaction
-     */
-    public function positiveTransaction(): Transaction
-    {
-        return $this->transactions()->where('amount', '>', 0)->first();
-    }
-
-    /**
-     * Save the model to the database.
-     *
-     * @param array $options
-     *
-     * @return bool
-     */
-    abstract public function save(array $options = []): bool;
-
-    /**
-     * @param string $name
-     * @param        $value
-     *
-     * @return TransactionJournalMeta
-     */
-    abstract public function setMeta(string $name, $value): TransactionJournalMeta;
-
-    /**
+     * @deprecated
      * @return Collection
      */
     public function sourceAccountList(): Collection
@@ -314,6 +131,7 @@ trait TransactionJournalTrait
     }
 
     /**
+     * @deprecated
      * @return Collection
      */
     public function sourceTransactionList(): Collection
@@ -332,6 +150,7 @@ trait TransactionJournalTrait
     }
 
     /**
+     * @deprecated
      * @return string
      */
     public function transactionTypeStr(): string

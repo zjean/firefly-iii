@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * AttachmentCollector.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 namespace FireflyIII\Export\Collector;
 
@@ -118,7 +118,7 @@ class AttachmentCollector extends BasicCollector implements CollectorInterface
      */
     private function exportFileName($attachment): string
     {
-        return sprintf('%s-Attachment nr. %s - %s', $this->job->key, strval($attachment->id), $attachment->filename);
+        return sprintf('%s-Attachment nr. %s - %s', $this->job->key, (string)$attachment->id, $attachment->filename);
     }
 
     /**
@@ -127,8 +127,7 @@ class AttachmentCollector extends BasicCollector implements CollectorInterface
     private function getAttachments(): Collection
     {
         $this->repository->setUser($this->user);
-        $attachments = $this->repository->getBetween($this->start, $this->end);
 
-        return $attachments;
+        return $this->repository->getBetween($this->start, $this->end);
     }
 }

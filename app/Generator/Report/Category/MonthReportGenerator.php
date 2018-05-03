@@ -67,8 +67,8 @@ class MonthReportGenerator extends Support implements ReportGeneratorInterface
      */
     public function generate(): string
     {
-        $accountIds      = join(',', $this->accounts->pluck('id')->toArray());
-        $categoryIds     = join(',', $this->categories->pluck('id')->toArray());
+        $accountIds      = implode(',', $this->accounts->pluck('id')->toArray());
+        $categoryIds     = implode(',', $this->categories->pluck('id')->toArray());
         $reportType      = 'category';
         $expenses        = $this->getExpenses();
         $income          = $this->getIncome();
@@ -239,8 +239,8 @@ class MonthReportGenerator extends Support implements ReportGeneratorInterface
         $result = [];
         /** @var Transaction $transaction */
         foreach ($collection as $transaction) {
-            $jrnlCatId           = intval($transaction->transaction_journal_category_id);
-            $transCatId          = intval($transaction->transaction_category_id);
+            $jrnlCatId           = (int)$transaction->transaction_journal_category_id;
+            $transCatId          = (int)$transaction->transaction_category_id;
             $categoryId          = max($jrnlCatId, $transCatId);
             $result[$categoryId] = $result[$categoryId] ?? '0';
             $result[$categoryId] = bcadd($transaction->transaction_amount, $result[$categoryId]);

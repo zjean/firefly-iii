@@ -157,50 +157,53 @@ class TransactionTransformer extends TransformerAbstract
         $categoryName = null;
         $budgetId     = null;
         $budgetName   = null;
-        $categoryId   = is_null($transaction->transaction_category_id) ? $transaction->transaction_journal_category_id
+        $categoryId   = null === $transaction->transaction_category_id ? $transaction->transaction_journal_category_id
             : $transaction->transaction_category_id;
-        $categoryName = is_null($transaction->transaction_category_name) ? $transaction->transaction_journal_category_name
+        $categoryName = null === $transaction->transaction_category_name ? $transaction->transaction_journal_category_name
             : $transaction->transaction_category_name;
 
         if ($transaction->transaction_type_type === TransactionType::WITHDRAWAL) {
-            $budgetId   = is_null($transaction->transaction_budget_id) ? $transaction->transaction_journal_budget_id
+            $budgetId   = null === $transaction->transaction_budget_id ? $transaction->transaction_journal_budget_id
                 : $transaction->transaction_budget_id;
-            $budgetName = is_null($transaction->transaction_budget_name) ? $transaction->transaction_journal_budget_name
+            $budgetName = null === $transaction->transaction_budget_name ? $transaction->transaction_journal_budget_name
                 : $transaction->transaction_budget_name;
         }
         /** @var Note $dbNote */
         $dbNote = $transaction->transactionJournal->notes()->first();
-        $notes = null;
-        if(!is_null($dbNote)) {
+        $notes  = null;
+        if (null !== $dbNote) {
             $notes = $dbNote->text;
         }
 
         $data = [
-            'id'                    => (int)$transaction->id,
-            'updated_at'            => $transaction->updated_at->toAtomString(),
-            'created_at'            => $transaction->created_at->toAtomString(),
-            'description'           => $transaction->description,
-            'date'                  => $transaction->date->format('Y-m-d'),
-            'type'                  => $transaction->transaction_type_type,
-            'identifier'            => $transaction->identifier,
-            'journal_id'            => (int)$transaction->journal_id,
-            'reconciled'            => (bool)$transaction->reconciled,
-            'amount'                => round($transaction->transaction_amount, intval($transaction->transaction_currency_dp)),
-            'currency_id'           => $transaction->transaction_currency_id,
-            'currency_code'         => $transaction->transaction_currency_code,
-            'currency_dp'           => $transaction->transaction_currency_dp,
-            'foreign_amount'        => null,
-            'foreign_currency_id'   => $transaction->foreign_currency_id,
-            'foreign_currency_code' => $transaction->foreign_currency_code,
-            'foreign_currency_dp'   => $transaction->foreign_currency_dp,
-            'bill_id'               => $transaction->bill_id,
-            'bill_name'             => $transaction->bill_name,
-            'category_id'           => $categoryId,
-            'category_name'         => $categoryName,
-            'budget_id'             => $budgetId,
-            'budget_name'           => $budgetName,
-            'notes'                 => $notes,
-            'links'                 => [
+            'id'                      => (int)$transaction->id,
+            'updated_at'              => $transaction->updated_at->toAtomString(),
+            'created_at'              => $transaction->created_at->toAtomString(),
+            'description'             => $transaction->description,
+            'transaction_description' => $transaction->transaction_description,
+            'date'                    => $transaction->date->format('Y-m-d'),
+            'type'                    => $transaction->transaction_type_type,
+            'identifier'              => $transaction->identifier,
+            'journal_id'              => (int)$transaction->journal_id,
+            'reconciled'              => (bool)$transaction->reconciled,
+            'amount'                  => round($transaction->transaction_amount, (int)$transaction->transaction_currency_dp),
+            'currency_id'             => $transaction->transaction_currency_id,
+            'currency_code'           => $transaction->transaction_currency_code,
+            'currency_symbol'         => $transaction->transaction_currency_symbol,
+            'currency_dp'             => $transaction->transaction_currency_dp,
+            'foreign_amount'          => null,
+            'foreign_currency_id'     => $transaction->foreign_currency_id,
+            'foreign_currency_code'   => $transaction->foreign_currency_code,
+            'foreign_currency_symbol' => $transaction->foreign_currency_symbol,
+            'foreign_currency_dp'     => $transaction->foreign_currency_dp,
+            'bill_id'                 => $transaction->bill_id,
+            'bill_name'               => $transaction->bill_name,
+            'category_id'             => $categoryId,
+            'category_name'           => $categoryName,
+            'budget_id'               => $budgetId,
+            'budget_name'             => $budgetName,
+            'notes'                   => $notes,
+            'links'                   => [
                 [
                     'rel' => 'self',
                     'uri' => '/transactions/' . $transaction->id,
@@ -209,10 +212,9 @@ class TransactionTransformer extends TransformerAbstract
         ];
 
         // expand foreign amount:
-        if (!is_null($transaction->transaction_foreign_amount)) {
-            $data['foreign_amount'] = round($transaction->transaction_foreign_amount, intval($transaction->foreign_currency_dp));
+        if (null !== $transaction->transaction_foreign_amount) {
+            $data['foreign_amount'] = round($transaction->transaction_foreign_amount, (int)$transaction->foreign_currency_dp);
         }
-
         // switch on type for consistency
         switch ($transaction->transaction_type_type) {
             case TransactionType::WITHDRAWAL:
@@ -248,7 +250,7 @@ class TransactionTransformer extends TransformerAbstract
         }
 
         // expand description.
-        if (strlen(strval($transaction->transaction_description)) > 0) {
+        if (strlen((string)$transaction->transaction_description) > 0) {
             $data['description'] = $transaction->transaction_description . ' (' . $transaction->description . ')';
         }
 

@@ -81,7 +81,7 @@ class ImportJobRepository implements ImportJobRepositoryInterface
     public function addTotalSteps(ImportJob $job, int $steps = 1): ImportJob
     {
         $extended          = $this->getExtendedStatus($job);
-        $total             = $extended['steps'] ?? 0;
+        $total             = (int)($extended['steps'] ?? 0);
         $total             += $steps;
         $extended['steps'] = $total;
 
@@ -104,7 +104,7 @@ class ImportJobRepository implements ImportJobRepositoryInterface
                                        ->where('name', 'importHash')
                                        ->count();
 
-        return intval($count);
+        return (int)$count;
     }
 
     /**
@@ -247,18 +247,33 @@ class ImportJobRepository implements ImportJobRepositoryInterface
      *
      * @return bool
      *
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function processFile(ImportJob $job, ?UploadedFile $file): bool
     {
-        if (is_null($file)) {
+        if (null === $file) {
             return false;
         }
         /** @var UserRepositoryInterface $repository */
-        $repository       = app(UserRepositoryInterface::class);
-        $newName          = sprintf('%s.upload', $job->key);
-        $uploaded         = new SplFileObject($file->getRealPath());
-        $content          = trim($uploaded->fread($uploaded->getSize()));
+        $repository = app(UserRepositoryInterface::class);
+        $newName    = sprintf('%s.upload', $job->key);
+        $uploaded   = new SplFileObject($file->getRealPath());
+        $content    = trim($uploaded->fread($uploaded->getSize()));
+
+        // verify content:
+        $result = mb_detect_encoding($content, 'UTF-8', true);
+        if ($result === false) {
+            Log::error(sprintf('Cannot detect encoding for uploaded import file "%s".', $file->getClientOriginalName()));
+
+            return false;
+        }
+        if ($result !== 'ASCII' && $result !== 'UTF-8') {
+            Log::error(sprintf('Uploaded import file is %s instead of UTF8!', var_export($result, true)));
+
+            return false;
+        }
+
         $contentEncrypted = Crypt::encrypt($content);
         $disk             = Storage::disk('upload');
 
@@ -311,18 +326,10 @@ class ImportJobRepository implements ImportJobRepositoryInterface
      */
     public function setExtendedStatus(ImportJob $job, array $array): ImportJob
     {
-        // remove 'errors' because it gets larger and larger and larger...
-        $display = $array;
-        unset($display['errors']);
-        Log::debug(sprintf('Incoming extended status for job "%s" is (except errors): ', $job->key), $display);
         $currentStatus        = $job->extended_status;
         $newStatus            = array_merge($currentStatus, $array);
         $job->extended_status = $newStatus;
         $job->save();
-
-        // remove 'errors' because it gets larger and larger and larger...
-        unset($newStatus['errors']);
-        Log::debug(sprintf('Set extended status of job "%s" to (except errors): ', $job->key), $newStatus);
 
         return $job;
     }

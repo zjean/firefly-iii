@@ -29,7 +29,6 @@ use FireflyIII\Repositories\Attachment\AttachmentRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as LaravelResponse;
 use Preferences;
-use Response;
 use View;
 
 /**
@@ -88,7 +87,7 @@ class AttachmentController extends Controller
 
         $this->repository->destroy($attachment);
 
-        $request->session()->flash('success', strval(trans('firefly.attachment_deleted', ['name' => $name])));
+        $request->session()->flash('success', (string)trans('firefly.attachment_deleted', ['name' => $name]));
         Preferences::mark();
 
         return redirect($this->getPreviousUri('attachments.delete.uri'));
@@ -142,6 +141,9 @@ class AttachmentController extends Controller
         }
         $request->session()->forget('attachments.edit.fromUpdate');
 
+        $preFilled['notes'] = $this->repository->getNoteText($attachment);
+        $request->session()->flash('preFilled', $preFilled);
+
         return view('attachments.edit', compact('attachment', 'subTitleIcon', 'subTitle'));
     }
 
@@ -156,10 +158,10 @@ class AttachmentController extends Controller
         $data = $request->getAttachmentData();
         $this->repository->update($attachment, $data);
 
-        $request->session()->flash('success', strval(trans('firefly.attachment_updated', ['name' => $attachment->filename])));
+        $request->session()->flash('success', (string)trans('firefly.attachment_updated', ['name' => $attachment->filename]));
         Preferences::mark();
 
-        if (1 === intval($request->get('return_to_edit'))) {
+        if (1 === (int)$request->get('return_to_edit')) {
             // @codeCoverageIgnoreStart
             $request->session()->put('attachments.edit.fromUpdate', true);
 
@@ -182,7 +184,7 @@ class AttachmentController extends Controller
         if ($this->repository->exists($attachment)) {
             $content = $this->repository->getContent($attachment);
 
-            return Response::make(
+            return response()->make(
                 $content, 200, [
                             'Content-Type'        => $attachment->mime,
                             'Content-Disposition' => 'inline; filename="' . $attachment->filename . '"',

@@ -33,7 +33,6 @@ use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Support\Collection;
-use Response;
 
 /**
  * Separate controller because many helper functions are shared.
@@ -80,7 +79,7 @@ class ExpenseReportController extends Controller
         $cache->addProperty($start);
         $cache->addProperty($end);
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
 
         $format       = app('navigation')->preferredCarbonLocalizedFormat($start, $end);
@@ -101,27 +100,27 @@ class ExpenseReportController extends Controller
             /** @var Account $exp */
             $exp                          = $combi->first();
             $chartData[$exp->id . '-in']  = [
-                'label'   => $name . ' (' . strtolower(strval(trans('firefly.income'))) . ')',
+                'label'   => $name . ' (' . strtolower((string)trans('firefly.income')) . ')',
                 'type'    => 'bar',
                 'yAxisID' => 'y-axis-0',
                 'entries' => [],
             ];
             $chartData[$exp->id . '-out'] = [
-                'label'   => $name . ' (' . strtolower(strval(trans('firefly.expenses'))) . ')',
+                'label'   => $name . ' (' . strtolower((string)trans('firefly.expenses')) . ')',
                 'type'    => 'bar',
                 'yAxisID' => 'y-axis-0',
                 'entries' => [],
             ];
             // total in, total out:
             $chartData[$exp->id . '-total-in']  = [
-                'label'   => $name . ' (' . strtolower(strval(trans('firefly.sum_of_income'))) . ')',
+                'label'   => $name . ' (' . strtolower((string)trans('firefly.sum_of_income')) . ')',
                 'type'    => 'line',
                 'fill'    => false,
                 'yAxisID' => 'y-axis-1',
                 'entries' => [],
             ];
             $chartData[$exp->id . '-total-out'] = [
-                'label'   => $name . ' (' . strtolower(strval(trans('firefly.sum_of_expenses'))) . ')',
+                'label'   => $name . ' (' . strtolower((string)trans('firefly.sum_of_expenses')) . ')',
                 'type'    => 'line',
                 'fill'    => false,
                 'yAxisID' => 'y-axis-1',
@@ -180,7 +179,7 @@ class ExpenseReportController extends Controller
         $data = $this->generator->multiSet($newSet);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -197,7 +196,7 @@ class ExpenseReportController extends Controller
             $collection->push($expenseAccount);
 
             $revenue = $this->accountRepository->findByName($expenseAccount->name, [AccountType::REVENUE]);
-            if (!is_null($revenue)) {
+            if (null !== $revenue) {
                 $collection->push($revenue);
             }
             $combined[$expenseAccount->name] = $collection;
@@ -220,9 +219,7 @@ class ExpenseReportController extends Controller
         $collector = app(JournalCollectorInterface::class);
         $collector->setAccounts($accounts)->setRange($start, $end)->setTypes([TransactionType::WITHDRAWAL])->setOpposingAccounts($opposing);
 
-        $transactions = $collector->getJournals();
-
-        return $transactions;
+        return $collector->getJournals();
     }
 
     /**
@@ -240,9 +237,7 @@ class ExpenseReportController extends Controller
         $collector = app(JournalCollectorInterface::class);
         $collector->setAccounts($accounts)->setRange($start, $end)->setTypes([TransactionType::DEPOSIT])->setOpposingAccounts($opposing);
 
-        $transactions = $collector->getJournals();
-
-        return $transactions;
+        return $collector->getJournals();
     }
 
     /**

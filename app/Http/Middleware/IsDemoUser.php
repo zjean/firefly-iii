@@ -23,10 +23,9 @@ declare(strict_types=1);
 namespace FireflyIII\Http\Middleware;
 
 use Closure;
+use FireflyIII\Exceptions\IsDemoUserException;
 use FireflyIII\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Session;
 
 /**
  * Class IsDemoUser.
@@ -34,26 +33,30 @@ use Session;
 class IsDemoUser
 {
     /**
-     * Handle an incoming request. May not be a limited user (ie. Sandstorm env. or demo user).
+     * Handle an incoming request.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \Closure                 $next
-     * @param string|null              $guard
+     * @param  \Illuminate\Http\Request $request
+     * @param  \Closure                 $next
      *
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, $guard = null)
+    public function handle(Request $request, Closure $next)
     {
-        if (Auth::guard($guard)->guest()) {
-            // don't care when not logged in, usual stuff applies:
+        /** @var User $user */
+        $user = $request->user();
+        if (null === $user) {
             return $next($request);
         }
-        /** @var User $user */
-        $user = auth()->user();
-        if ($user->hasRole('demo')) {
-            Session::flash('info', strval(trans('firefly.not_available_demo_user')));
 
-            return redirect($request->session()->previousUrl());
+        if ($user->hasRole('demo')) {
+            $request->session()->flash('info', (string)trans('firefly.not_available_demo_user'));
+            $current  = $request->url();
+            $previous = $request->session()->previousUrl();
+            if ($current !== $previous) {
+                return response()->redirectTo($previous);
+            }
+
+            return response()->redirectTo(route('index'));
         }
 
         return $next($request);

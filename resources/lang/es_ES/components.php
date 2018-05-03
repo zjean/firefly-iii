@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * components.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -18,8 +19,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
-    'personal_access_tokens' => 'Personal access tokens',
+    // profile
+    'personal_access_tokens' => 'Tokens de acceso personal',
+
+    // bills:
+    'not_expected_period'    => 'No se esperaba este período',
+    'not_or_not_yet'         => 'No (todavía)',
 ];

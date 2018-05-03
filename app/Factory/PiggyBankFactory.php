@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * PiggyBankFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,13 +20,11 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
 
 use FireflyIII\Models\PiggyBank;
-use FireflyIII\Repositories\PiggyBank\PiggyBankRepositoryInterface;
 use FireflyIII\User;
 
 /**
@@ -33,18 +32,8 @@ use FireflyIII\User;
  */
 class PiggyBankFactory
 {
-    /** @var PiggyBankRepositoryInterface */
-    private $repository;
     /** @var User */
     private $user;
-
-    /**
-     * PiggyBankFactory constructor.
-     */
-    public function __construct()
-    {
-        $this->repository = app(PiggyBankRepositoryInterface::class);
-    }
 
     /**
      * @param int|null    $piggyBankId
@@ -54,16 +43,16 @@ class PiggyBankFactory
      */
     public function find(?int $piggyBankId, ?string $piggyBankName): ?PiggyBank
     {
-        $piggyBankId   = intval($piggyBankId);
-        $piggyBankName = strval($piggyBankName);
+        $piggyBankId   = (int)$piggyBankId;
+        $piggyBankName = (string)$piggyBankName;
         if (strlen($piggyBankName) === 0 && $piggyBankId === 0) {
             return null;
         }
         // first find by ID:
         if ($piggyBankId > 0) {
             /** @var PiggyBank $piggyBank */
-            $piggyBank = $this->repository->find($piggyBankId);
-            if (!is_null($piggyBank)) {
+            $piggyBank = $this->user->piggyBanks()->find($piggyBankId);
+            if (null !== $piggyBank) {
                 return $piggyBank;
             }
         }
@@ -71,8 +60,8 @@ class PiggyBankFactory
         // then find by name:
         if (strlen($piggyBankName) > 0) {
             /** @var PiggyBank $piggyBank */
-            $piggyBank = $this->repository->findByName($piggyBankName);
-            if (!is_null($piggyBank)) {
+            $piggyBank = $this->findByName($piggyBankName);
+            if (null !== $piggyBank) {
                 return $piggyBank;
             }
         }
@@ -82,12 +71,29 @@ class PiggyBankFactory
     }
 
     /**
+     * @param string $name
+     *
+     * @return PiggyBank|null
+     */
+    public function findByName(string $name): ?PiggyBank
+    {
+        $set = $this->user->piggyBanks()->get();
+        /** @var PiggyBank $piggy */
+        foreach ($set as $piggy) {
+            if ($piggy->name === $name) {
+                return $piggy;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param User $user
      */
     public function setUser(User $user)
     {
         $this->user = $user;
-        $this->repository->setUser($user);
 
     }
 

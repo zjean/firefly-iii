@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * import.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +20,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
     // status of import:
@@ -50,7 +51,7 @@ return [
     'status_sub_title'                     => 'Status de importação',
     'config_sub_title'                     => 'Configurar a sua importação',
     'status_finished_job'                  => 'As transações de :count importadas podem ser encontradas na tag <a href=":link" class="label label-success" style="font-size:100%;font-weight:normal;">:tag</a>.',
-    'status_finished_no_tag'               => 'O Firefly III não coletou nenhum periódico do seu arquivo de importação.',
+    'status_finished_no_tag'               => 'Firefly III has not collected any transactions from your import file.',
     'import_with_key'                      => 'Importar com a chave \':key\'',
 
     // file, upload something
@@ -73,7 +74,7 @@ return [
     'csv_initial_header_help'              => 'Marque esta caixa se a primeira linha do seu arquivo CSV for os títulos das colunas.',
     'csv_initial_date_help'                => 'Formato de data e hora em seu CSV. Siga o formato como indica <a href="https://secure.php.net/manual/en/datetime.createfromformat.php#refsect1-datetime.createfromformat-parameters">esta página</a>. O valor padrão analisará datas que se parecem com isso: :dateExample.',
     'csv_initial_delimiter_help'           => 'Escolha o delimitador de campo que é usado em seu arquivo de entrada. Se não tiver certeza, a vírgula é a opção mais segura.',
-    'csv_initial_import_account_help'      => 'Se o seu arquivo CSV NÃO contém informações sobre sua(s) conta(s) ativa(s), use este combobox para selecionar para qual conta pertencem as transações no CSV.',
+    'csv_initial_import_account_help'      => 'Se o seu arquivo CSV NÃO contém informações sobre sua(s) conta(s) de ativo(s), use este combobox para selecionar para qual conta pertencem as transações no CSV.',
     'csv_initial_submit'                   => 'Continue com o passo 3/4',
 
     // file, new options:
@@ -97,6 +98,7 @@ return [
     // not csv, but normal warning
     'roles_warning'                        => 'No mínimo, marque uma coluna como a coluna de quantidade. É aconselhável também selecionar uma coluna para a descrição, data e a conta oposta.',
     'foreign_amount_warning'               => 'Se você marcar uma coluna como contendo um valor em uma moeda estrangeira, você também deve definir a coluna que contém qual moeda é.',
+
     // file, map data
     'file_map_title'                       => 'Configuração de importação (4/4) - Conecte dados de importação aos dados do Firefly III',
     'file_map_text'                        => 'Nas tabelas a seguir, o valor à esquerda mostra informações encontradas no seu arquivo carregado. É sua tarefa mapear esse valor, se possível, para um valor já presente em seu banco de dados. O Firefly vai se ater a esse mapeamento. Se não há nenhum valor para mapear, ou não quer mapear o valor específico, não selecione nada.',
@@ -108,9 +110,9 @@ return [
 
     // map things.
     'column__ignore'                       => '(ignorar esta coluna)',
-    'column_account-iban'                  => 'Conta Ativa (IBAN)',
-    'column_account-id'                    => 'ID da conta ativa (correspondência FF3)',
-    'column_account-name'                  => 'Conta Ativa (nome)',
+    'column_account-iban'                  => 'Conta de Ativo (IBAN)',
+    'column_account-id'                    => 'ID da Conta de Ativo (correspondente FF3)',
+    'column_account-name'                  => 'Conta de Ativo (nome)',
     'column_amount'                        => 'Montante',
     'column_amount_foreign'                => 'Montante (em moeda estrangeira)',
     'column_amount_debit'                  => 'Montante (coluna de débito)',
@@ -131,28 +133,40 @@ return [
     'column_date-book'                     => 'Data da reserva de transação',
     'column_date-process'                  => 'Data do processo de transação',
     'column_date-transaction'              => 'Data',
+    'column_date-due'                      => 'Transaction due date',
+    'column_date-payment'                  => 'Transaction payment date',
+    'column_date-invoice'                  => 'Transaction invoice date',
     'column_description'                   => 'Descrição',
     'column_opposing-iban'                 => 'Conta contrária (IBAN)',
+    'column_opposing-bic'                  => 'Opposing account (BIC)',
     'column_opposing-id'                   => 'ID da Conta Cotrária (correspondente FF3)',
     'column_external-id'                   => 'ID Externo',
     'column_opposing-name'                 => 'Conta contrária (nome)',
     'column_rabo-debit-credit'             => 'Indicador de débito/crédito específico do Rabobank',
     'column_ing-debit-credit'              => 'Indicador de débito/crédito específico do ING',
-    'column_sepa-ct-id'                    => 'ID da Transferência de Crédito fim-a-fim SEPA',
-    'column_sepa-ct-op'                    => 'Transferência de Crédito SEPA conta contrária',
-    'column_sepa-db'                       => 'Débito direto SEPA',
+    'column_sepa-ct-id'                    => 'SEPA end-to-end Identifier',
+    'column_sepa-ct-op'                    => 'SEPA Opposing Account Identifier',
+    'column_sepa-db'                       => 'SEPA Mandate Identifier',
+    'column_sepa-cc'                       => 'SEPA Clearing Code',
+    'column_sepa-ci'                       => 'SEPA Creditor Identifier',
+    'column_sepa-ep'                       => 'SEPA External Purpose',
+    'column_sepa-country'                  => 'SEPA Country Code',
     'column_tags-comma'                    => 'Tags (separadas por vírgula)',
     'column_tags-space'                    => 'Tags (separadas por espaço)',
-    'column_account-number'                => 'Conta ativa (número da conta)',
+    'column_account-number'                => 'Conta de ativo (número da conta)',
     'column_opposing-number'               => 'Conta Contrária (número da conta)',
     'column_note'                          => 'Nota(s)',
+    'column_internal-reference'            => 'Internal reference',
 
     // prerequisites
     'prerequisites'                        => 'Pré-requisitos',
 
     // bunq
     'bunq_prerequisites_title'             => 'Pré-requisitos para uma importação de bunq',
-    'bunq_prerequisites_text'              => 'Para importar a partir de bunq, você precisa obter uma chave API. Você pode fazer isso através do aplicativo.',
+    'bunq_prerequisites_text'              => 'In order to import from bunq, you need to obtain an API key. You can do this through the app. Please note that the import function for bunq is in BETA. It has only been tested against the sandbox API.',
+    'bunq_do_import'                       => 'Yes, import from this account',
+    'bunq_accounts_title'                  => 'Bunq accounts',
+    'bunq_accounts_text'                   => 'These are the accounts associated with your bunq account. Please select the accounts from which you want to import, and in which account the transactions must be imported.',
 
     // Spectre
     'spectre_title'                        => 'Importar usando Spectre',
@@ -160,7 +174,7 @@ return [
     'spectre_prerequisites_text'           => 'Para importar dados usando a Spectre API, você deve fornecer ao Firefly III dois valores secretos. Eles podem ser encontrados na <a href="https://www.saltedge.com/clients/profile/secrets">página de segredos</a>.',
     'spectre_enter_pub_key'                => 'A importação só funcionará quando você inserir essa chave pública em sua <a href="https://www.saltedge.com/clients/security/edit">página de segurança</a>.',
     'spectre_accounts_title'               => 'Selecione as contas a serem importadas',
-    'spectre_accounts_text'                => 'Cada conta à esquerda abaixo foi encontrada pela Spectre e pode ser importada para Firefly III. Por favor selecione a conta ativa que deve armazenar as transações. Se você não deseja importar de qualquer conta específica, desmarque a caixa de seleção.',
+    'spectre_accounts_text'                => 'Cada conta à esquerda abaixo foi encontrada pela Spectre e pode ser importada para Firefly III. Por favor selecione a conta de ativo que deve armazenar as transações. Se você não deseja importar de qualquer conta específica, desmarque a caixa de seleção.',
     'spectre_do_import'                    => 'Sim, importe a partir desta conta',
 
     // keys from "extra" array:
@@ -187,4 +201,3 @@ return [
     // various other strings:
     'imported_from_account'                => 'Importado de ":account"',
 ];
-

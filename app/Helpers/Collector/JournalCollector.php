@@ -25,11 +25,13 @@ namespace FireflyIII\Helpers\Collector;
 use Carbon\Carbon;
 use DB;
 use FireflyIII\Exceptions\FireflyException;
+use FireflyIII\Helpers\Filter\CountAttachmentsFilter;
 use FireflyIII\Helpers\Filter\FilterInterface;
 use FireflyIII\Helpers\Filter\InternalTransferFilter;
 use FireflyIII\Helpers\Filter\NegativeAmountFilter;
 use FireflyIII\Helpers\Filter\OpposingAccountFilter;
 use FireflyIII\Helpers\Filter\PositiveAmountFilter;
+use FireflyIII\Helpers\Filter\SplitIndicatorFilter;
 use FireflyIII\Helpers\Filter\TransferFilter;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Budget;
@@ -235,7 +237,7 @@ class JournalCollector implements JournalCollectorInterface
         $countQuery->getQuery()->groups     = null;
         $countQuery->getQuery()->orders     = null;
         $countQuery->groupBy('accounts.user_id');
-        $this->count = intval($countQuery->count());
+        $this->count = (int)$countQuery->count();
 
         return $this->count;
     }
@@ -268,10 +270,10 @@ class JournalCollector implements JournalCollectorInterface
         $set->each(
             function (Transaction $transaction) {
                 $transaction->date        = new Carbon($transaction->date);
-                $transaction->description = Steam::decrypt(intval($transaction->encrypted), $transaction->description);
+                $transaction->description = Steam::decrypt((int)$transaction->encrypted, $transaction->description);
 
                 if (null !== $transaction->bill_name) {
-                    $transaction->bill_name = Steam::decrypt(intval($transaction->bill_name_encrypted), $transaction->bill_name);
+                    $transaction->bill_name = Steam::decrypt((int)$transaction->bill_name_encrypted, $transaction->bill_name);
                 }
                 $transaction->account_name          = app('steam')->tryDecrypt($transaction->account_name);
                 $transaction->opposing_account_name = app('steam')->tryDecrypt($transaction->opposing_account_name);
@@ -336,7 +338,7 @@ class JournalCollector implements JournalCollectorInterface
         if ($accounts->count() > 0) {
             $accountIds = $accounts->pluck('id')->toArray();
             $this->query->whereIn('transactions.account_id', $accountIds);
-            Log::debug(sprintf('setAccounts: %s', join(', ', $accountIds)));
+            Log::debug(sprintf('setAccounts: %s', implode(', ', $accountIds)));
             $this->accountIds = $accountIds;
         }
 
@@ -760,6 +762,8 @@ class JournalCollector implements JournalCollectorInterface
             TransferFilter::class         => new TransferFilter,
             PositiveAmountFilter::class   => new PositiveAmountFilter,
             NegativeAmountFilter::class   => new NegativeAmountFilter,
+            SplitIndicatorFilter::class   => new SplitIndicatorFilter,
+            CountAttachmentsFilter::class => new CountAttachmentsFilter,
         ];
         Log::debug(sprintf('Will run %d filters on the set.', count($this->filters)));
         foreach ($this->filters as $enabled) {

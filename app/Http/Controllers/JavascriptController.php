@@ -47,14 +47,14 @@ class JavascriptController extends Controller
     {
         $accounts   = $repository->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET]);
         $preference = Preferences::get('currencyPreference', config('firefly.default_currency', 'EUR'));
-        $default    = $currencyRepository->findByCode($preference->data);
+        $default    = $currencyRepository->findByCodeNull($preference->data);
 
         $data = ['accounts' => []];
 
         /** @var Account $account */
         foreach ($accounts as $account) {
             $accountId                    = $account->id;
-            $currency                     = intval($account->getMeta('currency_id'));
+            $currency                     = (int)$repository->getMetaValue($account, 'currency_id');
             $currency                     = 0 === $currency ? $default->id : $currency;
             $entry                        = ['preferredCurrency' => $currency, 'name' => $account->name];
             $data['accounts'][$accountId] = $entry;
@@ -95,13 +95,13 @@ class JavascriptController extends Controller
      */
     public function variables(Request $request, AccountRepositoryInterface $repository, CurrencyRepositoryInterface $currencyRepository)
     {
-        $account    = $repository->find(intval($request->get('account')));
+        $account    = $repository->findNull((int)$request->get('account'));
         $currencyId = 0;
         if (null !== $account) {
-            $currencyId = intval($account->getMeta('currency_id'));
+            $currencyId = (int)$repository->getMetaValue($account, 'currency_id');
         }
         /** @var TransactionCurrency $currency */
-        $currency = $currencyRepository->find($currencyId);
+        $currency = $currencyRepository->findNull($currencyId);
         if (0 === $currencyId) {
             $currency = app('amount')->getDefaultCurrency();
         }
@@ -174,21 +174,21 @@ class JavascriptController extends Controller
         $todayStart = app('navigation')->startOfPeriod($today, $viewRange);
         $todayEnd   = app('navigation')->endOfPeriod($todayStart, $viewRange);
         if ($todayStart->ne($start) || $todayEnd->ne($end)) {
-            $ranges[ucfirst(strval(trans('firefly.today')))] = [$todayStart, $todayEnd];
+            $ranges[ucfirst((string)trans('firefly.today'))] = [$todayStart, $todayEnd];
         }
 
         // everything
-        $index          = strval(trans('firefly.everything'));
+        $index          = (string)trans('firefly.everything');
         $ranges[$index] = [$first, new Carbon];
 
         $return = [
             'title'         => $title,
             'configuration' => [
-                'apply'       => strval(trans('firefly.apply')),
-                'cancel'      => strval(trans('firefly.cancel')),
-                'from'        => strval(trans('firefly.from')),
-                'to'          => strval(trans('firefly.to')),
-                'customRange' => strval(trans('firefly.customRange')),
+                'apply'       => (string)trans('firefly.apply'),
+                'cancel'      => (string)trans('firefly.cancel'),
+                'from'        => (string)trans('firefly.from'),
+                'to'          => (string)trans('firefly.to'),
+                'customRange' => (string)trans('firefly.customRange'),
                 'start'       => $start->format('Y-m-d'),
                 'end'         => $end->format('Y-m-d'),
                 'ranges'      => $ranges,

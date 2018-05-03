@@ -25,6 +25,7 @@ namespace FireflyIII\Support\Binder;
 use FireflyIII\Models\Account;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
+use Log;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -38,6 +39,7 @@ class AccountList implements BinderInterface
      * @param Route  $route
      *
      * @return Collection
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value, Route $route): Collection
     {
@@ -45,10 +47,11 @@ class AccountList implements BinderInterface
             $list     = [];
             $incoming = explode(',', $value);
             foreach ($incoming as $entry) {
-                $list[] = intval($entry);
+                $list[] = (int)$entry;
             }
             $list = array_unique($list);
             if (count($list) === 0) {
+                Log::error('Account list is empty.');
                 throw new NotFoundHttpException; // @codeCoverageIgnore
             }
 
@@ -67,6 +70,7 @@ class AccountList implements BinderInterface
                 return $collection;
             }
         }
+        Log::error('User is not logged in.');
         throw new NotFoundHttpException;
     }
 }

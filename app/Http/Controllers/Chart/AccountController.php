@@ -38,7 +38,6 @@ use FireflyIII\Support\CacheProperties;
 use Illuminate\Support\Collection;
 use Log;
 use Preferences;
-use Response;
 
 /** checked
  * Class AccountController.
@@ -74,7 +73,7 @@ class AccountController extends Controller
         $cache->addProperty($end);
         $cache->addProperty('chart.account.expense-accounts');
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
         $start->subDay();
 
@@ -94,10 +93,10 @@ class AccountController extends Controller
         }
 
         arsort($chartData);
-        $data = $this->generator->singleSet(strval(trans('firefly.spent')), $chartData);
+        $data = $this->generator->singleSet((string)trans('firefly.spent'), $chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -115,7 +114,7 @@ class AccountController extends Controller
         $cache->addProperty($end);
         $cache->addProperty('chart.account.expense-budget');
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
         $collector = app(JournalCollectorInterface::class);
         $collector->setAccounts(new Collection([$account]))->setRange($start, $end)->withBudgetInformation()->setTypes([TransactionType::WITHDRAWAL]);
@@ -125,8 +124,8 @@ class AccountController extends Controller
 
         /** @var Transaction $transaction */
         foreach ($transactions as $transaction) {
-            $jrnlBudgetId      = intval($transaction->transaction_journal_budget_id);
-            $transBudgetId     = intval($transaction->transaction_budget_id);
+            $jrnlBudgetId      = (int)$transaction->transaction_journal_budget_id;
+            $transBudgetId     = (int)$transaction->transaction_budget_id;
             $budgetId          = max($jrnlBudgetId, $transBudgetId);
             $result[$budgetId] = $result[$budgetId] ?? '0';
             $result[$budgetId] = bcadd($transaction->transaction_amount, $result[$budgetId]);
@@ -140,7 +139,7 @@ class AccountController extends Controller
         $data = $this->generator->pieChart($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -172,7 +171,7 @@ class AccountController extends Controller
         $cache->addProperty($end);
         $cache->addProperty('chart.account.expense-category');
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
 
         $collector = app(JournalCollectorInterface::class);
@@ -182,8 +181,8 @@ class AccountController extends Controller
         $chartData    = [];
         /** @var Transaction $transaction */
         foreach ($transactions as $transaction) {
-            $jrnlCatId           = intval($transaction->transaction_journal_category_id);
-            $transCatId          = intval($transaction->transaction_category_id);
+            $jrnlCatId           = (int)$transaction->transaction_journal_category_id;
+            $transCatId          = (int)$transaction->transaction_category_id;
             $categoryId          = max($jrnlCatId, $transCatId);
             $result[$categoryId] = $result[$categoryId] ?? '0';
             $result[$categoryId] = bcadd($transaction->transaction_amount, $result[$categoryId]);
@@ -197,7 +196,7 @@ class AccountController extends Controller
         $data = $this->generator->pieChart($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -236,7 +235,7 @@ class AccountController extends Controller
         }
         $accounts = $repository->getAccountsById($frontPage->data);
 
-        return Response::json($this->accountBalanceChart($accounts, $start, $end));
+        return response()->json($this->accountBalanceChart($accounts, $start, $end));
     }
 
     /**
@@ -254,7 +253,7 @@ class AccountController extends Controller
         $cache->addProperty($end);
         $cache->addProperty('chart.account.income-category');
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
 
         // grab all journals:
@@ -265,8 +264,8 @@ class AccountController extends Controller
         $chartData    = [];
         /** @var Transaction $transaction */
         foreach ($transactions as $transaction) {
-            $jrnlCatId           = intval($transaction->transaction_journal_category_id);
-            $transCatId          = intval($transaction->transaction_category_id);
+            $jrnlCatId           = (int)$transaction->transaction_journal_category_id;
+            $transCatId          = (int)$transaction->transaction_category_id;
             $categoryId          = max($jrnlCatId, $transCatId);
             $result[$categoryId] = $result[$categoryId] ?? '0';
             $result[$categoryId] = bcadd($transaction->transaction_amount, $result[$categoryId]);
@@ -279,7 +278,7 @@ class AccountController extends Controller
         $data = $this->generator->pieChart($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -300,6 +299,8 @@ class AccountController extends Controller
      * @param Account $account
      * @param Carbon  $start
      *
+     * @param Carbon  $end
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function period(Account $account, Carbon $start, Carbon $end)
@@ -310,13 +311,13 @@ class AccountController extends Controller
         $cache->addProperty($end);
         $cache->addProperty($account->id);
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
         // depending on diff, do something with range of chart.
         $step   = '1D';
         $months = $start->diffInMonths($end);
         if ($months > 3) {
-            $step = '1W';
+            $step = '1W'; // @codeCoverageIgnore
         }
         if ($months > 24) {
             $step = '1M'; // @codeCoverageIgnore
@@ -335,26 +336,28 @@ class AccountController extends Controller
                     $theDate           = $current->format('Y-m-d');
                     $balance           = $range[$theDate] ?? $previous;
                     $label             = $current->formatLocalized($format);
-                    $chartData[$label] = floatval($balance);
+                    $chartData[$label] = (float)$balance;
                     $previous          = $balance;
                     $current->addDay();
                 }
                 break;
+            // @codeCoverageIgnoreStart
             case '1W':
-            case '1M': // @codeCoverageIgnore
-            case '1Y': // @codeCoverageIgnore
+            case '1M':
+            case '1Y':
                 while ($end >= $current) {
-                    $balance           = floatval(app('steam')->balance($account, $current));
+                    $balance           = (float)app('steam')->balance($account, $current);
                     $label             = app('navigation')->periodShow($current, $step);
                     $chartData[$label] = $balance;
-                    $current           = app('navigation')->addPeriod($current, $step, 1);
+                    $current           = app('navigation')->addPeriod($current, $step, 0);
                 }
                 break;
+            // @codeCoverageIgnoreEnd
         }
         $data = $this->generator->singleSet($account->name, $chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -368,7 +371,7 @@ class AccountController extends Controller
      */
     public function report(Collection $accounts, Carbon $start, Carbon $end)
     {
-        return Response::json($this->accountBalanceChart($accounts, $start, $end));
+        return response()->json($this->accountBalanceChart($accounts, $start, $end));
     }
 
     /**
@@ -388,7 +391,7 @@ class AccountController extends Controller
         $cache->addProperty($end);
         $cache->addProperty('chart.account.revenue-accounts');
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
         $accounts = $repository->getAccountsByType([AccountType::REVENUE]);
 
@@ -408,10 +411,10 @@ class AccountController extends Controller
         }
 
         arsort($chartData);
-        $data = $this->generator->singleSet(strval(trans('firefly.earned')), $chartData);
+        $data = $this->generator->singleSet((string)trans('firefly.earned'), $chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -436,21 +439,25 @@ class AccountController extends Controller
 
         /** @var CurrencyRepositoryInterface $repository */
         $repository = app(CurrencyRepositoryInterface::class);
-
-        $chartData = [];
+        $default    = app('amount')->getDefaultCurrency();
+        $chartData  = [];
         foreach ($accounts as $account) {
-            $currency     = $repository->findNull(intval($account->getMeta('currency_id')));
-            $currentSet   = [
+            $currency = $repository->findNull((int)$account->getMeta('currency_id'));
+            if (null === $currency) {
+                $currency = $default;
+            }
+            $currentSet = [
                 'label'           => $account->name,
                 'currency_symbol' => $currency->symbol,
                 'entries'         => [],
             ];
+
             $currentStart = clone $start;
             $range        = app('steam')->balanceInRange($account, $start, clone $end);
             $previous     = array_values($range)[0];
             while ($currentStart <= $end) {
                 $format   = $currentStart->format('Y-m-d');
-                $label    = $currentStart->formatLocalized(strval(trans('config.month_and_day')));
+                $label    = $currentStart->formatLocalized((string)trans('config.month_and_day'));
                 $balance  = isset($range[$format]) ? round($range[$format], 12) : $previous;
                 $previous = $balance;
                 $currentStart->addDay();

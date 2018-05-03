@@ -23,7 +23,7 @@ declare(strict_types=1);
 namespace FireflyIII\Services\Bunq\Object;
 
 use Carbon\Carbon;
-
+use FireflyIII\Exceptions\FireflyException;
 /**
  * Class UserLight.
  */
@@ -34,21 +34,21 @@ class UserLight extends BunqObject
     /** @var Carbon */
     private $created;
     /** @var string */
-    private $displayName = '';
+    private $displayName;
     /** @var string */
-    private $firstName = '';
+    private $firstName;
     /** @var int */
-    private $id = 0;
+    private $id;
     /** @var string */
-    private $lastName = '';
+    private $lastName;
     /** @var string */
-    private $legalName = '';
+    private $legalName;
     /** @var string */
-    private $middleName = '';
+    private $middleName;
     /** @var string */
-    private $publicNickName = '';
+    private $publicNickName;
     /** @var string */
-    private $publicUuid = '';
+    private $publicUuid;
     /** @var Carbon */
     private $updated;
 
@@ -56,13 +56,14 @@ class UserLight extends BunqObject
      * UserLight constructor.
      *
      * @param array $data
+     *
      */
     public function __construct(array $data)
     {
         if (0 === count($data)) {
             return;
         }
-        $this->id             = intval($data['id']);
+        $this->id             = (int)$data['id'];
         $this->created        = Carbon::createFromFormat('Y-m-d H:i:s.u', $data['created']);
         $this->updated        = Carbon::createFromFormat('Y-m-d H:i:s.u', $data['updated']);
         $this->publicUuid     = $data['public_uuid'];
@@ -73,5 +74,13 @@ class UserLight extends BunqObject
         $this->lastName       = $data['last_name'];
         $this->legalName      = $data['legal_name'];
         // aliases
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        throw new FireflyException(sprintf('Cannot convert %s to array.', \get_class($this)));
     }
 }

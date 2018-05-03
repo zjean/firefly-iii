@@ -28,7 +28,7 @@ namespace FireflyIII\Services\Bunq\Object;
 class ServerPublicKey extends BunqObject
 {
     /** @var string */
-    private $publicKey = '';
+    private $publicKey;
 
     /**
      * ServerPublicKey constructor.
@@ -54,5 +54,15 @@ class ServerPublicKey extends BunqObject
     public function setPublicKey(string $publicKey)
     {
         $this->publicKey = $publicKey;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'server_public_key' => $this->publicKey,
+        ];
     }
 }

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * form.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +20,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
     // new user:
@@ -33,9 +34,12 @@ return [
     'amount_min'                     => 'Minimum amount',
     'amount_max'                     => 'Maximum amount',
     'match'                          => 'Matches on',
+    'strict'                         => 'Strict mode',
     'repeat_freq'                    => 'Repeats',
     'journal_currency_id'            => 'Currency',
     'currency_id'                    => 'Currency',
+    'transaction_currency_id'        => 'Currency',
+    'external_ip'                    => 'Your server\'s external IP',
     'attachments'                    => 'Attachments',
     'journal_amount'                 => 'Amount',
     'journal_source_account_name'    => 'Revenue account (source)',

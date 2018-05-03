@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * TransactionController.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,13 +20,10 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Api\V1\Controllers;
 
 use FireflyIII\Api\V1\Requests\TransactionRequest;
-use FireflyIII\Factory\TransactionJournalFactory;
-use FireflyIII\Helpers\Collector\JournalCollector;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Helpers\Filter\InternalTransferFilter;
 use FireflyIII\Helpers\Filter\NegativeAmountFilter;
@@ -39,8 +37,8 @@ use Illuminate\Support\Collection;
 use League\Fractal\Manager;
 use League\Fractal\Pagination\IlluminatePaginatorAdapter;
 use League\Fractal\Resource\Collection as FractalCollection;
-use League\Fractal\Resource\Item;
 use League\Fractal\Serializer\JsonApiSerializer;
+use Log;
 use Preferences;
 
 /**
@@ -81,7 +79,7 @@ class TransactionController extends Controller
     public function delete(Transaction $transaction)
     {
         $journal = $transaction->transactionJournal;
-        $this->repository->delete($journal);
+        $this->repository->destroy($journal);
 
         return response()->json([], 204);
     }
@@ -90,11 +88,10 @@ class TransactionController extends Controller
      * @param Request $request
      *
      * @return \Illuminate\Http\JsonResponse
-     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function index(Request $request)
     {
-        $pageSize = intval(Preferences::getForUser(auth()->user(), 'listPageSize', 50)->data);
+        $pageSize = (int)Preferences::getForUser(auth()->user(), 'listPageSize', 50)->data;
 
         // read type from URI
         $type = $request->get('type') ?? 'default';
@@ -118,7 +115,7 @@ class TransactionController extends Controller
             $collector->removeFilter(InternalTransferFilter::class);
         }
 
-        if (!is_null($this->parameters->get('start')) && !is_null($this->parameters->get('end'))) {
+        if (null !== $this->parameters->get('start') && null !== $this->parameters->get('end')) {
             $collector->setRange($this->parameters->get('start'), $this->parameters->get('end'));
         }
         $collector->setLimit($pageSize)->setPage($this->parameters->get('page'));
@@ -151,7 +148,6 @@ class TransactionController extends Controller
         $include = $request->get('include') ?? '';
         $manager->parseIncludes($include);
 
-        // needs a lot of extra data to match the journal collector. Or just expand that one.
         // collect transactions using the journal collector
         $collector = app(JournalCollectorInterface::class);
         $collector->setUser(auth()->user());
@@ -169,25 +165,70 @@ class TransactionController extends Controller
         }
 
         $transactions = $collector->getJournals();
-        $resource = new Item($transactions->first(), new TransactionTransformer($this->parameters), 'transactions');
+        $resource     = new FractalCollection($transactions, new TransactionTransformer($this->parameters), 'transactions');
 
         return response()->json($manager->createData($resource)->toArray())->header('Content-Type', 'application/vnd.api+json');
     }
 
     /**
-     * @param TransactionRequest $request
+     * @param TransactionRequest         $request
+     *
+     * @param JournalRepositoryInterface $repository
      *
      * @return \Illuminate\Http\JsonResponse
-     * @throws \FireflyIII\Exceptions\FireflyException
      */
-    public function store(TransactionRequest $request)
+    public function store(TransactionRequest $request, JournalRepositoryInterface $repository)
     {
         $data         = $request->getAll();
         $data['user'] = auth()->user()->id;
-        /** @var TransactionJournalFactory $factory */
-        $factory = app(TransactionJournalFactory::class);
-        $factory->setUser(auth()->user());
-        $journal = $factory->create($data);
+        $journal      = $repository->store($data);
+
+        $manager = new Manager();
+        $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
+        $manager->setSerializer(new JsonApiSerializer($baseUrl));
+
+        // add include parameter:
+        $include = $request->get('include') ?? '';
+        $manager->parseIncludes($include);
+
+        // collect transactions using the journal collector
+        $collector = app(JournalCollectorInterface::class);
+        $collector->setUser(auth()->user());
+        $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
+        // filter on specific journals.
+        $collector->setJournals(new Collection([$journal]));
+
+        // add filter to remove transactions:
+        $transactionType = $journal->transactionType->type;
+        if ($transactionType === TransactionType::WITHDRAWAL) {
+            $collector->addFilter(PositiveAmountFilter::class);
+        }
+        if (!($transactionType === TransactionType::WITHDRAWAL)) {
+            $collector->addFilter(NegativeAmountFilter::class);
+        }
+
+        $transactions = $collector->getJournals();
+        $resource     = new FractalCollection($transactions, new TransactionTransformer($this->parameters), 'transactions');
+
+        return response()->json($manager->createData($resource)->toArray())->header('Content-Type', 'application/vnd.api+json');
+    }
+
+
+    /**
+     * @param TransactionRequest         $request
+     * @param JournalRepositoryInterface $repository
+     * @param Transaction                $transaction
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(TransactionRequest $request, JournalRepositoryInterface $repository, Transaction $transaction)
+    {
+        $data         = $request->getAll();
+        $data['user'] = auth()->user()->id;
+
+        Log::debug('Inside transaction update');
+
+        $journal = $repository->update($transaction->transactionJournal, $data);
 
         $manager = new Manager();
         $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
@@ -216,27 +257,6 @@ class TransactionController extends Controller
 
         $transactions = $collector->getJournals();
         $resource     = new FractalCollection($transactions, new TransactionTransformer($this->parameters), 'transactions');
-
-        return response()->json($manager->createData($resource)->toArray())->header('Content-Type', 'application/vnd.api+json');
-    }
-
-
-    /**
-     * @param BillRequest $request
-     * @param Bill        $bill
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function update(BillRequest $request, Bill $bill)
-    {
-        die('todo');
-        $data    = $request->getAll();
-        $bill    = $this->repository->update($bill, $data);
-        $manager = new Manager();
-        $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
-        $manager->setSerializer(new JsonApiSerializer($baseUrl));
-
-        $resource = new Item($bill, new BillTransformer($this->parameters), 'bills');
 
         return response()->json($manager->createData($resource)->toArray())->header('Content-Type', 'application/vnd.api+json');
 

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * PiggyBankEventFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,7 +20,6 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
@@ -46,7 +46,7 @@ class PiggyBankEventFactory
     public function create(TransactionJournal $journal, ?PiggyBank $piggyBank): ?PiggyBankEvent
     {
         Log::debug(sprintf('Now in PiggyBankEventCreate for a %s', $journal->transactionType->type));
-        if (is_null($piggyBank)) {
+        if (null === $piggyBank) {
             return null;
         }
 

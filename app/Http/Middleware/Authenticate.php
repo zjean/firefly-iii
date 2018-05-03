@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Authenticate.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -72,8 +74,7 @@ class Authenticate
      *
      * @param  array $guards
      *
-     * @return void
-     *
+     * @return mixed
      * @throws \Illuminate\Auth\AuthenticationException
      */
     protected function authenticate(array $guards)
@@ -83,10 +84,10 @@ class Authenticate
             if ($this->auth->check()) {
                 // do an extra check on user object.
                 $user = $this->auth->authenticate();
-                if (1 === intval($user->blocked)) {
-                    $message = strval(trans('firefly.block_account_logout'));
+                if (1 === (int)$user->blocked) {
+                    $message = (string)trans('firefly.block_account_logout');
                     if ('email_changed' === $user->blocked_code) {
-                        $message = strval(trans('firefly.email_changed_logout'));
+                        $message = (string)trans('firefly.email_changed_logout');
                     }
                     app('session')->flash('logoutMessage', $message);
                     $this->auth->logout();
@@ -98,6 +99,7 @@ class Authenticate
             return $this->auth->authenticate();
         }
 
+        // @codeCoverageIgnoreStart
         foreach ($guards as $guard) {
             if ($this->auth->guard($guard)->check()) {
                 return $this->auth->shouldUse($guard);
@@ -105,5 +107,6 @@ class Authenticate
         }
 
         throw new AuthenticationException('Unauthenticated.', $guards);
+        // @codeCoverageIgnoreEnd
     }
 }

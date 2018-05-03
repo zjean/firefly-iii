@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * UpgradeFireflyInstructions.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 namespace FireflyIII\Console\Commands;
 
@@ -41,14 +41,6 @@ class UpgradeFireflyInstructions extends Command
      * @var string
      */
     protected $signature = 'firefly:instructions {task}';
-
-    /**
-     * Create a new command instance.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * Execute the console command.

@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\TransactionRules\Triggers;
 
+use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Triggers\HasAnyCategory;
 use Tests\TestCase;
@@ -36,7 +37,7 @@ class HasAnyCategoryTest extends TestCase
      */
     public function testTriggered()
     {
-        $journal  = TransactionJournal::find(25);
+        $journal  = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $category = $journal->user->categories()->first();
         $journal->categories()->detach();
         $journal->categories()->save($category);
@@ -52,8 +53,15 @@ class HasAnyCategoryTest extends TestCase
      */
     public function testTriggeredNot()
     {
-        $journal = TransactionJournal::find(24);
+        $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $journal->categories()->detach();
+
+        // also detach transactions:
+        /** @var Transaction $transaction */
+        foreach($journal->transactions as $transaction) {
+            $transaction->categories()->detach();
+        }
+
         $this->assertEquals(0, $journal->categories()->count());
         $trigger = HasAnyCategory::makeFromStrings('', false);
         $result  = $trigger->triggered($journal);
@@ -65,18 +73,16 @@ class HasAnyCategoryTest extends TestCase
      */
     public function testTriggeredTransactions()
     {
-        $journal  = TransactionJournal::find(26);
+        $journal  = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $category = $journal->user->categories()->first();
         $journal->categories()->detach();
         $this->assertEquals(0, $journal->categories()->count());
 
-        // append to transaction
+        // append to transaction, not to journal.
         foreach ($journal->transactions()->get() as $index => $transaction) {
-            $transaction->categories()->detach();
-            if (0 === $index) {
-                $transaction->categories()->save($category);
-            }
+            $transaction->categories()->sync([$category->id]);
         }
+        $this->assertEquals(0, $journal->categories()->count());
 
         $trigger = HasAnyCategory::makeFromStrings('', false);
         $result  = $trigger->triggered($journal);

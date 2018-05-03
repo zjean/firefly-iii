@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * User.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 namespace FireflyIII;
 
@@ -43,12 +43,22 @@ class User extends Authenticatable
     use Notifiable, HasApiTokens;
 
     /**
+     * The attributes that should be casted to native types.
+     *
+     * @var array
+     */
+    protected $casts
+        = [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'blocked'    => 'boolean',
+        ];
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = ['email', 'password', 'blocked', 'blocked_code'];
-
     /**
      * The attributes excluded from the model's JSON form.
      *
@@ -63,17 +73,17 @@ class User extends Authenticatable
     protected $table = 'users';
 
     /**
-     * @param        $guard
      * @param string $value
      *
      * @return User
+     * @throws NotFoundHttpException
      */
     public static function routeBinder(string $value): User
     {
         if (auth()->check()) {
-            $userId = intval($value);
+            $userId = (int)$value;
             $user   = self::find($userId);
-            if (!is_null($user)) {
+            if (null !== $user) {
                 return $user;
             }
         }
@@ -202,7 +212,7 @@ class User extends Authenticatable
     {
         $bytes = random_bytes(16);
 
-        return strval(bin2hex($bytes));
+        return (string)bin2hex($bytes);
     }
 
     /**
@@ -213,6 +223,7 @@ class User extends Authenticatable
      *
      * @param string $name
      *
+     * @deprecated
      * @return bool
      */
     public function hasRole(string $name): bool

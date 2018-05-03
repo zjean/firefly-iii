@@ -26,14 +26,13 @@ use Crypt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Watson\Validating\ValidatingTrait;
 
 /**
  * Class Tag.
  */
 class Tag extends Model
 {
-    use ValidatingTrait, SoftDeletes;
+    use SoftDeletes;
 
     /**
      * The attributes that should be casted to native types.
@@ -52,12 +51,11 @@ class Tag extends Model
     protected $dates = ['date'];
     /** @var array */
     protected $fillable = ['user_id', 'tag', 'date', 'description', 'longitude', 'latitude', 'zoomLevel', 'tagMode'];
-    /** @var array */
-    protected $rules = ['tag' => 'required|between:1,200'];
 
     /**
      * @param array $fields
      *
+     * @deprecated
      * @return Tag|null
      */
     public static function firstOrCreateEncrypted(array $fields)
@@ -90,35 +88,18 @@ class Tag extends Model
      * @param string $value
      *
      * @return Tag
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value): Tag
     {
         if (auth()->check()) {
-            $tagId = intval($value);
+            $tagId = (int)$value;
             $tag   = auth()->user()->tags()->find($tagId);
-            if (!is_null($tag)) {
+            if (null !== $tag) {
                 return $tag;
             }
         }
         throw new NotFoundHttpException;
-    }
-
-    /**
-     * @param Tag $tag
-     *
-     * @return string
-     *
-     * @throws \FireflyIII\Exceptions\FireflyException
-     */
-    public static function tagSum(Tag $tag): string
-    {
-        $sum = '0';
-        /** @var TransactionJournal $journal */
-        foreach ($tag->transactionjournals as $journal) {
-            bcadd($sum, $journal->amount());
-        }
-
-        return $sum;
     }
 
     /**
@@ -127,6 +108,7 @@ class Tag extends Model
      * @param $value
      *
      * @return string
+     * @throws \Illuminate\Contracts\Encryption\DecryptException
      */
     public function getDescriptionAttribute($value)
     {
@@ -143,6 +125,7 @@ class Tag extends Model
      * @param $value
      *
      * @return string
+     * @throws \Illuminate\Contracts\Encryption\DecryptException
      */
     public function getTagAttribute($value)
     {
@@ -154,27 +137,11 @@ class Tag extends Model
     }
 
     /**
-     * Save the model to the database.
-     *
-     * @param array $options
-     *
-     * @return bool
-     */
-    public function save(array $options = [])
-    {
-        foreach ($this->transactionJournals()->get() as $journal) {
-            $count              = $journal->tags()->count();
-            $journal->tag_count = $count;
-            $journal->save();
-        }
-
-        return parent::save($options);
-    }
-
-    /**
      * @codeCoverageIgnore
      *
      * @param $value
+     *
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     public function setDescriptionAttribute($value)
     {
@@ -185,6 +152,8 @@ class Tag extends Model
      * @codeCoverageIgnore
      *
      * @param $value
+     *
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     public function setTagAttribute($value)
     {

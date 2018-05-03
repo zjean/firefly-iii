@@ -37,6 +37,7 @@ class CategoryList implements BinderInterface
      * @param Route  $route
      *
      * @return Collection
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value, Route $route): Collection
     {
@@ -44,7 +45,7 @@ class CategoryList implements BinderInterface
             $list     = [];
             $incoming = explode(',', $value);
             foreach ($incoming as $entry) {
-                $list[] = intval($entry);
+                $list[] = (int)$entry;
             }
             $list = array_unique($list);
             if (count($list) === 0) {

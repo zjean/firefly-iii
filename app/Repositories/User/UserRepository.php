@@ -77,8 +77,8 @@ class UserRepository implements UserRepositoryInterface
         Preferences::setForUser($user, 'previous_email_' . date('Y-m-d-H-i-s'), $oldEmail);
 
         // set undo and confirm token:
-        Preferences::setForUser($user, 'email_change_undo_token', strval(bin2hex(random_bytes(16))));
-        Preferences::setForUser($user, 'email_change_confirm_token', strval(bin2hex(random_bytes(16))));
+        Preferences::setForUser($user, 'email_change_undo_token', (string)bin2hex(random_bytes(16)));
+        Preferences::setForUser($user, 'email_change_confirm_token', (string)bin2hex(random_bytes(16)));
         // update user
 
         $user->email        = $newEmail;
@@ -145,7 +145,7 @@ class UserRepository implements UserRepositoryInterface
      *
      * @return bool
      *
-     * @throws \Exception
+
      */
     public function destroy(User $user): bool
     {
@@ -158,6 +158,7 @@ class UserRepository implements UserRepositoryInterface
     /**
      * @param int $userId
      *
+     * @deprecated
      * @return User
      */
     public function find(int $userId): User
@@ -178,6 +179,16 @@ class UserRepository implements UserRepositoryInterface
     public function findByEmail(string $email): ?User
     {
         return User::where('email', $email)->first();
+    }
+
+    /**
+     * @param int $userId
+     *
+     * @return User|null
+     */
+    public function findNull(int $userId): ?User
+    {
+        return User::find($userId);
     }
 
     /**
@@ -220,7 +231,7 @@ class UserRepository implements UserRepositoryInterface
         }
 
         $return['is_admin']            = $user->hasRole('owner');
-        $return['blocked']             = 1 === intval($user->blocked);
+        $return['blocked']             = 1 === (int)$user->blocked;
         $return['blocked_code']        = $user->blocked_code;
         $return['accounts']            = $user->accounts()->count();
         $return['journals']            = $user->transactionJournals()->count();
@@ -264,12 +275,12 @@ class UserRepository implements UserRepositoryInterface
      */
     public function store(array $data): User
     {
-        $password = bcrypt($data['password'] ?? app('str')->random(16));
-
         return User::create(
             [
-                'email'    => $data['email'],
-                'password' => $password,
+                'blocked'      => $data['blocked'] ?? false,
+                'blocked_code' => $data['blocked_code'] ?? null,
+                'email'        => $data['email'],
+                'password'     => str_random(24),
             ]
         );
     }
@@ -284,6 +295,24 @@ class UserRepository implements UserRepositoryInterface
         $user->save();
 
         return;
+    }
+
+    /**
+     * Update user info.
+     *
+     * @param User  $user
+     * @param array $data
+     *
+     * @return User
+     */
+    public function update(User $user, array $data): User
+    {
+        $this->updateEmail($user, $data['email']);
+        $user->blocked      = $data['blocked'] ?? false;
+        $user->blocked_code = $data['blocked_code'] ?? null;
+        $user->save();
+
+        return $user;
     }
 
     /**

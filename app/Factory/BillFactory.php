@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * BillFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,30 +20,54 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
 use FireflyIII\Models\Bill;
-use FireflyIII\Repositories\Bill\BillRepositoryInterface;
+use FireflyIII\Services\Internal\Support\BillServiceTrait;
 use FireflyIII\User;
+use Illuminate\Support\Collection;
+use Log;
 
 /**
  * Class BillFactory
  */
 class BillFactory
 {
-    /** @var BillRepositoryInterface */
-    private $repository;
+    use BillServiceTrait;
     /** @var User */
     private $user;
 
     /**
-     * BillFactory constructor.
+     * @param array $data
+     *
+     * @return Bill|null
      */
-    public function __construct()
+    public function create(array $data): ?Bill
     {
-        $this->repository = app(BillRepositoryInterface::class);
+        /** @var Bill $bill */
+        $bill = Bill::create(
+            [
+                'name'                    => $data['name'],
+                'match'                   => 'MIGRATED_TO_RULES',
+                'amount_min'              => $data['amount_min'],
+                'user_id'                 => $this->user->id,
+                'transaction_currency_id' => $data['transaction_currency_id'],
+                'amount_max'              => $data['amount_max'],
+                'date'                    => $data['date'],
+                'repeat_freq'             => $data['repeat_freq'],
+                'skip'                    => $data['skip'],
+                'automatch'               => true,
+                'active'                  => $data['active'],
+            ]
+        );
+
+        // update note:
+        if (isset($data['notes'])) {
+            $this->updateNote($bill, $data['notes']);
+        }
+
+        return $bill;
     }
 
     /**
@@ -53,21 +78,22 @@ class BillFactory
      */
     public function find(?int $billId, ?string $billName): ?Bill
     {
-        $billId   = intval($billId);
-        $billName = strval($billName);
+        $billId   = (int)$billId;
+        $billName = (string)$billName;
+
         // first find by ID:
         if ($billId > 0) {
             /** @var Bill $bill */
-            $bill = $this->repository->find($billId);
-            if (!is_null($bill)) {
+            $bill = $this->user->bills()->find($billId);
+            if (null !== $bill) {
                 return $bill;
             }
         }
 
         // then find by name:
-        if (strlen($billName) > 0) {
-            $bill = $this->repository->findByName($billName);
-            if (!is_null($bill)) {
+        if (\strlen($billName) > 0) {
+            $bill = $this->findByName($billName);
+            if (null !== $bill) {
                 return $bill;
             }
         }
@@ -77,13 +103,32 @@ class BillFactory
     }
 
     /**
+     * @param string $name
+     *
+     * @return Bill|null
+     */
+    public function findByName(string $name): ?Bill
+    {
+        /** @var Collection $collection */
+        $collection = $this->user->bills()->get();
+        /** @var Bill $bill */
+        foreach ($collection as $bill) {
+            Log::debug(sprintf('"%s" vs. "%s"', $bill->name, $name));
+            if ($bill->name === $name) {
+                return $bill;
+            }
+        }
+        Log::debug(sprintf('Bill::Find by name returns NULL based on "%s"', $name));
+
+        return null;
+    }
+
+    /**
      * @param User $user
      */
     public function setUser(User $user)
     {
         $this->user = $user;
-        $this->repository->setUser($user);
-
     }
 
 }

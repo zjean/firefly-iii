@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * form.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
     // new user:
@@ -158,7 +158,7 @@ return [
     'tag_areYouSure'             => 'Вы действительно хотите удалить метку ":tag"?',
     'journal_link_areYouSure'    => 'Вы действительно хотите удалить связь между <a href=":source_link">:source</a> и <a href=":destination_link">:destination</a>?',
     'linkType_areYouSure'        => 'Вы уверены, что хотите удалить тип ссылки ":name" (":inward" / ":outward")?',
-    'permDeleteWarning'          => 'Удаление информации из Firefly является постоянным и не может быть отменено.',
+    'permDeleteWarning'          => 'Удаление информации из Firefly III является постоянным и не может быть отменено.',
     'mass_make_selection'        => 'Вы все же можете предотвратить удаление элементов, сняв флажок.',
     'delete_all_permanently'     => 'Удалить выбранное навсегда',
     'update_all_journals'        => 'Обновить эти транзакции',

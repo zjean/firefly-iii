@@ -34,6 +34,7 @@ use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use Illuminate\Support\Collection;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -46,13 +47,24 @@ use Tests\TestCase;
 class BudgetReportControllerTest extends TestCase
 {
     /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
+    /**
      * @covers       \FireflyIII\Http\Controllers\Chart\BudgetReportController::accountExpense
      * @covers       \FireflyIII\Http\Controllers\Chart\BudgetReportController::__construct
      */
     public function testAccountExpense()
     {
-        $generator = $this->mock(GeneratorInterface::class);
-        $pieChart  = $this->mock(MetaPieChartInterface::class);
+        $budgetRepos = $this->mock(BudgetRepositoryInterface::class);
+        $generator   = $this->mock(GeneratorInterface::class);
+        $pieChart    = $this->mock(MetaPieChartInterface::class);
+
 
         $pieChart->shouldReceive('setAccounts')->once()->andReturnSelf();
         $pieChart->shouldReceive('setBudgets')->once()->andReturnSelf();
@@ -72,8 +84,9 @@ class BudgetReportControllerTest extends TestCase
      */
     public function testBudgetExpense()
     {
-        $generator = $this->mock(GeneratorInterface::class);
-        $pieChart  = $this->mock(MetaPieChartInterface::class);
+        $budgetRepos = $this->mock(BudgetRepositoryInterface::class);
+        $generator   = $this->mock(GeneratorInterface::class);
+        $pieChart    = $this->mock(MetaPieChartInterface::class);
 
         $pieChart->shouldReceive('setAccounts')->once()->andReturnSelf();
         $pieChart->shouldReceive('setBudgets')->once()->andReturnSelf();

@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers\Admin;
 
+use Carbon\Carbon;
 use FireflyConfig;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Http\Controllers\Controller;
@@ -31,7 +32,6 @@ use FireflyIII\Services\Github\Object\Release;
 use FireflyIII\Services\Github\Request\UpdateRequest;
 use Illuminate\Http\Request;
 use Log;
-use Response;
 use Session;
 
 /**
@@ -49,7 +49,7 @@ class UpdateController extends Controller
         parent::__construct();
         $this->middleware(
             function ($request, $next) {
-                app('view')->share('title', strval(trans('firefly.administration')));
+                app('view')->share('title', (string)trans('firefly.administration'));
                 app('view')->share('mainTitleIcon', 'fa-hand-spock-o');
 
                 return $next($request);
@@ -61,6 +61,8 @@ class UpdateController extends Controller
 
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Illuminate\Container\EntryNotFoundException
      */
     public function index()
@@ -85,10 +87,10 @@ class UpdateController extends Controller
      */
     public function post(Request $request)
     {
-        $checkForUpdates = intval($request->get('check_for_updates'));
+        $checkForUpdates = (int)$request->get('check_for_updates');
         FireflyConfig::set('permission_update_check', $checkForUpdates);
         FireflyConfig::set('last_update_check', time());
-        Session::flash('success', strval(trans('firefly.configuration_updated')));
+        Session::flash('success', (string)trans('firefly.configuration_updated'));
 
         return redirect(route('admin.update-check'));
     }
@@ -116,27 +118,33 @@ class UpdateController extends Controller
             Log::error(sprintf('Could not check for updates: %s', $e->getMessage()));
         }
         if ($check === -2) {
-            $string = strval(trans('firefly.update_check_error'));
+            $string = (string)trans('firefly.update_check_error');
         }
 
         if ($check === -1) {
             // there is a new FF version!
-            $string = strval(
-                trans(
+            // has it been released for more than three days?
+            $today = new Carbon;
+            if ($today->diffInDays($first->getUpdated(), true) > 3) {
+                $string = (string)trans(
                     'firefly.update_new_version_alert',
-                    ['your_version' => $current, 'new_version' => $first->getTitle(), 'date' => $first->getUpdated()->formatLocalized($this->monthAndDayFormat)]
-                )
-            );
+                    [
+                        'your_version' => $current,
+                        'new_version'  => $first->getTitle(),
+                        'date'         => $first->getUpdated()->formatLocalized($this->monthAndDayFormat),
+                    ]
+                );
+            }
         }
         if ($check === 0) {
             // you are running the current version!
-            $string = strval(trans('firefly.update_current_version_alert', ['version' => $current]));
+            $string = (string)trans('firefly.update_current_version_alert', ['version' => $current]);
         }
         if ($check === 1) {
             // you are running a newer version!
-            $string = strval(trans('firefly.update_newer_version_alert', ['your_version' => $current, 'new_version' => $first->getTitle()]));
+            $string = (string)trans('firefly.update_newer_version_alert', ['your_version' => $current, 'new_version' => $first->getTitle()]);
         }
 
-        return Response::json(['result' => $string]);
+        return response()->json(['result' => $string]);
     }
 }

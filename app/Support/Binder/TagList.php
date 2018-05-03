@@ -26,6 +26,7 @@ use FireflyIII\Models\Tag;
 use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
+use Log;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -38,8 +39,9 @@ class TagList implements BinderInterface
      * @param Route  $route
      *
      * @return Collection
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    public static function routeBinder(string $value, Route $route):  Collection
+    public static function routeBinder(string $value, Route $route): Collection
     {
         if (auth()->check()) {
             $list     = [];
@@ -49,6 +51,7 @@ class TagList implements BinderInterface
             }
             $list = array_unique($list);
             if (count($list) === 0) {
+                Log::error('Tag list is empty.');
                 throw new NotFoundHttpException; // @codeCoverageIgnore
             }
             /** @var TagRepositoryInterface $repository */
@@ -66,6 +69,7 @@ class TagList implements BinderInterface
                 return $collection;
             }
         }
+        Log::error('TagList: user is not logged in.');
         throw new NotFoundHttpException;
     }
 }

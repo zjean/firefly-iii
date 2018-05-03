@@ -36,7 +36,7 @@ class FireflyConfig
      *
      * @return bool
      *
-     * @throws \Exception
+
      */
     public function delete($name): bool
     {
@@ -66,6 +66,27 @@ class FireflyConfig
 
         if ($config) {
             Cache::forever($fullName, $config);
+
+            return $config;
+        }
+        // no preference found and default is null:
+        if (null === $default) {
+            return null;
+        }
+
+        return $this->set($name, $default);
+    }
+
+    /**
+     * @param      $name
+     * @param null $default
+     *
+     * @return \FireflyIII\Models\Configuration|null
+     */
+    public function getFresh($name, $default = null)
+    {
+        $config = Configuration::where('name', $name)->first(['id', 'name', 'data']);
+        if ($config) {
 
             return $config;
         }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * DecryptAttachment.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 namespace FireflyIII\Console\Commands;
 
@@ -48,14 +48,6 @@ class DecryptAttachment extends Command
     {directory:Where the file must be stored.}';
 
     /**
-     * Create a new command instance.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) // it's five its fine.
@@ -65,7 +57,7 @@ class DecryptAttachment extends Command
     {
         /** @var AttachmentRepositoryInterface $repository */
         $repository     = app(AttachmentRepositoryInterface::class);
-        $attachmentId   = intval($this->argument('id'));
+        $attachmentId   = (int)$this->argument('id');
         $attachment     = $repository->findWithoutUser($attachmentId);
         $attachmentName = trim($this->argument('name'));
         $storagePath    = realpath(trim($this->argument('directory')));

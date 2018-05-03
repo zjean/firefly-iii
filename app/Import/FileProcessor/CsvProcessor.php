@@ -28,8 +28,8 @@ use FireflyIII\Import\Specifics\SpecificInterface;
 use FireflyIII\Models\ImportJob;
 use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
 use Illuminate\Support\Collection;
-use Iterator;
 use League\Csv\Reader;
+use League\Csv\Statement;
 use Log;
 
 /**
@@ -46,9 +46,9 @@ class CsvProcessor implements FileProcessorInterface
     /** @var ImportJobRepositoryInterface */
     private $repository;
     /** @var array */
-    private $validConverters = [];
+    private $validConverters;
     /** @var array */
-    private $validSpecifics = [];
+    private $validSpecifics;
 
     /**
      * FileProcessorInterface constructor.
@@ -62,11 +62,12 @@ class CsvProcessor implements FileProcessorInterface
 
     /**
      * @return Collection
+     *
      * @throws FireflyException
      */
     public function getObjects(): Collection
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call getObjects() without a job.');
         }
 
@@ -78,13 +79,12 @@ class CsvProcessor implements FileProcessorInterface
      *
      * @return bool
      *
-     * @throws \League\Csv\Exception
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      * @throws FireflyException
+     * @throws \League\Csv\Exception
      */
     public function run(): bool
     {
-        if (is_null($this->job)) {
+        if (null === $this->job) {
             throw new FireflyException('Cannot call run() without a job.');
         }
         Log::debug('Now in CsvProcessor run(). Job is now running...');
@@ -128,7 +128,7 @@ class CsvProcessor implements FileProcessorInterface
      *
      * @param array $array
      */
-    public function setExtendedStatus(array $array)
+    public function setExtendedStatus(array $array): void
     {
         $this->repository->setExtendedStatus($this->job, $array);
     }
@@ -193,6 +193,7 @@ class CsvProcessor implements FileProcessorInterface
      * Shorthand method to return configuration.
      *
      * @codeCoverageIgnore
+     *
      * @return array
      */
     private function getConfig(): array
@@ -201,29 +202,35 @@ class CsvProcessor implements FileProcessorInterface
     }
 
     /**
-     * @return Iterator
+     * @return array
      *
      * @throws \League\Csv\Exception
      * @throws \League\Csv\Exception
      */
-    private function getImportArray(): Iterator
+    private function getImportArray(): array
     {
         $content    = $this->repository->uploadFileContents($this->job);
         $config     = $this->getConfig();
         $reader     = Reader::createFromString($content);
         $delimiter  = $config['delimiter'] ?? ',';
-        $hasHeaders = isset($config['has-headers']) ? $config['has-headers'] : false;
+        $hasHeaders = $config['has-headers'] ?? false;
+        $offset     = 0;
         if ('tab' === $delimiter) {
             $delimiter = "\t"; // @codeCoverageIgnore
         }
         $reader->setDelimiter($delimiter);
         if ($hasHeaders) {
-            $reader->setHeaderOffset(0); // @codeCoverageIgnore
+            $offset = 1;
         }
-        $results = $reader->getRecords();
+        $stmt    = (new Statement)->offset($offset);
+        $records = $stmt->process($reader);
+        $return  = [];
+        foreach ($records as $record) {
+            $return[] = $record;
+        }
         Log::debug('Created a CSV reader.');
 
-        return $results;
+        return $return;
     }
 
     /**
@@ -232,6 +239,7 @@ class CsvProcessor implements FileProcessorInterface
      * @param int $jsonError
      *
      * @codeCoverageIgnore
+     *
      * @return string
      */
     private function getJsonError(int $jsonError): string
@@ -273,9 +281,8 @@ class CsvProcessor implements FileProcessorInterface
         if (false === $json) {
             throw new FireflyException(sprintf('Error while encoding JSON for CSV row: %s', $this->getJsonError($jsonError)));  // @codeCoverageIgnore
         }
-        $hash = hash('sha256', $json);
 
-        return $hash;
+        return hash('sha256', $json);
     }
 
     /**
@@ -305,7 +312,7 @@ class CsvProcessor implements FileProcessorInterface
          * @var string $value
          */
         foreach ($row as $rowIndex => $value) {
-            $value = trim(strval($value));
+            $value = trim((string)$value);
             if (strlen($value) > 0) {
                 $annotated = $this->annotateValue($rowIndex, $value);
                 Log::debug('Annotated value', $annotated);
@@ -313,7 +320,7 @@ class CsvProcessor implements FileProcessorInterface
             }
         }
         // set some extra info:
-        $importAccount = intval($config['import-account'] ?? 0);
+        $importAccount = (int)($config['import-account'] ?? 0.0);
         $journal->asset->setDefaultAccountId($importAccount);
 
         return $journal;
@@ -332,11 +339,9 @@ class CsvProcessor implements FileProcessorInterface
     {
         $hash  = $this->getRowHash($array);
         $count = $this->repository->countByHash($hash);
-        if ($count > 0) {
-            return true;
-        }
+        Log::debug(sprintf('Hash is %s and count is %d', $hash, $count));
 
-        return false;
+        return $count > 0;
     }
 
     /**

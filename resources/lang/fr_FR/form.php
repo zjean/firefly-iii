@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * form.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
     // new user:
@@ -78,7 +78,7 @@ return [
     'new_email_address'              => 'Nouvelle adresse email',
     'verification'                   => 'Vérification',
     'api_key'                        => 'Clé API',
-    'remember_me'                    => 'Remember me',
+    'remember_me'                    => 'Se souvenir de moi',
 
     'source_account_asset'        => 'Compte source (compte d\'actif)',
     'destination_account_expense' => 'Compte de destination (compte de dépenses)',
@@ -170,7 +170,7 @@ return [
     'budget_keep_transactions'   => 'La seule opération liée à ce budget ne sera pas supprimée.|Les :count opérations liées à ce budget ne seront pas supprimées.',
     'category_keep_transactions' => 'La seule opération liée à cette catégorie ne sera pas supprimée.|Les :count opérations liées à cette catégorie ne seront pas supprimées.',
     'tag_keep_transactions'      => 'La seule opération liée à ce tag ne sera pas supprimée.|Les :count opérations liées à ce tag ne seront pas supprimées.',
-    'check_for_updates'          => 'Check for updates',
+    'check_for_updates'          => 'Vérifier les mises à jour',
 
     'email'                 => 'Adresse Email',
     'password'              => 'Mot de passe',
@@ -194,8 +194,8 @@ return [
     'csv_import_account'    => 'Compte d’importation par défaut',
     'csv_config'            => 'Configuration d\'importation CSV',
     'client_id'             => 'Identifiant',
-    'service_secret'        => 'Service secret',
-    'app_secret'            => 'App secret',
+    'service_secret'        => 'Secret de service',
+    'app_secret'            => 'Secret d\'application',
     'public_key'            => 'Clé publique',
     'country_code'          => 'Code pays',
     'provider_code'         => 'Banque ou fournisseur de données',

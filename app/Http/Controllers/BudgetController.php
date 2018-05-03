@@ -39,7 +39,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Log;
 use Preferences;
-use Response;
 use View;
 
 /**
@@ -82,10 +81,14 @@ class BudgetController extends Controller
      */
     public function amount(Request $request, BudgetRepositoryInterface $repository, Budget $budget)
     {
-        $amount = strval($request->get('amount'));
-        $start  = Carbon::createFromFormat('Y-m-d', $request->get('start'));
-        $end    = Carbon::createFromFormat('Y-m-d', $request->get('end'));
+        $amount      = (string)$request->get('amount');
+        $start       = Carbon::createFromFormat('Y-m-d', $request->get('start'));
+        $end         = Carbon::createFromFormat('Y-m-d', $request->get('end'));
         $budgetLimit = $this->repository->updateLimitAmount($budget, $start, $end, $amount);
+        $largeDiff   = false;
+        $warnText    = '';
+        $average     = '0';
+        $current     = '0';
         if (0 === bccomp($amount, '0')) {
             $budgetLimit = null;
         }
@@ -95,9 +98,41 @@ class BudgetController extends Controller
         $currency = app('amount')->getDefaultCurrency();
         $left     = app('amount')->formatAnything($currency, bcadd($amount, $spent), true);
 
+
+        // over or under budgeting, compared to previous budgets?
+        $average = $this->repository->budgetedPerDay($budget);
+        // current average per day:
+        $diff    = $start->diffInDays($end);
+        $current = $amount;
+        if ($diff > 0) {
+            $current = bcdiv($amount, (string)$diff);
+        }
+        if (bccomp(bcmul('1.1', $average), $current) === -1) {
+            $largeDiff = true;
+            $warnText  = (string)trans(
+                'firefly.over_budget_warn',
+                [
+                    'amount'      => app('amount')->formatAnything($currency, $average, false),
+                    'over_amount' => app('amount')->formatAnything($currency, $current, false),
+                ]
+            );
+        }
+
         Preferences::mark();
 
-        return Response::json(['left' => $left, 'name' => $budget->name, 'limit' => $budgetLimit ? $budgetLimit->id : 0, 'amount' => $amount]);
+        return response()->json(
+            [
+                'left'       => $left,
+                'name'       => $budget->name,
+                'limit'      => $budgetLimit ? $budgetLimit->id : 0,
+                'amount'     => $amount,
+                'current'    => $current,
+                'average'    => $average,
+                'large_diff' => $largeDiff,
+                'warn_text'  => $warnText,
+
+            ]
+        );
     }
 
     /**
@@ -142,7 +177,7 @@ class BudgetController extends Controller
     {
         $name = $budget->name;
         $this->repository->destroy($budget);
-        $request->session()->flash('success', strval(trans('firefly.deleted_budget', ['name' => $name])));
+        $request->session()->flash('success', (string)trans('firefly.deleted_budget', ['name' => $name]));
         Preferences::mark();
 
         return redirect($this->getPreviousUri('budgets.delete.uri'));
@@ -168,6 +203,7 @@ class BudgetController extends Controller
     }
 
     /**
+     * @param Request     $request
      * @param string|null $moment
      *
      * @return View
@@ -180,16 +216,17 @@ class BudgetController extends Controller
         $range    = Preferences::get('viewRange', '1M')->data;
         $start    = session('start', new Carbon);
         $end      = session('end', new Carbon);
-        $page     = 0 === intval($request->get('page')) ? 1 : intval($request->get('page'));
-        $pageSize = intval(Preferences::get('listPageSize', 50)->data);
+        $page     = 0 === (int)$request->get('page') ? 1 : (int)$request->get('page');
+        $pageSize = (int)Preferences::get('listPageSize', 50)->data;
 
         // make date if present:
-        if (null !== $moment || 0 !== strlen(strval($moment))) {
+        if (null !== $moment || '' !== (string)$moment) {
             try {
                 $start = new Carbon($moment);
                 $end   = app('navigation')->endOfPeriod($start, $range);
             } catch (Exception $e) {
                 // start and end are already defined.
+                Log::debug('start and end are already defined.');
             }
         }
         $next = clone $end;
@@ -292,7 +329,7 @@ class BudgetController extends Controller
             // @codeCoverageIgnoreStart
             $result = $cache->get();
 
-            return view('budgets.info', compact('result', 'begin', 'currentEnd'));
+            return view('budgets.info', compact('result'));
             // @codeCoverageIgnoreEnd
         }
         $result   = [
@@ -323,7 +360,7 @@ class BudgetController extends Controller
         if (0 === $count) {
             $count = 1;
         }
-        $result['available'] = bcdiv($total, strval($count));
+        $result['available'] = bcdiv($total, (string)$count);
 
         // amount earned in this period:
         $subDay = clone $end;
@@ -331,13 +368,13 @@ class BudgetController extends Controller
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
         $collector->setAllAssetAccounts()->setRange($begin, $subDay)->setTypes([TransactionType::DEPOSIT])->withOpposingAccount();
-        $result['earned'] = bcdiv(strval($collector->getJournals()->sum('transaction_amount')), strval($count));
+        $result['earned'] = bcdiv((string)$collector->getJournals()->sum('transaction_amount'), (string)$count);
 
         // amount spent in period
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
         $collector->setAllAssetAccounts()->setRange($begin, $subDay)->setTypes([TransactionType::WITHDRAWAL])->withOpposingAccount();
-        $result['spent'] = bcdiv(strval($collector->getJournals()->sum('transaction_amount')), strval($count));
+        $result['spent'] = bcdiv((string)$collector->getJournals()->sum('transaction_amount'), (string)$count);
         // suggestion starts with the amount spent
         $result['suggested'] = bcmul($result['spent'], '-1');
         $result['suggested'] = 1 === bccomp($result['suggested'], $result['earned']) ? $result['earned'] : $result['suggested'];
@@ -396,8 +433,8 @@ class BudgetController extends Controller
             );
         }
 
-        $page     = intval($request->get('page'));
-        $pageSize = intval(Preferences::get('listPageSize', 50)->data);
+        $page     = (int)$request->get('page');
+        $pageSize = (int)Preferences::get('listPageSize', 50)->data;
 
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
@@ -439,10 +476,11 @@ class BudgetController extends Controller
         /** @var Carbon $start */
         $start      = session('first', Carbon::create()->startOfYear());
         $end        = new Carbon;
-        $page       = intval($request->get('page'));
-        $pageSize   = intval(Preferences::get('listPageSize', 50)->data);
+        $page       = (int)$request->get('page');
+        $pageSize   = (int)Preferences::get('listPageSize', 50)->data;
         $limits     = $this->getLimits($budget, $start, $end);
         $repetition = null;
+
         // collector:
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
@@ -470,8 +508,8 @@ class BudgetController extends Controller
             throw new FireflyException('This budget limit is not part of this budget.');
         }
 
-        $page     = intval($request->get('page'));
-        $pageSize = intval(Preferences::get('listPageSize', 50)->data);
+        $page     = (int)$request->get('page');
+        $pageSize = (int)Preferences::get('listPageSize', 50)->data;
         $subTitle = trans(
             'firefly.budget_in_period',
             [
@@ -505,10 +543,10 @@ class BudgetController extends Controller
         $data   = $request->getBudgetData();
         $budget = $this->repository->store($data);
         $this->repository->cleanupBudgets();
-        $request->session()->flash('success', strval(trans('firefly.stored_new_budget', ['name' => $budget->name])));
+        $request->session()->flash('success', (string)trans('firefly.stored_new_budget', ['name' => $budget->name]));
         Preferences::mark();
 
-        if (1 === intval($request->get('create_another'))) {
+        if (1 === (int)$request->get('create_another')) {
             // @codeCoverageIgnoreStart
             $request->session()->put('budgets.create.fromStore', true);
 
@@ -530,11 +568,11 @@ class BudgetController extends Controller
         $data = $request->getBudgetData();
         $this->repository->update($budget, $data);
 
-        $request->session()->flash('success', strval(trans('firefly.updated_budget', ['name' => $budget->name])));
+        $request->session()->flash('success', (string)trans('firefly.updated_budget', ['name' => $budget->name]));
         $this->repository->cleanupBudgets();
         Preferences::mark();
 
-        if (1 === intval($request->get('return_to_edit'))) {
+        if (1 === (int)$request->get('return_to_edit')) {
             // @codeCoverageIgnoreStart
             $request->session()->put('budgets.edit.fromUpdate', true);
 
@@ -546,8 +584,9 @@ class BudgetController extends Controller
     }
 
     /**
-     * @param Carbon $start
-     * @param Carbon $end
+     * @param Request $request
+     * @param Carbon  $start
+     * @param Carbon  $end
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
@@ -556,7 +595,7 @@ class BudgetController extends Controller
         $defaultCurrency = app('amount')->getDefaultCurrency();
         $available       = $this->repository->getAvailableBudget($defaultCurrency, $start, $end);
         $available       = round($available, $defaultCurrency->decimal_places);
-        $page            = intval($request->get('page'));
+        $page            = (int)$request->get('page');
 
         return view('budgets.income', compact('available', 'start', 'end', 'page'));
     }
@@ -622,7 +661,7 @@ class BudgetController extends Controller
                 [TransactionType::WITHDRAWAL]
             );
             $set      = $collector->getJournals();
-            $sum      = strval($set->sum('transaction_amount') ?? '0');
+            $sum      = (string)($set->sum('transaction_amount') ?? '0');
             $journals = $set->count();
             $dateStr  = $date['end']->format('Y-m-d');
             $dateName = app('navigation')->periodShow($date['end'], $date['period']);

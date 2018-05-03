@@ -28,6 +28,7 @@ use FireflyIII\Models\Bill;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Laravel\Passport\Passport;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -42,14 +43,14 @@ class BillControllerTest extends TestCase
     {
         parent::setUp();
         Passport::actingAs($this->user());
+        Log::debug(sprintf('Now in %s.', get_class($this)));
 
     }
 
     /**
      * Send delete
      *
-     * @covers \FireflyIII\Api\V1\Controllers\BillController::delete
-     * @covers \FireflyIII\Api\V1\Controllers\BillController::__construct
+     * @covers \FireflyIII\Api\V1\Controllers\BillController
      */
     public function testDelete()
     {
@@ -138,8 +139,8 @@ class BillControllerTest extends TestCase
 
         // data to submit:
         $data = [
-            'name'        => 'New bill #' . rand(1, 1000),
-            'match'       => 'some,words,' . rand(1, 1000),
+            'name'        => 'New bill #' . random_int(1, 1000),
+            'match'       => 'some,words,' . random_int(1, 1000),
             'amount_min'  => '66.34',
             'amount_max'  => '45.67',
             'date'        => '2018-01-01',
@@ -182,8 +183,8 @@ class BillControllerTest extends TestCase
 
         // data to submit:
         $data = [
-            'name'        => 'New bill #' . rand(1, 1000),
-            'match'       => 'some,words,' . rand(1, 1000),
+            'name'        => 'New bill #' . random_int(1, 1000),
+            'match'       => 'some,words,' . random_int(1, 1000),
             'amount_min'  => '12.34',
             'amount_max'  => '45.67',
             'date'        => '2018-01-01',
@@ -220,8 +221,8 @@ class BillControllerTest extends TestCase
 
         // data to submit:
         $data = [
-            'name'        => 'New bill #' . rand(1, 1000),
-            'match'       => 'some,words,' . rand(1, 1000),
+            'name'        => 'New bill #' . random_int(1, 1000),
+            'match'       => 'some,words,' . random_int(1, 1000),
             'amount_min'  => '12.34',
             'amount_max'  => '45.67',
             'date'        => '2018-01-01',

@@ -31,7 +31,6 @@ use FireflyIII\Models\Transaction;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Support\Collection;
-use Response;
 
 /**
  * Class BillController.
@@ -66,20 +65,20 @@ class BillController extends Controller
         $cache->addProperty($end);
         $cache->addProperty('chart.bill.frontpage');
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
 
         $paid      = $repository->getBillsPaidInRange($start, $end); // will be a negative amount.
         $unpaid    = $repository->getBillsUnpaidInRange($start, $end); // will be a positive amount.
         $chartData = [
-            strval(trans('firefly.unpaid')) => $unpaid,
-            strval(trans('firefly.paid'))   => $paid,
+            (string)trans('firefly.unpaid') => $unpaid,
+            (string)trans('firefly.paid')   => $paid,
         ];
 
         $data = $this->generator->pieChart($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 
     /**
@@ -94,7 +93,7 @@ class BillController extends Controller
         $cache->addProperty('chart.bill.single');
         $cache->addProperty($bill->id);
         if ($cache->has()) {
-            return Response::json($cache->get()); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
 
         $results   = $collector->setAllAssetAccounts()->setBills(new Collection([$bill]))->getJournals();
@@ -111,7 +110,7 @@ class BillController extends Controller
 
         /** @var Transaction $entry */
         foreach ($results as $entry) {
-            $date                           = $entry->date->formatLocalized(strval(trans('config.month_and_day')));
+            $date                           = $entry->date->formatLocalized((string)trans('config.month_and_day'));
             $chartData[0]['entries'][$date] = $bill->amount_min; // minimum amount of bill
             $chartData[1]['entries'][$date] = $bill->amount_max; // maximum amount of bill
             $chartData[2]['entries'][$date] = bcmul($entry->transaction_amount, '-1'); // amount of journal
@@ -120,6 +119,6 @@ class BillController extends Controller
         $data = $this->generator->multiSet($chartData);
         $cache->store($data);
 
-        return Response::json($data);
+        return response()->json($data);
     }
 }

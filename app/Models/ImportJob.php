@@ -24,6 +24,7 @@ namespace FireflyIII\Models;
 
 use Crypt;
 use FireflyIII\Exceptions\FireflyException;
+use FireflyIII\User;
 use Illuminate\Database\Eloquent\Model;
 use Log;
 use Storage;
@@ -31,6 +32,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Class ImportJob.
+ *
+ * @property User $user
  */
 class ImportJob extends Model
 {
@@ -136,7 +139,7 @@ class ImportJob extends Model
      */
     public function getExtendedStatusAttribute($value)
     {
-        if (0 === strlen(strval($value))) {
+        if (0 === strlen((string)$value)) {
             return [];
         }
 
@@ -176,6 +179,7 @@ class ImportJob extends Model
     /**
      * @return string
      *
+     * @throws \Illuminate\Contracts\Encryption\DecryptException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function uploadFileContents(): string

@@ -50,7 +50,7 @@ final class NotesContain extends AbstractTrigger implements TriggerInterface
     public static function willMatchEverything($value = null)
     {
         if (null !== $value) {
-            $res = '' === strval($value);
+            $res = '' === (string)$value;
             if (true === $res) {
                 Log::error(sprintf('Cannot use %s with "" as a value.', self::class));
             }
@@ -72,7 +72,7 @@ final class NotesContain extends AbstractTrigger implements TriggerInterface
      */
     public function triggered(TransactionJournal $journal): bool
     {
-        $search = trim(strtolower($this->triggerValue));
+        $search = strtolower(trim($this->triggerValue));
 
         if (0 === strlen($search)) {
             Log::debug(sprintf('RuleTrigger NotesContain for journal #%d: "%s" is empty, return false.', $journal->id, $search));

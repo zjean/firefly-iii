@@ -24,13 +24,13 @@ namespace FireflyIII\Import\Routine;
 
 use Carbon\Carbon;
 use DB;
+use Exception;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Import\Object\ImportJournal;
 use FireflyIII\Import\Storage\ImportStorage;
 use FireflyIII\Models\ImportJob;
 use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
 use FireflyIII\Repositories\Tag\TagRepositoryInterface;
-use FireflyIII\Services\Spectre\Exception\DuplicatedCustomerException;
 use FireflyIII\Services\Spectre\Exception\SpectreException;
 use FireflyIII\Services\Spectre\Object\Account;
 use FireflyIII\Services\Spectre\Object\Customer;
@@ -117,8 +117,11 @@ class SpectreRoutine implements RoutineInterface
      * have-account-mapping: start downloading transactions?
      *
      *
-     * @throws \FireflyIII\Exceptions\FireflyException
-     * @throws \FireflyIII\Services\Spectre\Exception\SpectreException
+     * @return bool
+     *
+     * @throws FireflyException
+     * @throws SpectreException
+     * @throws \Illuminate\Container\EntryNotFoundException
      */
     public function run(): bool
     {
@@ -164,8 +167,10 @@ class SpectreRoutine implements RoutineInterface
 
     /**
      * @return Customer
+     *
      * @throws \FireflyIII\Exceptions\FireflyException
      * @throws \FireflyIII\Services\Spectre\Exception\SpectreException
+     * @throws \Illuminate\Container\EntryNotFoundException
      */
     protected function createCustomer(): Customer
     {
@@ -174,39 +179,39 @@ class SpectreRoutine implements RoutineInterface
         try {
             $newCustomerRequest->call();
             $customer = $newCustomerRequest->getCustomer();
-        } catch (DuplicatedCustomerException $e) {
+        } catch (Exception $e) {
             // already exists, must fetch customer instead.
-            Log::warning('Customer exists already for user, fetch it.');
+            Log::warning(sprintf('Customer exists already for user, fetch it: %s', $e->getMessage()));
         }
-        if (is_null($customer)) {
+        if (null === $customer) {
             $getCustomerRequest = new ListCustomersRequest($this->job->user);
             $getCustomerRequest->call();
             $customers = $getCustomerRequest->getCustomers();
             /** @var Customer $current */
             foreach ($customers as $current) {
-                if ($current->getIdentifier() === 'default_ff3_customer') {
+                if ('default_ff3_customer' === $current->getIdentifier()) {
                     $customer = $current;
                     break;
                 }
             }
         }
 
-
         Preferences::setForUser($this->job->user, 'spectre_customer', $customer->toArray());
 
         return $customer;
-
     }
 
     /**
      * @return Customer
+     *
      * @throws FireflyException
-     * @throws \FireflyIII\Services\Spectre\Exception\SpectreException
+     * @throws SpectreException
+     * @throws \Illuminate\Container\EntryNotFoundException
      */
     protected function getCustomer(): Customer
     {
         $config = $this->getConfig();
-        if (!is_null($config['customer'])) {
+        if (null !== $config['customer']) {
             $customer = new Customer($config['customer']);
 
             return $customer;
@@ -228,8 +233,10 @@ class SpectreRoutine implements RoutineInterface
      * @param string   $returnUri
      *
      * @return Token
+     *
      * @throws \FireflyIII\Exceptions\FireflyException
      * @throws \FireflyIII\Services\Spectre\Exception\SpectreException
+     * @throws \Illuminate\Container\EntryNotFoundException
      */
     protected function getToken(Customer $customer, string $returnUri): Token
     {
@@ -240,12 +247,12 @@ class SpectreRoutine implements RoutineInterface
         Log::debug('Call to get token is finished');
 
         return $request->getToken();
-
     }
 
     /**
      * @throws FireflyException
      * @throws SpectreException
+     * @throws \Illuminate\Container\EntryNotFoundException
      */
     protected function runStageInitial(): void
     {
@@ -280,6 +287,7 @@ class SpectreRoutine implements RoutineInterface
     /**
      * @throws FireflyException
      * @throws SpectreException
+     * @throws \Illuminate\Container\EntryNotFoundException
      */
     protected function runStageLoggedIn(): void
     {
@@ -298,13 +306,13 @@ class SpectreRoutine implements RoutineInterface
         /** @var Login $login */
         foreach ($logins as $login) {
             $attempt     = $login->getLastAttempt();
-            $attemptTime = intval($attempt->getCreatedAt()->format('U'));
-            if ($attemptTime > $time && is_null($attempt->getFailErrorClass())) {
+            $attemptTime = (int)$attempt->getCreatedAt()->format('U');
+            if ($attemptTime > $time && null === $attempt->getFailErrorClass()) {
                 $time  = $attemptTime;
                 $final = $login;
             }
         }
-        if (is_null($final)) {
+        if (null === $final) {
             Log::error('Could not find a valid login for this user.');
             $this->repository->addError($this->job, 0, 'Spectre connection failed. Did you use invalid credentials, press Cancel or failed the 2FA challenge?');
             $this->repository->setStatus($this->job, 'error');
@@ -335,8 +343,6 @@ class SpectreRoutine implements RoutineInterface
         $this->setConfig($config);
         $this->setStatus('configuring');
         $this->addStep();
-
-        return;
     }
 
     /**
@@ -414,8 +420,8 @@ class SpectreRoutine implements RoutineInterface
                 }
                 $extra = $transaction->getExtra()->toArray();
                 $notes = '';
-                $notes .= strval(trans('import.imported_from_account', ['account' => $account->getName()])) . '  '
-                          . "\n"; // double space for newline in Markdown.
+                // double space for newline in Markdown.
+                $notes .= (string)trans('import.imported_from_account', ['account' => $account->getName()]) . '  ' . "\n";
 
                 foreach ($extra as $key => $value) {
                     switch ($key) {
@@ -453,16 +459,14 @@ class SpectreRoutine implements RoutineInterface
                 // date:
                 $importJournal->setValue(['role' => 'date-transaction', 'value' => $transaction->getMadeOn()->toIso8601String()]);
 
-
                 // amount
                 $importJournal->setValue(['role' => 'amount', 'value' => $transaction->getAmount()]);
                 $importJournal->setValue(['role' => 'currency-code', 'value' => $transaction->getCurrencyCode()]);
 
-
                 // various meta fields:
                 $importJournal->setValue(['role' => 'category-name', 'value' => $transaction->getCategory()]);
                 $importJournal->setValue(['role' => 'note', 'value' => $notes]);
-                $importJournal->setValue(['role' => 'tags-comma', 'value' => join(',', $tags)]);
+                $importJournal->setValue(['role' => 'tags-comma', 'value' => implode(',', $tags)]);
                 $collection->push($importJournal);
             }
         }
@@ -515,12 +519,12 @@ class SpectreRoutine implements RoutineInterface
         $this->setStatus('finished');
         $this->addStep();
 
-        return;
     }
 
     /**
      * @throws FireflyException
      * @throws SpectreException
+     * @throws \Illuminate\Container\EntryNotFoundException
      */
     private function runStageHaveMapping()
     {
@@ -531,8 +535,8 @@ class SpectreRoutine implements RoutineInterface
         /** @var array $accountArray */
         foreach ($accounts as $accountArray) {
             $account  = new Account($accountArray);
-            $importId = intval($config['accounts-mapped'][$account->getid()] ?? 0);
-            $doImport = $importId !== 0 ? true : false;
+            $importId = (int)($config['accounts-mapped'][$account->getId()] ?? 0.0);
+            $doImport = 0 !== $importId;
             if (!$doImport) {
                 Log::debug(sprintf('Will NOT import from Spectre account #%d ("%s")', $account->getId(), $account->getName()));
                 continue;
@@ -552,7 +556,6 @@ class SpectreRoutine implements RoutineInterface
         Log::debug(sprintf('Total number of transactions: %d', $count));
         $this->addStep();
 
-
         $this->importTransactions($all);
     }
 
@@ -565,7 +568,6 @@ class SpectreRoutine implements RoutineInterface
     {
         $this->repository->setConfiguration($this->job, $config);
 
-        return;
     }
 
     /**
@@ -577,7 +579,6 @@ class SpectreRoutine implements RoutineInterface
     {
         $this->repository->setExtendedStatus($this->job, $extended);
 
-        return;
     }
 
     /**

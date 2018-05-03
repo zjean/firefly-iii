@@ -27,7 +27,7 @@ use FireflyIII\Import\Object\ImportAccount;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
-use Illuminate\Support\Collection;
+
 use Mockery;
 use Tests\TestCase;
 
@@ -40,12 +40,7 @@ class ImportAccountTest extends TestCase
     /**
      * Should error because it requires a default asset account.
      *
-     * @covers \FireflyIII\Import\Object\ImportAccount::__construct
-     * @covers \FireflyIII\Import\Object\ImportAccount::getAccount
-     * @covers \FireflyIII\Import\Object\ImportAccount::store
-     * @covers \FireflyIII\Import\Object\ImportAccount::findMappedObject
-     * @covers \FireflyIII\Import\Object\ImportAccount::findExistingObject
-     * @covers \FireflyIII\Import\Object\ImportAccount::getMappedObject
+     * @covers \FireflyIII\Import\Object\ImportAccount
      */
     public function testBasic()
     {
@@ -57,8 +52,8 @@ class ImportAccountTest extends TestCase
         // mock calls:
         $repository->shouldReceive('setUser')->once()->withArgs([Mockery::any()]);
         $repository->shouldReceive('getAccountType')->twice()->withArgs([AccountType::ASSET])->andReturn($accountType);
-        $repository->shouldReceive('getAccountsByType')->twice()->withArgs([[AccountType::ASSET]])->andReturn(new Collection());
-        $repository->shouldReceive('find')->once()->withArgs([1])->andReturn($account);
+        //$repository->shouldReceive('getAccountsByType')->twice()->withArgs([[AccountType::ASSET]])->andReturn(new Collection());
+        $repository->shouldReceive('findNull')->once()->withArgs([1])->andReturn($account);
 
         // create import account.
         $importAccount = new ImportAccount;
@@ -72,12 +67,7 @@ class ImportAccountTest extends TestCase
     /**
      * Should error because it requires a default asset account.
      *
-     * @covers \FireflyIII\Import\Object\ImportAccount::__construct
-     * @covers \FireflyIII\Import\Object\ImportAccount::getAccount
-     * @covers \FireflyIII\Import\Object\ImportAccount::store
-     * @covers \FireflyIII\Import\Object\ImportAccount::findMappedObject
-     * @covers \FireflyIII\Import\Object\ImportAccount::findExistingObject
-     * @covers \FireflyIII\Import\Object\ImportAccount::getMappedObject
+     * @covers \FireflyIII\Import\Object\ImportAccount
      */
     public function testEmptyMappingAccountId()
     {
@@ -89,8 +79,6 @@ class ImportAccountTest extends TestCase
         // mock calls:
         $repository->shouldReceive('setUser')->once()->withArgs([Mockery::any()]);
         $repository->shouldReceive('getAccountType')->once()->withArgs([AccountType::ASSET])->andReturn($accountType);
-        //$repository->shouldReceive('getAccountsByType')->once()->withArgs([[AccountType::ASSET]])->andReturn(new Collection());
-        //$repository->shouldReceive('find')->once()->withArgs([1])->andReturn($account);
 
         // create import account.
         $importAccount = new ImportAccount;
@@ -112,9 +100,7 @@ class ImportAccountTest extends TestCase
     }
 
     /**
-     * @covers                   \FireflyIII\Import\Object\ImportAccount::__construct
-     * @covers                   \FireflyIII\Import\Object\ImportAccount::getAccount
-     * @covers                   \FireflyIII\Import\Object\ImportAccount::store
+     * @covers                   \FireflyIII\Import\Object\ImportAccount
      * @expectedException \FireflyIII\Exceptions\FireflyException
      * @expectedExceptionMessage ImportAccount cannot continue without a default account to fall back on.
      */
@@ -128,9 +114,7 @@ class ImportAccountTest extends TestCase
     }
 
     /**
-     * @covers                   \FireflyIII\Import\Object\ImportAccount::__construct
-     * @covers                   \FireflyIII\Import\Object\ImportAccount::getAccount
-     * @covers                   \FireflyIII\Import\Object\ImportAccount::store
+     * @covers                   \FireflyIII\Import\Object\ImportAccount
      * @expectedException \FireflyIII\Exceptions\FireflyException
      * @expectedExceptionMessage ImportAccount cannot continue without user.
      */

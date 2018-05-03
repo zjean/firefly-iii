@@ -35,26 +35,33 @@ use Tests\TestCase;
 class IsDemoUserTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Http\Middleware\IsDemoUser::handle
+     * @covers \FireflyIII\Http\Middleware\IsDemoUser
      */
     public function testMiddlewareAuthenticated()
     {
-        $this->withoutExceptionHandling();
         $this->be($this->user());
         $response = $this->get('/_test/is-demo');
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
     }
 
-
-
     /**
-     * @covers \FireflyIII\Http\Middleware\IsDemoUser::handle
+     * @covers \FireflyIII\Http\Middleware\IsDemoUser
      */
     public function testMiddlewareNotAuthenticated()
     {
-        $this->withoutExceptionHandling();
         $response = $this->get('/_test/is-demo');
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Middleware\IsDemoUser
+     */
+    public function testMiddlewareIsDemoUser()
+    {
+        $this->be($this->demoUser());
+        $response = $this->get('/_test/is-demo');
+        $this->assertEquals(Response::HTTP_FOUND, $response->getStatusCode());
+        $response->assertSessionHas('info');
     }
 
     /**

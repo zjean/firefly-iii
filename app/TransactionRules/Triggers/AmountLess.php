@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace FireflyIII\TransactionRules\Triggers;
 
 use FireflyIII\Models\TransactionJournal;
+use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Log;
 
 /**
@@ -65,16 +66,20 @@ final class AmountLess extends AbstractTrigger implements TriggerInterface
      */
     public function triggered(TransactionJournal $journal): bool
     {
-        $amount  = $journal->destination_amount ?? $journal->amountPositive();
+        /** @var JournalRepositoryInterface $repos */
+        $repos = app(JournalRepositoryInterface::class);
+        $repos->setUser($journal->user);
+
+        $amount  = $journal->destination_amount ?? $repos->getJournalTotal($journal);
         $compare = $this->triggerValue;
         $result  = bccomp($amount, $compare);
         if ($result === -1) {
-            Log::debug(sprintf('RuleTrigger AmountLess for journal #%d: %d is less than %d, so return true', $journal->id, $amount, $compare));
+            Log::debug(sprintf('RuleTrigger AmountLess for journal #%d: %f is less than %f, so return true', $journal->id, $amount, $compare));
 
             return true;
         }
 
-        Log::debug(sprintf('RuleTrigger AmountLess for journal #%d: %d is NOT less than %d, so return false', $journal->id, $amount, $compare));
+        Log::debug(sprintf('RuleTrigger AmountLess for journal #%d: %f is NOT less than %f, so return false', $journal->id, $amount, $compare));
 
         return false;
     }

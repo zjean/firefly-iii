@@ -28,9 +28,7 @@ use FireflyIII\Models\RuleGroup;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface as JRI;
 use FireflyIII\Repositories\PiggyBank\PiggyBankRepositoryInterface as PRI;
 use FireflyIII\Repositories\RuleGroup\RuleGroupRepositoryInterface as RGRI;
-use FireflyIII\Support\Events\BillScanner;
 use FireflyIII\TransactionRules\Processor;
-use Log;
 
 /**
  * @codeCoverageIgnore
@@ -62,66 +60,12 @@ class StoredJournalEventHandler
     }
 
     /**
-     * This method connects a new transfer to a piggy bank.
-     *
-     * @param StoredTransactionJournal $event
-     *
-     * @return bool
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     */
-    public function connectToPiggyBank(StoredTransactionJournal $event): bool
-    {
-        $journal     = $event->journal;
-        $piggyBankId = $event->piggyBankId;
-        $piggyBank   = $this->repository->find($piggyBankId);
-
-        // is a transfer?
-        if (!$this->journalRepository->isTransfer($journal)) {
-            Log::info(sprintf('Will not connect %s #%d to a piggy bank.', $journal->transactionType->type, $journal->id));
-
-            return true;
-        }
-
-        // piggy exists?
-        if (null === $piggyBank) {
-            Log::error(sprintf('There is no piggy bank with ID #%d', $piggyBankId));
-
-            return true;
-        }
-
-        // repetition exists?
-        $repetition = $this->repository->getRepetition($piggyBank, $journal->date);
-        if (null === $repetition->id) {
-            Log::error(sprintf('No piggy bank repetition on %s!', $journal->date->format('Y-m-d')));
-
-            return true;
-        }
-
-        // get the amount
-        $amount = $this->repository->getExactAmount($piggyBank, $repetition, $journal);
-        if (0 === bccomp($amount, '0')) {
-            Log::debug('Amount is zero, will not create event.');
-
-            return true;
-        }
-
-        // update amount
-        $this->repository->addAmountToRepetition($repetition, $amount);
-        $event = $this->repository->createEventWithJournal($piggyBank, $amount, $journal);
-
-        Log::debug(sprintf('Created piggy bank event #%d', $event->id));
-
-        return true;
-    }
-
-    /**
      * This method grabs all the users rules and processes them.
      *
      * @param StoredTransactionJournal $storedJournalEvent
      *
      * @return bool
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function processRules(StoredTransactionJournal $storedJournalEvent): bool
     {
@@ -146,18 +90,4 @@ class StoredJournalEventHandler
         return true;
     }
 
-    /**
-     * This method calls a special bill scanner that will check if the stored journal is part of a bill.
-     *
-     * @param StoredTransactionJournal $storedJournalEvent
-     *
-     * @return bool
-     */
-    public function scanBills(StoredTransactionJournal $storedJournalEvent): bool
-    {
-        $journal = $storedJournalEvent->journal;
-        BillScanner::scan($journal);
-
-        return true;
-    }
 }

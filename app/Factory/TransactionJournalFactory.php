@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * TransactionJournalFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,27 +20,26 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
 use FireflyIII\Exceptions\FireflyException;
-use FireflyIII\Models\Note;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
+use FireflyIII\Services\Internal\Support\JournalServiceTrait;
 use FireflyIII\User;
+use Log;
 
 /**
  * Class TransactionJournalFactory
  */
 class TransactionJournalFactory
 {
+    use JournalServiceTrait;
     /** @var User */
     private $user;
 
     /**
-     * Create a new transaction journal and associated transactions.
-     *
      * @param array $data
      *
      * @return TransactionJournal
@@ -47,6 +47,7 @@ class TransactionJournalFactory
      */
     public function create(array $data): TransactionJournal
     {
+        Log::debug('Start of TransactionJournalFactory::create()');
         // store basic journal first.
         $type            = $this->findTransactionType($data['type']);
         $defaultCurrency = app('amount')->getDefaultCurrencyByUser($this->user);
@@ -65,6 +66,7 @@ class TransactionJournalFactory
         );
 
         // store basic transactions:
+        /** @var TransactionFactory $factory */
         $factory = app(TransactionFactory::class);
         $factory->setUser($this->user);
 
@@ -81,21 +83,20 @@ class TransactionJournalFactory
         // link piggy bank (if transfer)
         $this->connectPiggyBank($journal, $data);
 
-
         // link tags:
         $this->connectTags($journal, $data);
 
         // store note:
-        $this->storeNote($journal, $data['notes']);
+        $this->storeNote($journal, (string)$data['notes']);
 
         // store date meta fields (if present):
-        $this->storeMeta($journal, $data, 'interest_date');
-        $this->storeMeta($journal, $data, 'book_date');
-        $this->storeMeta($journal, $data, 'process_date');
-        $this->storeMeta($journal, $data, 'due_date');
-        $this->storeMeta($journal, $data, 'payment_date');
-        $this->storeMeta($journal, $data, 'invoice_date');
-        $this->storeMeta($journal, $data, 'internal_reference');
+        $fields = ['sepa-cc', 'sepa-ct-op', 'sepa-ct-id', 'sepa-db', 'sepa-country', 'sepa-ep', 'sepa-ci', 'interest_date', 'book_date', 'process_date',
+                   'due_date', 'payment_date', 'invoice_date', 'internal_reference', 'bunq_payment_id','importHash'];
+
+        foreach ($fields as $field) {
+            $this->storeMeta($journal, $data, $field);
+        }
+        Log::debug('End of TransactionJournalFactory::create()');
 
         return $journal;
     }
@@ -111,25 +112,6 @@ class TransactionJournalFactory
     }
 
     /**
-     * Connect bill if present.
-     *
-     * @param TransactionJournal $journal
-     * @param array              $data
-     */
-    protected function connectBill(TransactionJournal $journal, array $data): void
-    {
-        /** @var BillFactory $factory */
-        $factory = app(BillFactory::class);
-        $factory->setUser($this->user);
-        $bill = $factory->find($data['bill_id'], $data['bill_name']);
-
-        if (!is_null($bill)) {
-            $journal->bill_id = $bill->id;
-            $journal->save();
-        }
-    }
-
-    /**
      * @param TransactionJournal $journal
      * @param array              $data
      */
@@ -140,24 +122,10 @@ class TransactionJournalFactory
         $factory->setUser($this->user);
 
         $piggyBank = $factory->find($data['piggy_bank_id'], $data['piggy_bank_name']);
-        if (!is_null($piggyBank)) {
+        if (null !== $piggyBank) {
             /** @var PiggyBankEventFactory $factory */
             $factory = app(PiggyBankEventFactory::class);
             $factory->create($journal, $piggyBank);
-        }
-    }
-
-    /**
-     * @param TransactionJournal $journal
-     * @param array              $data
-     */
-    protected function connectTags(TransactionJournal $journal, array $data): void
-    {
-        $factory = app(TagFactory::class);
-        $factory->setUser($journal->user);
-        foreach ($data['tags'] as $string) {
-            $tag = $factory->findOrCreate($string);
-            $journal->tags()->save($tag);
         }
     }
 
@@ -174,46 +142,12 @@ class TransactionJournalFactory
     {
         $factory         = app(TransactionTypeFactory::class);
         $transactionType = $factory->find($type);
-        if (is_null($transactionType)) {
-            throw new FireflyException(sprintf('Could not find transaction type for "%s"', $type));
+        if (null === $transactionType) {
+            Log::error(sprintf('Could not find transaction type for "%s"', $type)); // @codeCoverageIgnore
+            throw new FireflyException(sprintf('Could not find transaction type for "%s"', $type)); // @codeCoverageIgnore
         }
 
         return $transactionType;
-    }
-
-    /**
-     * @param TransactionJournal $journal
-     * @param array              $data
-     * @param string             $field
-     */
-    protected function storeMeta(TransactionJournal $journal, array $data, string $field): void
-    {
-        $value = $data[$field];
-        if (!is_null($value)) {
-            $set = [
-                'journal' => $journal,
-                'name'    => $field,
-                'data'    => $data[$field],
-            ];
-            /** @var TransactionJournalMetaFactory $factory */
-            $factory = app(TransactionJournalMetaFactory::class);
-            $factory->updateOrCreate($set);
-        }
-    }
-
-    /**
-     * @param TransactionJournal $journal
-     * @param string             $notes
-     */
-    protected function storeNote(TransactionJournal $journal, string $notes): void
-    {
-        if (strlen($notes) > 0) {
-            $note = new Note;
-            $note->noteable()->associate($journal);
-            $note->text = $notes;
-            $note->save();
-        }
-
     }
 
 }

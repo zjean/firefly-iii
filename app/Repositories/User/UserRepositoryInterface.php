@@ -31,7 +31,6 @@ use Illuminate\Support\Collection;
  */
 interface UserRepositoryInterface
 {
-
     /**
      * Returns a collection of all users.
      *
@@ -105,6 +104,7 @@ interface UserRepositoryInterface
     /**
      * @param int $userId
      *
+     * @deprecated
      * @return User
      */
     public function find(int $userId): User;
@@ -115,6 +115,13 @@ interface UserRepositoryInterface
      * @return User|null
      */
     public function findByEmail(string $email): ?User;
+
+    /**
+     * @param int $userId
+     *
+     * @return User|null
+     */
+    public function findNull(int $userId): ?User;
 
     /**
      * Returns the first user in the DB. Generally only works when there is just one.
@@ -158,6 +165,16 @@ interface UserRepositoryInterface
      * @param User $user
      */
     public function unblockUser(User $user): void;
+
+    /**
+     * Update user info.
+     *
+     * @param User  $user
+     * @param array $data
+     *
+     * @return User
+     */
+    public function update(User $user, array $data): User;
 
     /**
      * This updates the users email address. Same as changeEmail just without most logging. This makes sure that the undo/confirm routine can't catch this one.

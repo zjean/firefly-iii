@@ -38,15 +38,15 @@ class MonetaryAccountBank extends BunqObject
     /** @var Carbon */
     private $created;
     /** @var string */
-    private $currency = '';
+    private $currency;
     /** @var Amount */
     private $dailyLimit;
     /** @var Amount */
     private $dailySpent;
     /** @var string */
-    private $description = '';
+    private $description;
     /** @var int */
-    private $id = 0;
+    private $id;
     /** @var MonetaryAccountProfile */
     private $monetaryAccountProfile;
     /** @var array */
@@ -54,26 +54,27 @@ class MonetaryAccountBank extends BunqObject
     /** @var Amount */
     private $overdraftLimit;
     /** @var string */
-    private $publicUuid = '';
+    private $publicUuid;
     /** @var string */
-    private $reason = '';
+    private $reason;
     /** @var string */
-    private $reasonDescription = '';
+    private $reasonDescription;
     /** @var MonetaryAccountSetting */
     private $setting;
     /** @var string */
-    private $status = '';
+    private $status;
     /** @var string */
-    private $subStatus = '';
+    private $subStatus;
     /** @var Carbon */
     private $updated;
     /** @var int */
-    private $userId = 0;
+    private $userId;
 
     /**
      * MonetaryAccountBank constructor.
      *
      * @param array $data
+     *
      */
     public function __construct(array $data)
     {
@@ -89,13 +90,12 @@ class MonetaryAccountBank extends BunqObject
         $this->status                 = $data['status'];
         $this->subStatus              = $data['sub_status'];
         $this->userId                 = $data['user_id'];
-        $this->status                 = $data['status'];
-        $this->subStatus              = $data['sub_status'];
         $this->monetaryAccountProfile = new MonetaryAccountProfile($data['monetary_account_profile']);
         $this->setting                = new MonetaryAccountSetting($data['setting']);
         $this->overdraftLimit         = new Amount($data['overdraft_limit']);
-
-        $this->publicUuid = $data['public_uuid'];
+        $this->avatar                 = new Avatar($data['avatar']);
+        $this->reason                 = $data['reason'] ?? '';
+        $this->reasonDescription      = $data['reason_description'] ?? '';
 
         // create aliases:
         foreach ($data['alias'] as $alias) {
@@ -105,8 +105,6 @@ class MonetaryAccountBank extends BunqObject
         foreach ($data['notification_filters'] as $filter) {
             $this->notificationFilters[] = new NotificationFilter($filter);
         }
-
-        return;
     }
 
     /**
@@ -155,5 +153,46 @@ class MonetaryAccountBank extends BunqObject
     public function getSetting(): MonetaryAccountSetting
     {
         return $this->setting;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $data = [
+            'id'                       => $this->id,
+            'created'                  => $this->created->format('Y-m-d H:i:s.u'),
+            'updated'                  => $this->updated->format('Y-m-d H:i:s.u'),
+            'balance'                  => $this->balance->toArray(),
+            'currency'                 => $this->currency,
+            'daily_limit'              => $this->dailyLimit->toArray(),
+            'daily_spent'              => $this->dailySpent->toArray(),
+            'description'              => $this->description,
+            'public_uuid'              => $this->publicUuid,
+            'status'                   => $this->status,
+            'sub_status'               => $this->subStatus,
+            'user_id'                  => $this->userId,
+            'monetary_account_profile' => $this->monetaryAccountProfile->toArray(),
+            'setting'                  => $this->setting->toArray(),
+            'overdraft_limit'          => $this->overdraftLimit->toArray(),
+            'avatar'                   => $this->avatar->toArray(),
+            'reason'                   => $this->reason,
+            'reason_description'       => $this->reasonDescription,
+            'alias'                    => [],
+            'notification_filters'     => [],
+        ];
+
+        /** @var Alias $alias */
+        foreach ($this->aliases as $alias) {
+            $data['alias'][] = $alias->toArray();
+        }
+
+        /** @var NotificationFilter $filter */
+        foreach ($this->notificationFilters as $filter) {
+            $data['notification_filters'][] = $filter->toArray();
+        }
+
+        return $data;
     }
 }

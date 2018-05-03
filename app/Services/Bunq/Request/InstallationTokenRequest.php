@@ -40,25 +40,24 @@ class InstallationTokenRequest extends BunqRequest
     private $publicKey = '';
 
     /**
-     * @throws \Exception
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function call(): void
     {
-        $uri      = '/v1/installation';
+        Log::debug('Now in InstallationTokenRequest::call()');
+        $uri      = 'installation';
         $data     = ['client_public_key' => $this->publicKey];
         $headers  = $this->getDefaultHeaders();
         $response = $this->sendUnsignedBunqPost($uri, $data, $headers);
-        Log::debug('Installation request response', $response);
+        //Log::debug('Installation request response', $response);
 
         $this->installationId    = $this->extractInstallationId($response);
         $this->serverPublicKey   = $this->extractServerPublicKey($response);
         $this->installationToken = $this->extractInstallationToken($response);
-
-        Log::debug(sprintf('Installation ID: %s', serialize($this->installationId)));
-        Log::debug(sprintf('Installation token: %s', serialize($this->installationToken)));
-        Log::debug(sprintf('server public key: %s', serialize($this->serverPublicKey)));
-
-        return;
+        Log::debug('No errors! We have installation ID!');
+        Log::debug(sprintf('Installation ID: %s', $this->installationId->getId()));
+        Log::debug(sprintf('Installation token: %s', $this->installationToken->getToken()));
+        Log::debug('Server public key: (not included)');
     }
 
     /**
@@ -102,7 +101,7 @@ class InstallationTokenRequest extends BunqRequest
     {
         $installationId = new InstallationId;
         $data           = $this->getKeyFromResponse('Id', $response);
-        $installationId->setId(intval($data['id']));
+        $installationId->setId((int)$data['id']);
 
         return $installationId;
     }
@@ -114,10 +113,9 @@ class InstallationTokenRequest extends BunqRequest
      */
     private function extractInstallationToken(array $response): InstallationToken
     {
-        $data              = $this->getKeyFromResponse('Token', $response);
-        $installationToken = new InstallationToken($data);
+        $data = $this->getKeyFromResponse('Token', $response);
 
-        return $installationToken;
+        return new InstallationToken($data);
     }
 
     /**
@@ -127,9 +125,8 @@ class InstallationTokenRequest extends BunqRequest
      */
     private function extractServerPublicKey(array $response): ServerPublicKey
     {
-        $data            = $this->getKeyFromResponse('ServerPublicKey', $response);
-        $serverPublicKey = new ServerPublicKey($data);
+        $data = $this->getKeyFromResponse('ServerPublicKey', $response);
 
-        return $serverPublicKey;
+        return new ServerPublicKey($data);
     }
 }

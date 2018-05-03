@@ -115,7 +115,7 @@ class CategoryController extends Controller
         $name = $category->name;
         $this->repository->destroy($category);
 
-        $request->session()->flash('success', strval(trans('firefly.deleted_category', ['name' => $name])));
+        $request->session()->flash('success', (string)trans('firefly.deleted_category', ['name' => $name]));
         Preferences::mark();
 
         return redirect($this->getPreviousUri('categories.delete.uri'));
@@ -147,8 +147,8 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $page       = 0 === intval($request->get('page')) ? 1 : intval($request->get('page'));
-        $pageSize   = intval(Preferences::get('listPageSize', 50)->data);
+        $page       = 0 === (int)$request->get('page') ? 1 : (int)$request->get('page');
+        $pageSize   = (int)Preferences::get('listPageSize', 50)->data;
         $collection = $this->repository->getCategories();
         $total      = $collection->count();
         $collection = $collection->slice(($page - 1) * $pageSize, $pageSize);
@@ -179,8 +179,8 @@ class CategoryController extends Controller
         $start    = null;
         $end      = null;
         $periods  = new Collection;
-        $page     = intval($request->get('page'));
-        $pageSize = intval(Preferences::get('listPageSize', 50)->data);
+        $page     = (int)$request->get('page');
+        $pageSize = (int)Preferences::get('listPageSize', 50)->data;
 
         // prep for "all" view.
         if ('all' === $moment) {
@@ -236,8 +236,8 @@ class CategoryController extends Controller
         // default values:
         $subTitle     = $category->name;
         $subTitleIcon = 'fa-bar-chart';
-        $page         = intval($request->get('page'));
-        $pageSize     = intval(Preferences::get('listPageSize', 50)->data);
+        $page         = (int)$request->get('page');
+        $pageSize     = (int)Preferences::get('listPageSize', 50)->data;
         $range        = Preferences::get('viewRange', '1M')->data;
         $start        = null;
         $end          = null;
@@ -249,7 +249,7 @@ class CategoryController extends Controller
             $subTitle = trans('firefly.all_journals_for_category', ['name' => $category->name]);
             $first    = $repository->firstUseDate($category);
             /** @var Carbon $start */
-            $start = null === $first ? new Carbon : $first;
+            $start = $first ?? new Carbon;
             $end   = new Carbon;
             $path  = route('categories.show', [$category->id, 'all']);
         }
@@ -303,10 +303,10 @@ class CategoryController extends Controller
         $data     = $request->getCategoryData();
         $category = $repository->store($data);
 
-        $request->session()->flash('success', strval(trans('firefly.stored_category', ['name' => $category->name])));
+        $request->session()->flash('success', (string)trans('firefly.stored_category', ['name' => $category->name]));
         Preferences::mark();
 
-        if (1 === intval($request->get('create_another'))) {
+        if (1 === (int)$request->get('create_another')) {
             // @codeCoverageIgnoreStart
             $request->session()->put('categories.create.fromStore', true);
 
@@ -329,10 +329,10 @@ class CategoryController extends Controller
         $data = $request->getCategoryData();
         $repository->update($category, $data);
 
-        $request->session()->flash('success', strval(trans('firefly.updated_category', ['name' => $category->name])));
+        $request->session()->flash('success', (string)trans('firefly.updated_category', ['name' => $category->name]));
         Preferences::mark();
 
-        if (1 === intval($request->get('return_to_edit'))) {
+        if (1 === (int)$request->get('return_to_edit')) {
             // @codeCoverageIgnoreStart
             $request->session()->put('categories.edit.fromUpdate', true);
 
@@ -424,6 +424,8 @@ class CategoryController extends Controller
     /**
      * @param Category $category
      *
+     * @param Carbon   $date
+     *
      * @return Collection
      */
     private function getPeriodOverview(Category $category, Carbon $date): Collection
@@ -445,20 +447,20 @@ class CategoryController extends Controller
         if ($cache->has()) {
             return $cache->get(); // @codeCoverageIgnore
         }
-
+        /** @var array $dates */
         $dates   = app('navigation')->blockPeriods($start, $end, $range);
         $entries = new Collection;
 
-        foreach ($dates as $date) {
-            $spent    = $this->repository->spentInPeriod(new Collection([$category]), $accounts, $date['start'], $date['end']);
-            $earned   = $this->repository->earnedInPeriod(new Collection([$category]), $accounts, $date['start'], $date['end']);
-            $dateStr  = $date['end']->format('Y-m-d');
-            $dateName = app('navigation')->periodShow($date['end'], $date['period']);
+        foreach ($dates as $currentDate) {
+            $spent    = $this->repository->spentInPeriod(new Collection([$category]), $accounts, $currentDate['start'], $currentDate['end']);
+            $earned   = $this->repository->earnedInPeriod(new Collection([$category]), $accounts, $currentDate['start'], $currentDate['end']);
+            $dateStr  = $currentDate['end']->format('Y-m-d');
+            $dateName = app('navigation')->periodShow($currentDate['end'], $currentDate['period']);
 
             // amount transferred
             /** @var JournalCollectorInterface $collector */
             $collector = app(JournalCollectorInterface::class);
-            $collector->setAllAssetAccounts()->setRange($date['start'], $date['end'])->setCategory($category)
+            $collector->setAllAssetAccounts()->setRange($currentDate['start'], $currentDate['end'])->setCategory($category)
                       ->withOpposingAccount()->setTypes([TransactionType::TRANSFER]);
             $collector->removeFilter(InternalTransferFilter::class);
             $transferred = Steam::positive($collector->getJournals()->sum('transaction_amount'));
@@ -471,7 +473,7 @@ class CategoryController extends Controller
                     'earned'      => $earned,
                     'sum'         => bcadd($earned, $spent),
                     'transferred' => $transferred,
-                    'date'        => clone $date['end'],
+                    'date'        => clone $currentDate['end'],
                 ]
             );
         }

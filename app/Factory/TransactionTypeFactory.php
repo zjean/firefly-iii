@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * TransactionTypeFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,13 +20,13 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
 use FireflyIII\Models\TransactionType;
 
 /**
+ * @codeCoverageIgnore
  * Class TransactionTypeFactory
  */
 class TransactionTypeFactory

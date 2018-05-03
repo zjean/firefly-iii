@@ -34,6 +34,14 @@ class NotificationFilter extends BunqObject
      */
     public function __construct(array $data)
     {
-        unset($data);
+
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [];
     }
 }

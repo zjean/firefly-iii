@@ -57,13 +57,14 @@ class TransactionCurrency extends Model
      * @param string $value
      *
      * @return TransactionCurrency
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value): TransactionCurrency
     {
         if (auth()->check()) {
-            $currencyId = intval($value);
+            $currencyId = (int)$value;
             $currency   = self::find($currencyId);
-            if (!is_null($currency)) {
+            if (null !== $currency) {
                 return $currency;
             }
         }

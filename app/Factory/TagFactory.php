@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * TagFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,7 +20,6 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
@@ -65,13 +65,13 @@ class TagFactory
      */
     public function findOrCreate(string $tag): ?Tag
     {
-        if (is_null($this->tags)) {
+        if (null === $this->tags) {
             $this->tags = $this->user->tags()->get();
         }
 
         /** @var Tag $object */
         foreach ($this->tags as $object) {
-            if ($object->tag === $tag) {
+            if (strtolower($object->tag) === strtolower($tag)) {
                 return $object;
             }
         }

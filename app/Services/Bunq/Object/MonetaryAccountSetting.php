@@ -28,11 +28,11 @@ namespace FireflyIII\Services\Bunq\Object;
 class MonetaryAccountSetting extends BunqObject
 {
     /** @var string */
-    private $color = '';
+    private $color;
     /** @var string */
-    private $defaultAvatarStatus = '';
+    private $defaultAvatarStatus;
     /** @var string */
-    private $restrictionChat = '';
+    private $restrictionChat;
 
     /**
      * MonetaryAccountSetting constructor.
@@ -70,5 +70,17 @@ class MonetaryAccountSetting extends BunqObject
     public function getRestrictionChat(): string
     {
         return $this->restrictionChat;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'color'                 => $this->color,
+            'default_avatar_status' => $this->defaultAvatarStatus,
+            'restriction_chat'      => $this->restrictionChat,
+        ];
     }
 }

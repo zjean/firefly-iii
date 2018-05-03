@@ -24,6 +24,7 @@ namespace FireflyIII\Services\Bunq\Request;
 
 use FireflyIII\Services\Bunq\Id\DeviceServerId;
 use FireflyIII\Services\Bunq\Token\InstallationToken;
+use Log;
 
 /**
  * Class DeviceServerRequest.
@@ -40,17 +41,19 @@ class DeviceServerRequest extends BunqRequest
     private $permittedIps = [];
 
     /**
-     * @throws \Exception
+     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function call(): void
     {
-        $uri                                     = '/v1/device-server';
+        Log::debug('Now in DeviceServerRequest::call()');
+        $uri                                     = 'device-server';
         $data                                    = ['description' => $this->description, 'secret' => $this->secret, 'permitted_ips' => $this->permittedIps];
         $headers                                 = $this->getDefaultHeaders();
         $headers['X-Bunq-Client-Authentication'] = $this->installationToken->getToken();
-        $response                                = $this->sendSignedBunqPost($uri, $data, $headers);
-        $deviceServerId                          = new DeviceServerId;
-        $deviceServerId->setId(intval($response['Response'][0]['Id']['id']));
+
+        $response       = $this->sendSignedBunqPost($uri, $data, $headers);
+        $deviceServerId = new DeviceServerId;
+        $deviceServerId->setId((int)$response['Response'][0]['Id']['id']);
         $this->deviceServerId = $deviceServerId;
 
         return;

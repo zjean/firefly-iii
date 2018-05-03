@@ -28,7 +28,7 @@ namespace FireflyIII\Services\Bunq\Object;
 class MonetaryAccountProfile extends BunqObject
 {
     /** @var string */
-    private $profileActionRequired = '';
+    private $profileActionRequired;
     /** @var Amount */
     private $profileAmountRequired;
     /**
@@ -53,5 +53,16 @@ class MonetaryAccountProfile extends BunqObject
         $this->profileAmountRequired = new Amount($data['profile_amount_required']);
 
         return;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'profile_action_required' => $this->profileActionRequired,
+            'profile_amount_required' => $this->profileAmountRequired->toArray(),
+        ];
     }
 }

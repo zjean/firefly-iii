@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace Tests\Unit\TransactionRules\Actions;
 
 use FireflyIII\Models\RuleAction;
+use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Actions\ClearBudget;
 use Tests\TestCase;
@@ -39,7 +40,7 @@ class ClearBudgetTest extends TestCase
     public function testAct()
     {
         // associate budget with journal:
-        $journal = TransactionJournal::find(5);
+        $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $budget  = $journal->user->budgets()->first();
         $journal->budgets()->save($budget);
         $this->assertGreaterThan(0, $journal->budgets()->count());
@@ -53,5 +54,12 @@ class ClearBudgetTest extends TestCase
 
         // assert result
         $this->assertEquals(0, $journal->budgets()->count());
+
+        /** @var Transaction $transaction */
+        foreach($journal->transactions as $transaction) {
+            $this->assertEquals(0, $transaction->budgets()->count());
+        }
+
+
     }
 }

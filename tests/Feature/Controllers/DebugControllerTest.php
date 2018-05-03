@@ -22,14 +22,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Controllers;
 
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
-use FireflyIII\Models\Account;
-use FireflyIII\Models\AccountType;
-use FireflyIII\Models\TransactionJournal;
-use FireflyIII\Repositories\Account\AccountRepositoryInterface;
-use FireflyIII\Repositories\Bill\BillRepositoryInterface;
-use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
-use Illuminate\Support\Collection;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -41,6 +34,15 @@ use Tests\TestCase;
  */
 class DebugControllerTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
     /**
      * @covers \FireflyIII\Http\Controllers\DebugController::index
      * @covers \FireflyIII\Http\Controllers\DebugController::__construct

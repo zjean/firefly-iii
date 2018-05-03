@@ -46,7 +46,7 @@ class UserPerson extends BunqObject
     /** @var array */
     private $billingContracts = [];
     /** @var string */
-    private $countryOfBirth = '';
+    private $countryOfBirth;
     /** @var Carbon */
     private $created;
     /**
@@ -64,65 +64,71 @@ class UserPerson extends BunqObject
     /** @var Carbon */
     private $dateOfBirth;
     /** @var string */
-    private $displayName = '';
+    private $displayName;
     /** @var string */
-    private $documentCountry = '';
+    private $documentCountry;
     /** @var string */
-    private $documentNumber = '';
+    private $documentNumber;
     /** @var string */
-    private $documentType = '';
+    private $documentType;
     /** @var string */
-    private $firstName = '';
+    private $firstName;
     /** @var string */
-    private $gender = '';
+    private $gender;
     /** @var int */
-    private $id = 0;
+    private $id;
     /** @var string */
-    private $language = '';
+    private $language;
     /** @var string */
-    private $lastName = '';
+    private $lastName;
     /** @var string */
-    private $legalName = '';
+    private $legalName;
     /** @var string */
-    private $middleName = '';
+    private $middleName;
     /** @var string */
-    private $nationality = '';
+    private $nationality;
     /** @var array */
     private $notificationFilters = [];
     /** @var string */
-    private $placeOfBirth = '';
+    private $placeOfBirth;
     /** @var string */
-    private $publicNickName = '';
+    private $publicNickName;
     /** @var string */
-    private $publicUuid = '';
+    private $publicUuid;
     /**
      * @var mixed
      */
     private $region;
     /** @var int */
-    private $sessionTimeout = 0;
+    private $sessionTimeout;
     /** @var string */
-    private $status = '';
+    private $status;
     /** @var string */
-    private $subStatus = '';
+    private $subStatus;
     /** @var string */
-    private $taxResident = '';
+    private $taxResident;
     /** @var Carbon */
     private $updated;
     /** @var int */
-    private $versionTos = 0;
+    private $versionTos;
 
     /**
      * UserPerson constructor.
      *
      * @param array $data
+     *
      */
     public function __construct(array $data)
     {
         if (0 === count($data)) {
+            $this->created     = new Carbon;
+            $this->updated     = new Carbon;
+            $this->dateOfBirth = new Carbon;
+
             return;
         }
-        $this->id              = intval($data['id']);
+
+        $this->id              = (int)$data['id'];
         $this->created         = Carbon::createFromFormat('Y-m-d H:i:s.u', $data['created']);
         $this->updated         = Carbon::createFromFormat('Y-m-d H:i:s.u', $data['updated']);
         $this->status          = $data['status'];
@@ -132,7 +138,7 @@ class UserPerson extends BunqObject
         $this->publicNickName  = $data['public_nick_name'];
         $this->language        = $data['language'];
         $this->region          = $data['region'];
-        $this->sessionTimeout  = intval($data['session_timeout']);
+        $this->sessionTimeout  = (int)$data['session_timeout'];
         $this->firstName       = $data['first_name'];
         $this->middleName      = $data['middle_name'];
         $this->lastName        = $data['last_name'];
@@ -143,19 +149,19 @@ class UserPerson extends BunqObject
         $this->countryOfBirth  = $data['country_of_birth'];
         $this->nationality     = $data['nationality'];
         $this->gender          = $data['gender'];
-        $this->versionTos      = intval($data['version_terms_of_service']);
+        $this->versionTos      = (int)$data['version_terms_of_service'];
         $this->documentNumber  = $data['document_number'];
         $this->documentType    = $data['document_type'];
         $this->documentCountry = $data['document_country_of_issuance'];
 
-        // create aliases
-        // create avatar
-        // create daily limit
-        // create notification filters
-        // create address main, postal
-        // document front, back attachment
-        // customer, customer_limit
-        // billing contracts
+        // TODO create aliases
+        // TODO create avatar
+        // TODO create daily limit
+        // TODO create notification filters
+        // TODO create address main, postal
+        // TODO  document front, back attachment
+        // TODO customer, customer_limit
+        // TODO billing contracts
     }
 
     /**
@@ -164,5 +170,41 @@ class UserPerson extends BunqObject
     public function getId(): int
     {
         return $this->id;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $data = [
+            'id'                           => $this->id,
+            'created'                      => $this->created->format('Y-m-d H:i:s.u'),
+            'updated'                      => $this->updated->format('Y-m-d H:i:s.u'),
+            'status'                       => $this->status,
+            'sub_status'                   => $this->subStatus,
+            'public_uuid'                  => $this->publicUuid,
+            'display_name'                 => $this->displayName,
+            'public_nick_name'             => $this->publicNickName,
+            'language'                     => $this->language,
+            'region'                       => $this->region,
+            'session_timeout'              => $this->sessionTimeout,
+            'first_name'                   => $this->firstName,
+            'middle_name'                  => $this->middleName,
+            'last_name'                    => $this->lastName,
+            'legal_name'                   => $this->legalName,
+            'tax_resident'                 => $this->taxResident,
+            'date_of_birth'                => $this->dateOfBirth->format('Y-m-d'),
+            'place_of_birth'               => $this->placeOfBirth,
+            'country_of_birth'             => $this->countryOfBirth,
+            'nationality'                  => $this->nationality,
+            'gender'                       => $this->gender,
+            'version_terms_of_service'     => $this->versionTos,
+            'document_number'              => $this->documentNumber,
+            'document_type'                => $this->documentType,
+            'document_country_of_issuance' => $this->documentCountry,
+        ];
+
+        return $data;
     }
 }

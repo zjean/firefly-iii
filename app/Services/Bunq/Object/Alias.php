@@ -28,11 +28,11 @@ namespace FireflyIII\Services\Bunq\Object;
 class Alias extends BunqObject
 {
     /** @var string */
-    private $name = '';
+    private $name;
     /** @var string */
-    private $type = '';
+    private $type;
     /** @var string */
-    private $value = '';
+    private $value;
 
     /**
      * Alias constructor.
@@ -70,5 +70,17 @@ class Alias extends BunqObject
     public function getValue(): string
     {
         return $this->value;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'type'  => $this->type,
+            'name'  => $this->name,
+            'value' => $this->value,
+        ];
     }
 }

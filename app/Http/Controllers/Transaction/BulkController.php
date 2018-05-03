@@ -31,6 +31,7 @@ use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use FireflyIII\Services\Internal\Update\JournalUpdateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Log;
@@ -42,6 +43,8 @@ use View;
  */
 class BulkController extends Controller
 {
+    /** @var JournalRepositoryInterface */
+    private $repository;
 
 
     /**
@@ -53,6 +56,7 @@ class BulkController extends Controller
 
         $this->middleware(
             function ($request, $next) {
+                $this->repository = app(JournalRepositoryInterface::class);
                 app('view')->share('title', trans('firefly.transactions'));
                 app('view')->share('mainTitleIcon', 'fa-repeat');
 
@@ -62,6 +66,7 @@ class BulkController extends Controller
     }
 
     /**
+     * @param Request    $request
      * @param Collection $journals
      *
      * @return View
@@ -76,8 +81,8 @@ class BulkController extends Controller
         $messages = [];
         /** @var TransactionJournal $journal */
         foreach ($journals as $journal) {
-            $sources      = $journal->sourceAccountList();
-            $destinations = $journal->destinationAccountList();
+            $sources      = $this->repository->getJournalSourceAccounts($journal);
+            $destinations = $this->repository->getJournalDestinationAccounts($journal);
             if ($sources->count() > 1) {
                 $messages[] = trans('firefly.cannot_edit_multiple_source', ['description' => $journal->description, 'id' => $journal->id]);
                 continue;
@@ -87,13 +92,13 @@ class BulkController extends Controller
                 $messages[] = trans('firefly.cannot_edit_multiple_dest', ['description' => $journal->description, 'id' => $journal->id]);
                 continue;
             }
-            if (TransactionType::OPENING_BALANCE === $journal->transactionType->type) {
+            if (TransactionType::OPENING_BALANCE === $this->repository->getTransactionType($journal)) {
                 $messages[] = trans('firefly.cannot_edit_opening_balance');
                 continue;
             }
 
             // cannot edit reconciled transactions / journals:
-            if ($journal->transactions->first()->reconciled) {
+            if ($this->repository->isJournalReconciled($journal)) {
                 $messages[] = trans('firefly.cannot_edit_reconciled', ['description' => $journal->description, 'id' => $journal->id]);
                 continue;
             }
@@ -137,20 +142,24 @@ class BulkController extends Controller
      */
     public function update(BulkEditJournalRequest $request, JournalRepositoryInterface $repository)
     {
+        /** @var JournalUpdateService $service */
+        $service        = app(JournalUpdateService::class);
         $journalIds     = $request->get('journals');
-        $ignoreCategory = intval($request->get('ignore_category')) === 1;
-        $ignoreBudget   = intval($request->get('ignore_budget')) === 1;
-        $ignoreTags     = intval($request->get('ignore_tags')) === 1;
+        $ignoreCategory = (int)$request->get('ignore_category') === 1;
+        $ignoreBudget   = (int)$request->get('ignore_budget') === 1;
+        $ignoreTags     = (int)$request->get('ignore_tags') === 1;
         $count          = 0;
+
         if (is_array($journalIds)) {
             foreach ($journalIds as $journalId) {
-                $journal = $repository->find(intval($journalId));
-                if (!is_null($journal)) {
+                $journal = $repository->find((int)$journalId);
+                if (null !== $journal) {
                     $count++;
                     Log::debug(sprintf('Found journal #%d', $journal->id));
                     // update category if not told to ignore
                     if ($ignoreCategory === false) {
                         Log::debug(sprintf('Set category to %s', $request->string('category')));
+
                         $repository->updateCategory($journal, $request->string('category'));
                     }
                     // update budget if not told to ignore (and is withdrawal)
@@ -160,7 +169,7 @@ class BulkController extends Controller
                     }
                     if ($ignoreTags === false) {
                         Log::debug(sprintf('Set tags to %s', $request->string('budget_id')));
-                        $repository->updateTags($journal, explode(',', $request->string('tags')));
+                        $repository->updateTags($journal, ['tags' => explode(',', $request->string('tags'))]);
                     }
                     // update tags if not told to ignore (and is withdrawal)
                 }

@@ -56,6 +56,7 @@ class RuleFormRequest extends Request
             'rule-action-values'  => $this->get('rule-action-value'),
             'rule-action-stop'    => $this->get('rule-action-stop'),
             'stop_processing'     => $this->boolean('stop_processing'),
+            'strict'              => $this->boolean('strict'),
         ];
     }
 
@@ -70,11 +71,11 @@ class RuleFormRequest extends Request
         $validActions  = array_keys(config('firefly.rule-actions'));
 
         // some actions require text:
-        $contextActions = join(',', config('firefly.rule-actions-text'));
+        $contextActions = implode(',', config('firefly.rule-actions-text'));
 
         $titleRule = 'required|between:1,100|uniqueObjectForUser:rules,title';
-        if (null !== $repository->find(intval($this->get('id')))->id) {
-            $titleRule = 'required|between:1,100|uniqueObjectForUser:rules,title,' . intval($this->get('id'));
+        if (null !== $repository->find((int)$this->get('id'))->id) {
+            $titleRule = 'required|between:1,100|uniqueObjectForUser:rules,title,' . (int)$this->get('id');
         }
         $rules = [
             'title'                => $titleRule,
@@ -82,9 +83,10 @@ class RuleFormRequest extends Request
             'stop_processing'      => 'boolean',
             'rule_group_id'        => 'required|belongsToUser:rule_groups',
             'trigger'              => 'required|in:store-journal,update-journal',
-            'rule-trigger.*'       => 'required|in:' . join(',', $validTriggers),
+            'rule-trigger.*'       => 'required|in:' . implode(',', $validTriggers),
             'rule-trigger-value.*' => 'required|min:1|ruleTriggerValue',
-            'rule-action.*'        => 'required|in:' . join(',', $validActions),
+            'rule-action.*'        => 'required|in:' . implode(',', $validActions),
+            'strict'               => 'in:0,1',
         ];
         // since Laravel does not support this stuff yet, here's a trick.
         for ($i = 0; $i < 10; ++$i) {

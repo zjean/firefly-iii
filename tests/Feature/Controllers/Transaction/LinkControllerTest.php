@@ -27,8 +27,8 @@ use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionJournalLink;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\LinkType\LinkTypeRepositoryInterface;
+use Log;
 use Tests\TestCase;
-
 
 /**
  * Class LinkControllerTest
@@ -36,11 +36,25 @@ use Tests\TestCase;
 class LinkControllerTest extends TestCase
 {
     /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
+
+    /**
      * @covers \FireflyIII\Http\Controllers\Transaction\LinkController::__construct
      * @covers \FireflyIII\Http\Controllers\Transaction\LinkController::delete
      */
     public function testDelete()
     {
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $linkRepos    = $this->mock(LinkTypeRepositoryInterface::class);
+        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+
         $this->be($this->user());
         $response = $this->get(route('transactions.link.delete', [1]));
         $response->assertStatus(200);
@@ -51,8 +65,12 @@ class LinkControllerTest extends TestCase
      */
     public function testDestroy()
     {
-        $repository = $this->mock(LinkTypeRepositoryInterface::class);
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $repository   = $this->mock(LinkTypeRepositoryInterface::class);
+
         $repository->shouldReceive('destroyLink');
+        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
+
         $this->be($this->user());
 
         $this->session(['journal_links.delete.uri' => 'http://localhost/']);
@@ -64,7 +82,8 @@ class LinkControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Transaction\LinkController::store
+     * @covers       \FireflyIII\Http\Controllers\Transaction\LinkController::store
+     * @covers       \FireflyIII\Http\Requests\JournalLinkRequest
      */
     public function testStore()
     {
@@ -89,7 +108,8 @@ class LinkControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Transaction\LinkController::store
+     * @covers       \FireflyIII\Http\Controllers\Transaction\LinkController::store
+     * @covers       \FireflyIII\Http\Requests\JournalLinkRequest
      */
     public function testStoreAlreadyLinked()
     {
@@ -113,14 +133,19 @@ class LinkControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Transaction\LinkController::store
+     * @covers       \FireflyIII\Http\Controllers\Transaction\LinkController::store
+     * @covers       \FireflyIII\Http\Requests\JournalLinkRequest
      */
     public function testStoreInvalid()
     {
-        $data = [
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $linkRepos    = $this->mock(LinkTypeRepositoryInterface::class);
+        $data         = [
             'link_other' => 0,
             'link_type'  => '1_inward',
         ];
+
+        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());
         $response = $this->post(route('transactions.link.store', [1]), $data);
@@ -134,7 +159,9 @@ class LinkControllerTest extends TestCase
      */
     public function testSwitchLink()
     {
-        $repository = $this->mock(LinkTypeRepositoryInterface::class);
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $repository   = $this->mock(LinkTypeRepositoryInterface::class);
+        $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $repository->shouldReceive('switchLink')->andReturn(false);
         $this->be($this->user());
         $response = $this->get(route('transactions.link.switch', [1]));

@@ -28,14 +28,20 @@ use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
+use FireflyIII\Repositories\Bill\BillRepositoryInterface;
+use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
+use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
+use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
+use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
-use Response;
 
 /**
  * Class AutoCompleteController.
  */
 class AutoCompleteController extends Controller
 {
+
     /**
      * Returns a JSON list of all accounts.
      *
@@ -52,7 +58,7 @@ class AutoCompleteController extends Controller
         );
         sort($return);
 
-        return Response::json($return);
+        return response()->json($return);
     }
 
     /**
@@ -66,7 +72,65 @@ class AutoCompleteController extends Controller
         $return = array_unique($collector->getJournals()->pluck('description')->toArray());
         sort($return);
 
-        return Response::json($return);
+        return response()->json($return);
+    }
+
+    /**
+     * Returns a JSON list of all bills.
+     *
+     * @param BillRepositoryInterface $repository
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function bills(BillRepositoryInterface $repository)
+    {
+        $return = array_unique(
+            $repository->getActiveBills()->pluck('name')->toArray()
+        );
+        sort($return);
+
+        return response()->json($return);
+    }
+
+    /**
+     * @param BudgetRepositoryInterface $repository
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function budgets(BudgetRepositoryInterface $repository)
+    {
+        $return = array_unique($repository->getBudgets()->pluck('name')->toArray());
+        sort($return);
+
+        return response()->json($return);
+    }
+
+    /**
+     * Returns a list of categories.
+     *
+     * @param CategoryRepositoryInterface $repository
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function categories(CategoryRepositoryInterface $repository)
+    {
+        $return = array_unique($repository->getCategories()->pluck('name')->toArray());
+        sort($return);
+
+        return response()->json($return);
+    }
+
+    /**
+     * @param CurrencyRepositoryInterface $repository
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function currencyNames(CurrencyRepositoryInterface $repository)
+    {
+        $return = $repository->get()->pluck('name')->toArray();
+        sort($return);
+
+        return response()->json($return);
     }
 
     /**
@@ -92,7 +156,7 @@ class AutoCompleteController extends Controller
 
         sort($return);
 
-        return Response::json($return);
+        return response()->json($return);
     }
 
     /**
@@ -114,7 +178,7 @@ class AutoCompleteController extends Controller
         $set    = $collector->getJournals()->pluck('description', 'journal_id')->toArray();
         $return = [];
         foreach ($set as $id => $description) {
-            $id = intval($id);
+            $id = (int)$id;
             if ($id !== $except->id) {
                 $return[] = [
                     'id'   => $id,
@@ -125,7 +189,7 @@ class AutoCompleteController extends Controller
 
         $cache->store($return);
 
-        return Response::json($return);
+        return response()->json($return);
     }
 
     /**
@@ -148,7 +212,22 @@ class AutoCompleteController extends Controller
         $return   = array_unique($filtered->pluck('name')->toArray());
         sort($return);
 
-        return Response::json($return);
+        return response()->json($return);
+    }
+
+    /**
+     * Returns a JSON list of all beneficiaries.
+     *
+     * @param TagRepositoryInterface $tagRepository
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tags(TagRepositoryInterface $tagRepository)
+    {
+        $return = array_unique($tagRepository->get()->pluck('tag')->toArray());
+        sort($return);
+
+        return response()->json($return);
     }
 
     /**
@@ -166,6 +245,19 @@ class AutoCompleteController extends Controller
         $return = array_unique($collector->getJournals()->pluck('description')->toArray());
         sort($return);
 
-        return Response::json($return);
+        return response()->json($return);
+    }
+
+    /**
+     * @param JournalRepositoryInterface $repository
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function transactionTypes(JournalRepositoryInterface $repository)
+    {
+        $return = array_unique($repository->getTransactionTypes()->pluck('type')->toArray());
+        sort($return);
+
+        return response()->json($return);
     }
 }

@@ -30,6 +30,7 @@ use FireflyIII\Models\Tag;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Log;
 
@@ -75,7 +76,7 @@ class TagRepository implements TagRepositoryInterface
      *
      * @return bool
      *
-     * @throws \Exception
+
      */
     public function destroy(Tag $tag): bool
     {
@@ -98,9 +99,8 @@ class TagRepository implements TagRepositoryInterface
         $collector->setUser($this->user);
         $collector->setRange($start, $end)->setTypes([TransactionType::DEPOSIT])->setAllAssetAccounts()->setTag($tag);
         $set = $collector->getJournals();
-        $sum = strval($set->sum('transaction_amount'));
 
-        return $sum;
+        return strval($set->sum('transaction_amount'));
     }
 
     /**
@@ -222,9 +222,8 @@ class TagRepository implements TagRepositoryInterface
         $collector->setUser($this->user);
         $collector->setRange($start, $end)->setTypes([TransactionType::WITHDRAWAL])->setAllAssetAccounts()->setTag($tag);
         $set = $collector->getJournals();
-        $sum = strval($set->sum('transaction_amount'));
 
-        return $sum;
+        return strval($set->sum('transaction_amount'));
     }
 
     /**
@@ -268,10 +267,10 @@ class TagRepository implements TagRepositoryInterface
         $journals = $collector->getJournals();
         $sum      = '0';
         foreach ($journals as $journal) {
-            $sum = bcadd($sum, app('steam')->positive(strval($journal->transaction_amount)));
+            $sum = bcadd($sum, app('steam')->positive((string)$journal->transaction_amount));
         }
 
-        return strval($sum);
+        return (string)$sum;
     }
 
     /**
@@ -301,7 +300,7 @@ class TagRepository implements TagRepositoryInterface
         ];
 
         foreach ($journals as $journal) {
-            $amount = app('steam')->positive(strval($journal->transaction_amount));
+            $amount = app('steam')->positive((string)$journal->transaction_amount);
             $type   = $journal->transaction_type_type;
             if (TransactionType::WITHDRAWAL === $type) {
                 $amount = bcmul($amount, '-1');
@@ -325,44 +324,42 @@ class TagRepository implements TagRepositoryInterface
         $min    = null;
         $max    = '0';
         $return = [];
-        // get all tags
-        $allTags = $this->user->tags();
-        // get tags with a certain amount (in this range):
-        $query = $this->user->tags()
-                            ->leftJoin('tag_transaction_journal', 'tag_transaction_journal.tag_id', '=', 'tags.id')
-                            ->leftJoin('transaction_journals', 'tag_transaction_journal.transaction_journal_id', '=', 'transaction_journals.id')
-                            ->leftJoin('transactions', 'transaction_journals.id', '=', 'transactions.transaction_journal_id')
-                            ->where('transactions.amount', '>', 0)
-                            ->groupBy(['tags.id', 'tags.tag']);
+        // get all tags in the year (if present):
+        $tagQuery = $this->user->tags()
+                               ->leftJoin('tag_transaction_journal', 'tag_transaction_journal.tag_id', '=', 'tags.id')
+                               ->leftJoin('transaction_journals', 'tag_transaction_journal.transaction_journal_id', '=', 'transaction_journals.id')
+                               ->leftJoin('transactions', 'transaction_journals.id', '=', 'transactions.transaction_journal_id')
+                               ->where(
+                                   function (Builder $query) {
+                                       $query->where('transactions.amount', '>', 0);
+                                       $query->orWhereNull('transactions.amount');
+                                   }
+                               )
+                               ->groupBy(['tags.id', 'tags.tag']);
 
         // add date range (or not):
         if (null === $year) {
-            $query->whereNull('tags.date');
-            $allTags->whereNull('tags.date');
+            Log::debug('Get tags without a date.');
+            $tagQuery->whereNull('tags.date');
         }
         if (null !== $year) {
-            $start = $year . '-01-01';
-            $end   = $year . '-12-31';
-            $query->where('tags.date', '>=', $start)->where('tags.date', '<=', $end);
-            $allTags->where('tags.date', '>=', $start)->where('tags.date', '<=', $end);
-        }
-        $set             = $query->get(['tags.id', DB::raw('SUM(transactions.amount) as amount_sum')]);
-        $tagsWithAmounts = [];
-        /** @var Tag $tag */
-        foreach ($set as $tag) {
-            $tagsWithAmounts[$tag->id] = strval($tag->amount_sum);
+            Log::debug(sprintf('Get tags with year %s.', $year));
+            $start = $year . '-01-01 00:00:00';
+            $end   = $year . '-12-31 23:59:59';
+            $tagQuery->where('tags.date', '>=', $start)->where('tags.date', '<=', $end);
         }
 
-        $tags      = $allTags->orderBy('tags.id', 'desc')->get(['tags.id', 'tags.tag']);
-        $temporary = [];
+        $result = $tagQuery->get(['tags.id', 'tags.tag', DB::raw('SUM(transactions.amount) as amount_sum')]);
+
         /** @var Tag $tag */
-        foreach ($tags as $tag) {
-            $amount = $tagsWithAmounts[$tag->id] ?? '0';
+        foreach ($result as $tag) {
+            $tagsWithAmounts[$tag->id] = (string)$tag->amount_sum;
+            $amount                    = strlen($tagsWithAmounts[$tag->id]) ? $tagsWithAmounts[$tag->id] : '0';
             if (null === $min) {
                 $min = $amount;
             }
             $max = 1 === bccomp($amount, $max) ? $amount : $max;
-            $min = bccomp($amount, $min) === -1 ? $amount : $min;
+            $min = -1 === bccomp($amount, $min) ? $amount : $min;
 
             $temporary[] = [
                 'amount' => $amount,
@@ -371,16 +368,38 @@ class TagRepository implements TagRepositoryInterface
                     'tag' => $tag->tag,
                 ],
             ];
+            Log::debug(sprintf('After tag "%s", max is %s and min is %s.', $tag->tag, $max, $min));
         }
+        $min = $min ?? '0';
+        Log::debug(sprintf('FINAL max is %s, FINAL min is %s', $max, $min));
+        // the difference between max and min:
+        $range = bcsub($max, $min);
+        Log::debug(sprintf('The range is: %s', $range));
 
-        /** @var array $entry */
-        foreach ($temporary as $entry) {
-            $scale          = $this->cloudScale([12, 20], floatval($entry['amount']), floatval($min), floatval($max));
-            $tagId          = $entry['tag']['id'];
-            $return[$tagId] = [
-                'scale' => $scale,
-                'tag'   => $entry['tag'],
+        // each euro difference is this step in the scale:
+        $step = (float)$range !== 0.0 ? 8 / (float)$range : 0;
+        Log::debug(sprintf('The step is: %f', $step));
+        $return = [];
+
+
+        foreach ($result as $tag) {
+            if ($step === 0) {
+                // easy: size is 12:
+                $size = 12;
+            }
+            if ($step !== 0) {
+                $amount = bcsub((string)$tag->amount_sum, $min);
+                Log::debug(sprintf('Work with amount %s for tag %s', $amount, $tag->tag));
+                $size = ((int)(float)$amount * $step) + 12;
+            }
+
+            $return[$tag->id] = [
+                'size' => $size,
+                'tag'  => $tag->tag,
+                'id'   => $tag->id,
             ];
+
+            Log::debug(sprintf('Size is %d', $size));
         }
 
         return $return;
@@ -424,14 +443,15 @@ class TagRepository implements TagRepositoryInterface
 
         $diff = $range[1] - $range[0];
         $step = 1;
-        if (0 != $diff) {
+        if (0.0 !== $diff) {
             $step = $amountDiff / $diff;
         }
-        if (0 == $step) {
+        if (0.0 === $step) {
             $step = 1;
         }
-        $extra = round($amount / $step);
 
-        return intval($range[0] + $extra);
+        $extra = $step / $amount;
+
+        return (int)($range[0] + $extra);
     }
 }

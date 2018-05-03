@@ -24,10 +24,8 @@ namespace FireflyIII\Support\Twig;
 
 use Carbon\Carbon;
 use FireflyIII\Models\Account;
-use FireflyIII\Models\TransactionJournal;
 use League\CommonMark\CommonMarkConverter;
 use Route;
-use Steam;
 use Twig_Extension;
 use Twig_SimpleFilter;
 use Twig_SimpleFunction;
@@ -60,21 +58,13 @@ class General extends Twig_Extension
             $this->getCurrencySymbol(),
             $this->phpdate(),
             $this->env(),
-            $this->getAmountFromJournal(),
+            //$this->getAmountFromJournal(),
             $this->activeRouteStrict(),
-            $this->steamPositive(),
+            //$this->steamPositive(),
             $this->activeRoutePartial(),
             $this->activeRoutePartialWhat(),
             $this->formatDate(),
         ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getName(): string
-    {
-        return 'FireflyIII\Support\Twig\General';
     }
 
     /**
@@ -349,29 +339,4 @@ class General extends Twig_Extension
         );
     }
 
-    /**
-     * @return Twig_SimpleFunction
-     */
-    protected function steamPositive()
-    {
-        return new Twig_SimpleFunction(
-            'steam_positive',
-            function (string $str): string {
-                return Steam::positive($str);
-            }
-        );
-    }
-
-    /**
-     * @return Twig_SimpleFunction
-     */
-    private function getAmountFromJournal()
-    {
-        return new Twig_SimpleFunction(
-            'getAmount',
-            function (TransactionJournal $journal): string {
-                return $journal->amount();
-            }
-        );
-    }
 }

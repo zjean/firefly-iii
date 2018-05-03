@@ -25,6 +25,10 @@ namespace FireflyIII\Support;
 use Amount as Amt;
 use Carbon\Carbon;
 use Eloquent;
+use FireflyIII\Models\Account;
+use FireflyIII\Models\AccountType;
+use FireflyIII\Repositories\Account\AccountRepositoryInterface;
+use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use RuntimeException;
@@ -49,9 +53,37 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
+     *
+     * @return string
+     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \Throwable
+     */
+    public function amountNoCurrency(string $name, $value = null, array $options = []): string
+    {
+        $label           = $this->label($name, $options);
+        $options         = $this->expandOptionArray($name, $label, $options);
+        $classes         = $this->getHolderClasses($name);
+        $value           = $this->fillFieldValue($name, $value);
+        $options['step'] = 'any';
+        unset($options['currency'], $options['placeholder']);
+
+        // make sure value is formatted nicely:
+        if (null !== $value && '' !== $value) {
+            $value = round($value, 8);
+        }
+
+        $html = view('form.amount-no-currency', compact('classes', 'name', 'label', 'value', 'options'))->render();
+
+        return $html;
+    }
+
+    /**
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
      * @throws \FireflyIII\Exceptions\FireflyException
@@ -62,13 +94,63 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
+     *
+     * @return string
+     */
+    public function assetAccountList(string $name, $value = null, array $options = []): string
+    {
+        // properties for cache
+        $cache = new CacheProperties;
+        $cache->addProperty('exp-form-asset-list');
+        $cache->addProperty($name);
+        $cache->addProperty($value);
+        $cache->addProperty($options);
+
+        if ($cache->has()) {
+            return $cache->get();
+        }
+        // make repositories
+        /** @var AccountRepositoryInterface $repository */
+        $repository = app(AccountRepositoryInterface::class);
+        /** @var CurrencyRepositoryInterface $currencyRepos */
+        $currencyRepos = app(CurrencyRepositoryInterface::class);
+
+        $assetAccounts   = $repository->getAccountsByType([AccountType::ASSET, AccountType::DEFAULT]);
+        $defaultCurrency = app('amount')->getDefaultCurrency();
+        $grouped         = [];
+        // group accounts:
+        /** @var Account $account */
+        foreach ($assetAccounts as $account) {
+            $balance    = app('steam')->balance($account, new Carbon);
+            $currencyId = (int)$account->getMeta('currency_id');
+            $currency   = $currencyRepos->findNull($currencyId);
+            $role       = $account->getMeta('accountRole');
+            if (0 === strlen($role)) {
+                $role = 'no_account_type'; // @codeCoverageIgnore
+            }
+            if (null === $currency) {
+                $currency = $defaultCurrency;
+            }
+
+            $key                         = (string)trans('firefly.opt_group_' . $role);
+            $grouped[$key][$account->id] = $account->name . ' (' . app('amount')->formatAnything($currency, $balance, false) . ')';
+        }
+        $res = $this->select($name, $grouped, $value, $options);
+        $cache->store($res);
+
+        return $res;
+    }
+
+    /**
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
      * @throws \FireflyIII\Exceptions\FireflyException
-     *
      */
     public function balance(string $name, $value = null, array $options = []): string
     {
@@ -83,7 +165,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function checkbox(string $name, $value = 1, $checked = null, $options = []): string
     {
@@ -107,7 +189,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function date(string $name, $value = null, array $options = []): string
     {
@@ -127,7 +209,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function file(string $name, array $options = []): string
     {
@@ -146,7 +228,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function integer(string $name, $value = null, array $options = []): string
     {
@@ -167,7 +249,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function location(string $name, $value = null, array $options = []): string
     {
@@ -193,7 +275,7 @@ class ExpandedForm
         $fields     = ['title', 'name', 'description'];
         /** @var Eloquent $entry */
         foreach ($set as $entry) {
-            $entryId = intval($entry->id);
+            $entryId = (int)$entry->id;
             $title   = null;
 
             foreach ($fields as $field) {
@@ -219,7 +301,7 @@ class ExpandedForm
         $fields        = ['title', 'name', 'description'];
         /** @var Eloquent $entry */
         foreach ($set as $entry) {
-            $entryId = intval($entry->id);
+            $entryId = (int)$entry->id;
             $title   = null;
 
             foreach ($fields as $field) {
@@ -241,7 +323,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function multiCheckbox(string $name, array $list = [], $selected = null, array $options = []): string
     {
@@ -264,7 +346,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function multiRadio(string $name, array $list = [], $selected = null, array $options = []): string
     {
@@ -286,7 +368,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function nonSelectableAmount(string $name, $value = null, array $options = []): string
     {
@@ -295,9 +377,8 @@ class ExpandedForm
         $classes          = $this->getHolderClasses($name);
         $value            = $this->fillFieldValue($name, $value);
         $options['step']  = 'any';
-        $selectedCurrency = isset($options['currency']) ? $options['currency'] : Amt::getDefaultCurrency();
-        unset($options['currency']);
-        unset($options['placeholder']);
+        $selectedCurrency = $options['currency'] ?? Amt::getDefaultCurrency();
+        unset($options['currency'], $options['placeholder']);
 
         // make sure value is formatted nicely:
         if (null !== $value && '' !== $value) {
@@ -316,7 +397,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function nonSelectableBalance(string $name, $value = null, array $options = []): string
     {
@@ -325,9 +406,8 @@ class ExpandedForm
         $classes          = $this->getHolderClasses($name);
         $value            = $this->fillFieldValue($name, $value);
         $options['step']  = 'any';
-        $selectedCurrency = isset($options['currency']) ? $options['currency'] : Amt::getDefaultCurrency();
-        unset($options['currency']);
-        unset($options['placeholder']);
+        $selectedCurrency = $options['currency'] ?? Amt::getDefaultCurrency();
+        unset($options['currency'], $options['placeholder']);
 
         // make sure value is formatted nicely:
         if (null !== $value && '' !== $value) {
@@ -347,7 +427,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function number(string $name, $value = null, array $options = []): string
     {
@@ -369,7 +449,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function optionsList(string $type, string $name): string
     {
@@ -381,7 +461,7 @@ class ExpandedForm
             // don't care
         }
 
-        $previousValue = null === $previousValue ? 'store' : $previousValue;
+        $previousValue = $previousValue ?? 'store';
         $html          = view('form.options', compact('type', 'name', 'previousValue'))->render();
 
         return $html;
@@ -393,14 +473,14 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function password(string $name, array $options = []): string
     {
         $label   = $this->label($name, $options);
         $options = $this->expandOptionArray($name, $label, $options);
         $classes = $this->getHolderClasses($name);
-        $html    = view('form.password', compact('classes', 'name', 'label', 'value', 'options'))->render();
+        $html    = view('form.password', compact('classes', 'name', 'label', 'options'))->render();
 
         return $html;
     }
@@ -413,7 +493,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function select(string $name, array $list = [], $selected = null, array $options = []): string
     {
@@ -421,8 +501,7 @@ class ExpandedForm
         $options  = $this->expandOptionArray($name, $label, $options);
         $classes  = $this->getHolderClasses($name);
         $selected = $this->fillFieldValue($name, $selected);
-        unset($options['autocomplete']);
-        unset($options['placeholder']);
+        unset($options['autocomplete'], $options['placeholder']);
         $html = view('form.select', compact('classes', 'name', 'label', 'selected', 'options', 'list'))->render();
 
         return $html;
@@ -435,7 +514,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function staticText(string $name, $value, array $options = []): string
     {
@@ -454,7 +533,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function tags(string $name, $value = null, array $options = []): string
     {
@@ -475,7 +554,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function text(string $name, $value = null, array $options = []): string
     {
@@ -495,7 +574,7 @@ class ExpandedForm
      *
      * @return string
      *
-     * @throws \Throwable
+
      */
     public function textarea(string $name, $value = null, array $options = []): string
     {
@@ -585,7 +664,7 @@ class ExpandedForm
         }
         $name = str_replace('[]', '', $name);
 
-        return strval(trans('form.' . $name));
+        return (string)trans('form.' . $name);
     }
 
     /**
@@ -605,15 +684,14 @@ class ExpandedForm
         $classes         = $this->getHolderClasses($name);
         $value           = $this->fillFieldValue($name, $value);
         $options['step'] = 'any';
-        $defaultCurrency = isset($options['currency']) ? $options['currency'] : Amt::getDefaultCurrency();
+        $defaultCurrency = $options['currency'] ?? Amt::getDefaultCurrency();
         $currencies      = app('amount')->getAllCurrencies();
-        unset($options['currency']);
-        unset($options['placeholder']);
+        unset($options['currency'], $options['placeholder']);
 
         // perhaps the currency has been sent to us in the field $amount_currency_id_$name (amount_currency_id_amount)
         $preFilled      = session('preFilled');
         $key            = 'amount_currency_id_' . $name;
-        $sentCurrencyId = isset($preFilled[$key]) ? intval($preFilled[$key]) : $defaultCurrency->id;
+        $sentCurrencyId = isset($preFilled[$key]) ? (int)$preFilled[$key] : $defaultCurrency->id;
 
         // find this currency in set of currencies:
         foreach ($currencies as $currency) {

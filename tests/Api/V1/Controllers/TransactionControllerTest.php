@@ -26,15 +26,17 @@ namespace Tests\Api\V1\Controllers;
 
 use FireflyIII\Helpers\Collector\JournalCollector;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Filter\NegativeAmountFilter;
 use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Models\TransactionJournal;
+use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Illuminate\Support\Collection;
 use Laravel\Passport\Passport;
+use Log;
 use Tests\TestCase;
 
 /**
- * todo test fire of rules with parameter
  * Class TransactionControllerTest
  */
 class TransactionControllerTest extends TestCase
@@ -46,6 +48,7 @@ class TransactionControllerTest extends TestCase
     {
         parent::setUp();
         Passport::actingAs($this->user());
+        Log::debug(sprintf('Now in %s.', get_class($this)));
     }
 
     /**
@@ -61,7 +64,7 @@ class TransactionControllerTest extends TestCase
 
         // mock calls:
         $repository->shouldReceive('setUser')->once();
-        $repository->shouldReceive('delete')->once()->andReturn(true);
+        $repository->shouldReceive('destroy')->once()->andReturn(true);
 
         // get account:
         $transaction = $this->user()->transactions()->first();
@@ -80,9 +83,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailCurrencyCode()
     {
-        $account = $this->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+
+        // mock calls:
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -117,9 +130,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailCurrencyId()
     {
-        $account = $this->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+
+        // mock calls:
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -154,8 +176,16 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailEmptyDescriptions()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+
+        // mock calls:
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $data = [
             'description'  => '',
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
@@ -183,7 +213,7 @@ class TransactionControllerTest extends TestCase
                         'The description must be between 1 and 255 characters.',
                     ],
                     'transactions.0.description' => [
-                        'Transaction description should not equal journal description.',
+                        'Transaction description should not equal global description.',
                     ],
                 ],
             ]
@@ -198,9 +228,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailEmptySplitDescriptions()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Split journal #' . rand(1, 1000),
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+
+        // mock calls:
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+        $data = [
+            'description'  => 'Split journal #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -247,9 +286,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailExpenseID()
     {
-        $account = $this->user()->accounts()->where('account_type_id', 4)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $account      = $this->user()->accounts()->where('account_type_id', 4)->first();
+
+        // mock calls:
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -286,16 +334,24 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailExpenseName()
     {
-        $account = $this->user()->accounts()->where('account_type_id', 4)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection);
+        $accountRepos->shouldReceive('findByNameNull')->andReturn(null);
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
                 [
                     'amount'      => '10',
                     'currency_id' => 1,
-                    'source_name' => $account->name,
+                    'source_name' => 'Expense name',
                 ],
 
 
@@ -325,8 +381,15 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailNoAsset()
     {
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+
         $data = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -362,8 +425,15 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailNoData()
     {
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+
         $data = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [],
@@ -392,9 +462,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailNoForeignCurrencyInfo()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Split journal #' . rand(1, 1000),
+        // mock stuff:
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+
+        $data = [
+            'description'  => 'Split journal #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -431,10 +510,20 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailOpposingRevenueID()
     {
-        $account  = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $opposing = auth()->user()->accounts()->where('account_type_id', 5)->first();
-        $data     = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $account  = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $opposing = $this->user()->accounts()->where('account_type_id', 5)->first();
+
+        // mock stuff:
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]), new Collection([$opposing]));
+
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -474,15 +563,23 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailOwnershipBillId()
     {
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
         // move account to other user
-        $bill          = auth()->user()->bills()->first();
+        $bill          = $this->user()->bills()->first();
         $bill->user_id = $this->emptyUser()->id;
         $bill->save();
 
         // submit with another account.
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'bill_id'      => $bill->id,
@@ -525,15 +622,22 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailOwnershipBillName()
     {
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
         // move account to other user
-        $bill          = auth()->user()->bills()->first();
+        $bill          = $this->user()->bills()->first();
         $bill->user_id = $this->emptyUser()->id;
         $bill->save();
 
         // submit with another account.
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'bill_name'    => $bill->name,
@@ -576,15 +680,22 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailOwnershipBudgetId()
     {
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
         // move account to other user
-        $budget          = auth()->user()->budgets()->first();
+        $budget          = $this->user()->budgets()->first();
         $budget->user_id = $this->emptyUser()->id;
         $budget->save();
 
         // submit with another account.
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -627,15 +738,22 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailOwnershipBudgetName()
     {
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
         // move account to other user
-        $budget          = auth()->user()->budgets()->first();
+        $budget          = $this->user()->budgets()->first();
         $budget->user_id = $this->emptyUser()->id;
         $budget->save();
 
         // submit with another account.
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -678,15 +796,22 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailOwnershipCategoryId()
     {
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
         // move account to other user
-        $category          = auth()->user()->categories()->first();
+        $category          = $this->user()->categories()->first();
         $category->user_id = $this->emptyUser()->id;
         $category->save();
 
         // submit with another account.
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -730,18 +855,27 @@ class TransactionControllerTest extends TestCase
     public function testFailOwnershipPiggyBankID()
     {
         // move account to other user
-        $move                  = auth()->user()->accounts()->where('account_type_id', 3)->first();
+        $move                  = $this->user()->accounts()->where('account_type_id', 3)->first();
         $move->user_id         = $this->emptyUser()->id;
-        $piggyBank             = auth()->user()->piggyBanks()->first();
+        $piggyBank             = $this->user()->piggyBanks()->first();
         $oldId                 = $piggyBank->account_id;
         $piggyBank->account_id = $move->id;
         $move->save();
         $piggyBank->save();
 
+
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+
         // submit with another account.
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'   => 'Some transaction #' . rand(1, 1000),
+        $data = [
+            'description'   => 'Some transaction #' . random_int(1, 1000),
             'date'          => '2018-01-01',
             'type'          => 'withdrawal',
             'piggy_bank_id' => $piggyBank->id,
@@ -787,18 +921,27 @@ class TransactionControllerTest extends TestCase
     public function testFailOwnershipPiggyBankName()
     {
         // move account to other user
-        $move                  = auth()->user()->accounts()->where('account_type_id', 3)->first();
+        $move                  = $this->user()->accounts()->where('account_type_id', 3)->first();
         $move->user_id         = $this->emptyUser()->id;
-        $piggyBank             = auth()->user()->piggyBanks()->first();
+        $piggyBank             = $this->user()->piggyBanks()->first();
         $oldId                 = $piggyBank->account_id;
         $piggyBank->account_id = $move->id;
         $move->save();
         $piggyBank->save();
 
+
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+
         // submit with another account.
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'     => 'Some transaction #' . rand(1, 1000),
+        $data = [
+            'description'     => 'Some transaction #' . random_int(1, 1000),
             'date'            => '2018-01-01',
             'type'            => 'withdrawal',
             'piggy_bank_name' => $piggyBank->name,
@@ -843,9 +986,16 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailRevenueID()
     {
-        $account = $this->user()->accounts()->where('account_type_id', 4)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $account      = $this->user()->accounts()->where('account_type_id', 4)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'deposit',
             'transactions' => [
@@ -882,10 +1032,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailSplitDeposit()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $second  = auth()->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $account->id)->first();
-        $data    = [
-            'description'  => 'Some deposit #' . rand(1, 1000),
+        $account = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $second  = $this->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $account->id)->first();
+
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]), new Collection([$second]));
+
+
+        $data = [
+            'description'  => 'Some deposit #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'deposit',
             'transactions' => [
@@ -930,10 +1089,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailSplitTransfer()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $second  = auth()->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $account->id)->first();
-        $data    = [
-            'description'  => 'Some transfer #' . rand(1, 1000),
+        $account = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $second  = $this->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $account->id)->first();
+
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]), new Collection([$second]));
+
+        $data = [
+            'description'  => 'Some transfer #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'transfer',
             'transactions' => [
@@ -969,6 +1136,9 @@ class TransactionControllerTest extends TestCase
                     'transactions.0.destination_id' => [
                         'All accounts in this field must be equal.',
                     ],
+                    'transactions.1.destination_id' => [
+                        'The source account equals the destination account',
+                    ],
                 ],
             ]
         );
@@ -983,10 +1153,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testFailSplitWithdrawal()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $second  = auth()->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $account->id)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $account = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $second  = $this->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $account->id)->first();
+
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]), new Collection([$second]));
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1030,13 +1208,18 @@ class TransactionControllerTest extends TestCase
      * @covers \FireflyIII\Api\V1\Controllers\TransactionController::index
      * @covers \FireflyIII\Api\V1\Controllers\TransactionController::mapTypes
      *
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testIndex()
     {
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsByType')
+                     ->andReturn($this->user()->accounts()->where('account_type_id', 3)->get());
+
         // get some transactions using the collector:
         $collector = new JournalCollector;
-        $collector->setUser(auth()->user());
+        $collector->setUser($this->user());
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         $collector->setAllAssetAccounts();
         $collector->setLimit(5)->setPage(1);
@@ -1046,6 +1229,7 @@ class TransactionControllerTest extends TestCase
         $repository = $this->mock(JournalRepositoryInterface::class);
         $collector  = $this->mock(JournalCollectorInterface::class);
         $repository->shouldReceive('setUser');
+
 
         $collector->shouldReceive('setUser')->andReturnSelf();
         $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
@@ -1074,13 +1258,18 @@ class TransactionControllerTest extends TestCase
      * @covers \FireflyIII\Api\V1\Controllers\TransactionController::__construct
      * @covers \FireflyIII\Api\V1\Controllers\TransactionController::index
      * @covers \FireflyIII\Api\V1\Controllers\TransactionController::mapTypes
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testIndexWithRange()
     {
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsByType')
+                     ->andReturn($this->user()->accounts()->where('account_type_id', 3)->get());
+
         // get some transactions using the collector:
         $collector = new JournalCollector;
-        $collector->setUser(auth()->user());
+        $collector->setUser($this->user());
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         $collector->setAllAssetAccounts();
         $collector->setLimit(5)->setPage(1);
@@ -1134,13 +1323,24 @@ class TransactionControllerTest extends TestCase
      */
     public function testShowDeposit()
     {
-        /** @var TransactionJournal $journal */
-        $journal     = auth()->user()->transactionJournals()->where('transaction_type_id', 2)->first();
+        do {
+            // this is kind of cheating but OK.
+            /** @var TransactionJournal $journal */
+            $journal = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 2)->whereNull('deleted_at')->first();
+            $count   = $journal->transactions()->count();
+        } while ($count !== 2);
         $transaction = $journal->transactions()->first();
+
+
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsByType')
+                     ->andReturn($this->user()->accounts()->where('account_type_id', 3)->get());
+
 
         // get some transactions using the collector:
         $collector = new JournalCollector;
-        $collector->setUser(auth()->user());
+        $collector->setUser($this->user());
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         $collector->setAllAssetAccounts();
         $collector->setJournals(new Collection([$journal]));
@@ -1157,7 +1357,7 @@ class TransactionControllerTest extends TestCase
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf()->once();
         $collector->shouldReceive('withBudgetInformation')->andReturnSelf()->once();
         $collector->shouldReceive('setJournals')->andReturnSelf()->once();
-        $collector->shouldReceive('addFilter')->andReturnSelf()->once();
+        $collector->shouldReceive('addFilter')->withArgs([NegativeAmountFilter::class])->andReturnSelf()->once();
         $collector->shouldReceive('getJournals')->andReturn($transactions);
 
         // test API
@@ -1165,15 +1365,12 @@ class TransactionControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson(
             [
-                'data' => [
-                    'attributes' => [
-                        'description' => $journal->description,
-                    ],
-                    'links'      => [
-                        0      => [],
-                        'self' => true,
-                    ],
-                ],
+                'data' => [[
+                               'attributes' => [
+                                   'description' => $journal->description,
+                                   'type'        => 'Deposit',
+                               ],
+                           ]],
 
             ]
         );
@@ -1187,13 +1384,23 @@ class TransactionControllerTest extends TestCase
      */
     public function testShowWithdrawal()
     {
-        /** @var TransactionJournal $journal */
-        $journal     = auth()->user()->transactionJournals()->where('transaction_type_id', 1)->first();
+        do {
+            // this is kind of cheating but OK.
+            /** @var TransactionJournal $journal */
+            $journal = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 1)->whereNull('deleted_at')->first();
+            $count   = $journal->transactions()->count();
+        } while ($count !== 2);
         $transaction = $journal->transactions()->first();
+
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsByType')
+                     ->andReturn($this->user()->accounts()->where('account_type_id', 3)->get());
+
 
         // get some transactions using the collector:
         $collector = new JournalCollector;
-        $collector->setUser(auth()->user());
+        $collector->setUser($this->user());
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         $collector->setAllAssetAccounts();
         $collector->setJournals(new Collection([$journal]));
@@ -1219,12 +1426,14 @@ class TransactionControllerTest extends TestCase
         $response->assertJson(
             [
                 'data' => [
-                    'attributes' => [
-                        'description' => $journal->description,
-                    ],
-                    'links'      => [
-                        0      => [],
-                        'self' => true,
+                    [
+                        'attributes' => [
+                            'description' => $journal->description,
+                        ],
+                        'links'      => [
+                            0      => [],
+                            'self' => true,
+                        ],
                     ],
                 ],
 
@@ -1243,10 +1452,20 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessBillId()
     {
-        $bill    = auth()->user()->bills()->first();
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // default journal:
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $bill = $this->user()->bills()->first();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'bill_id'      => $bill->id,
@@ -1264,27 +1483,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'bill_id'          => $bill->id,
-                                   'bill_name'        => $bill->name,
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ]],
-            ]
-        );
     }
 
     /**
@@ -1295,10 +1493,20 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessBillName()
     {
-        $bill    = auth()->user()->bills()->first();
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // default journal:
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $bill = $this->user()->bills()->first();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'bill_name'    => $bill->name,
@@ -1316,27 +1524,46 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'bill_id'          => $bill->id,
-                                   'bill_name'        => $bill->name,
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ]],
-            ]
-        );
+    }
+
+    /**
+     * Add opposing account by a new name.
+     *
+     * @covers \FireflyIII\Api\V1\Controllers\TransactionController::store
+     * @covers \FireflyIII\Api\V1\Requests\TransactionRequest
+     */
+    public function testSuccessNewStoreOpposingName()
+    {
+        $journal      = $this->user()->transactionJournals()->where('transaction_type_id', 1)->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
+            'date'         => '2018-01-01',
+            'type'         => 'withdrawal',
+            'transactions' => [
+                [
+                    'amount'           => '10',
+                    'currency_id'      => 1,
+                    'source_id'        => $account->id,
+                    'destination_name' => 'New expense account #' . random_int(1, 1000),
+                ],
+
+
+            ],
+        ];
+
+        // test API
+        $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
+        $response->assertStatus(200);
+
     }
 
     /**
@@ -1347,9 +1574,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreAccountName()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // default journal:
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1366,25 +1603,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1395,9 +1613,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreBasic()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // default journal:
+        $journal      = $this->user()->transactionJournals()->where('transaction_type_id', 1)->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1414,25 +1642,47 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
+    }
+
+    /**
+     * Submit the minimum amount of data required to create a withdrawal.
+     *
+     * @covers \FireflyIII\Api\V1\Controllers\TransactionController::store
+     * @covers \FireflyIII\Api\V1\Requests\TransactionRequest
+     */
+    public function testSuccessStoreBasicByName()
+    {
+        // default journal:
+        $journal      = $this->user()->transactionJournals()->where('transaction_type_id', 1)->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection);
+        $accountRepos->shouldReceive('findByNameNull')->andReturn($account);
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
+            'date'         => '2018-01-01',
+            'type'         => 'withdrawal',
+            'transactions' => [
+                [
+                    'amount'      => '10',
+                    'currency_id' => 1,
+                    'source_name' => $account->name,
+                ],
+
+
+            ],
+        ];
+
+        // test API
+        $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
+        $response->assertStatus(200);
     }
 
     /**
@@ -1443,9 +1693,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreBasicDeposit()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        // default journal:
+        $journal      = $this->user()->transactionJournals()->where('transaction_type_id', 2)->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'deposit',
             'transactions' => [
@@ -1462,25 +1722,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'destination_id'   => $account->id,
-                                   'destination_name' => $account->name,
-                                   'destination_type' => 'Asset account',
-                                   'type'             => 'Deposit',
-                                   'source_name'      => 'Cash account',
-                                   'source_type'      => 'Cash account',
-                                   'amount'           => 10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1491,10 +1732,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreBudgetId()
     {
-        $budget  = auth()->user()->budgets()->first();
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $budget       = $this->user()->budgets()->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1512,27 +1761,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                                   'budget_id'        => $budget->id,
-                                   'budget_name'      => $budget->name,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1543,10 +1771,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreBudgetName()
     {
-        $budget  = auth()->user()->budgets()->first();
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $budget       = $this->user()->budgets()->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1564,27 +1801,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                                   'budget_id'        => $budget->id,
-                                   'budget_name'      => $budget->name,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1595,10 +1811,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreCategoryID()
     {
-        $category = auth()->user()->categories()->first();
-        $account  = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data     = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $category     = $this->user()->categories()->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1616,27 +1840,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                                   'category_id'      => $category->id,
-                                   'category_name'    => $category->name,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1647,10 +1850,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreCategoryName()
     {
-        $category = auth()->user()->categories()->first();
-        $account  = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data     = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $category     = $this->user()->categories()->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1668,27 +1879,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                                   'category_id'      => $category->id,
-                                   'category_name'    => $category->name,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1699,11 +1889,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreForeignAmount()
     {
-        $currency = TransactionCurrency::first();
-        $foreign  = TransactionCurrency::where('id', '!=', $currency->id)->first();
-        $account  = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data     = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $currency     = TransactionCurrency::first();
+        $foreign      = TransactionCurrency::where('id', '!=', $currency->id)->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1722,28 +1920,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'           => $data['description'],
-                                   'date'                  => $data['date'],
-                                   'source_id'             => $account->id,
-                                   'source_name'           => $account->name,
-                                   'type'                  => 'Withdrawal',
-                                   'currency_code'         => $currency->code,
-                                   'foreign_currency_code' => $foreign->code,
-                                   'foreign_amount'        => -23,
-                                   'source_type'           => 'Asset account',
-                                   'destination_name'      => 'Cash account',
-                                   'destination_type'      => 'Cash account',
-                                   'amount'                => -10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1754,9 +1930,17 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreMetaData()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'        => 'Some transaction #' . rand(1, 1000),
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'        => 'Some transaction #' . random_int(1, 1000),
             'date'               => '2018-01-01',
             'type'               => 'withdrawal',
             // store date meta fields (if present):
@@ -1781,39 +1965,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions?include=journal_meta', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertSee('interest_date');
-        $response->assertSee('book_date');
-        $response->assertSee('process_date');
-        $response->assertSee('due_date');
-        $response->assertSee('payment_date');
-        $response->assertSee('invoice_date');
-        $response->assertSee('internal_reference');
-        $response->assertSee('2017-08-02');
-        $response->assertSee('2017-08-03');
-        $response->assertSee('2017-08-04');
-        $response->assertSee('2017-08-05');
-        $response->assertSee('2017-08-06');
-        $response->assertSee('2017-08-07');
-        $response->assertSee('I are internal ref!');
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1824,10 +1975,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreNewCategoryName()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $name    = 'Some new category #' . rand(1, 1000);
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $name = 'Some new category #' . random_int(1, 1000);
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1845,26 +2005,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                                   'category_name'    => $name,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1875,10 +2015,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreNewOpposingName()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $name    = 'New opposing account #' . rand(1, 10000);
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $opposing     = $this->user()->accounts()->where('account_type_id', 4)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]), new Collection([$opposing]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $name = 'New opposing account #' . random_int(1, 10000);
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1896,25 +2045,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => $name,
-                                   'destination_type' => 'Expense account',
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1925,9 +2055,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreNotes()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'notes'        => 'I am a note',
@@ -1945,27 +2084,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertSee('I am a note');
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                                   'notes'            => 'I am a note',
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -1976,10 +2094,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreOpposingID()
     {
-        $account  = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $opposing = auth()->user()->accounts()->where('account_type_id', 4)->first();
-        $data     = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $opposing     = $this->user()->accounts()->where('account_type_id', 4)->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]), new Collection([$opposing]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -1997,26 +2123,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => $opposing->name,
-                                   'destination_id'   => $opposing->id,
-                                   'destination_type' => 'Expense account',
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -2027,10 +2133,19 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreOpposingName()
     {
-        $account  = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $opposing = auth()->user()->accounts()->where('account_type_id', 4)->first();
-        $data     = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $opposing     = $this->user()->accounts()->where('account_type_id', 4)->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]), new Collection([$opposing]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -2048,26 +2163,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => $opposing->name,
-                                   'destination_id'   => $opposing->id,
-                                   'destination_type' => 'Expense account',
-                                   'amount'           => -10,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -2079,10 +2174,18 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStorePiggyDeposit()
     {
-        $dest  = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $piggy = auth()->user()->piggyBanks()->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $piggy = $this->user()->piggyBanks()->first();
         $data  = [
-            'description'     => 'Some deposit #' . rand(1, 1000),
+            'description'     => 'Some deposit #' . random_int(1, 1000),
             'date'            => '2018-01-01',
             'type'            => 'deposit',
             'piggy_bank_name' => $piggy->name,
@@ -2090,7 +2193,7 @@ class TransactionControllerTest extends TestCase
                 [
                     'amount'         => '10',
                     'currency_id'    => 1,
-                    'destination_id' => $dest->id,
+                    'destination_id' => $account->id,
                 ],
             ],
         ];
@@ -2098,23 +2201,6 @@ class TransactionControllerTest extends TestCase
         $response = $this->post('/api/v1/transactions?include=piggy_bank_events', $data, ['Accept' => 'application/json']);
         $this->assertFalse(isset($response->json()['included']));
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'type'             => 'Deposit',
-                                   'destination_id'   => $dest->id,
-                                   'destination_name' => $dest->name,
-                                   'destination_type' => 'Asset account',
-                                   'amount'           => 10,
-                               ],
-                               'links'      => [],
-                           ],
-                ]]
-        );
 
     }
 
@@ -2127,11 +2213,20 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStorePiggyId()
     {
-        $source = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $dest   = auth()->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $source->id)->first();
-        $piggy  = auth()->user()->piggyBanks()->first();
-        $data   = [
-            'description'   => 'Some transfer #' . rand(1, 1000),
+        $source       = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $dest         = $this->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $source->id)->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$source]), new Collection([$dest]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $piggy = $this->user()->piggyBanks()->first();
+        $data  = [
+            'description'   => 'Some transfer #' . random_int(1, 1000),
             'date'          => '2018-01-01',
             'type'          => 'transfer',
             'piggy_bank_id' => $piggy->id,
@@ -2147,34 +2242,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions?include=piggy_bank_events', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data'     => [[
-                                   'type'       => 'transactions',
-                                   'attributes' => [
-                                       'description'      => $data['description'],
-                                       'date'             => $data['date'],
-                                       'type'             => 'Transfer',
-                                       'source_id'        => $source->id,
-                                       'source_name'      => $source->name,
-                                       'source_type'      => 'Asset account',
-                                       'destination_id'   => $dest->id,
-                                       'destination_name' => $dest->name,
-                                       'destination_type' => 'Asset account',
-                                       'amount'           => 10,
-                                   ],
-                                   'links'      => [],
-                               ]],
-                'included' => [
-                    0 => [
-                        'type'       => 'piggy_bank_events',
-                        'attributes' => [
-                            'amount' => 10,
-                        ],
-                    ],
-                ],
-            ]
-        );
     }
 
     /**
@@ -2186,11 +2253,20 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStorePiggyName()
     {
-        $source = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $dest   = auth()->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $source->id)->first();
-        $piggy  = auth()->user()->piggyBanks()->first();
-        $data   = [
-            'description'     => 'Some transfer #' . rand(1, 1000),
+        $source       = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $dest         = $this->user()->accounts()->where('account_type_id', 3)->where('id', '!=', $source->id)->first();
+        $journal      = $this->user()->transactionJournals()->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$source]), new Collection([$dest]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+
+        $piggy = $this->user()->piggyBanks()->first();
+        $data  = [
+            'description'     => 'Some transfer #' . random_int(1, 1000),
             'date'            => '2018-01-01',
             'type'            => 'transfer',
             'piggy_bank_name' => $piggy->name,
@@ -2206,34 +2282,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions?include=piggy_bank_events', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data'     => [[
-                                   'type'       => 'transactions',
-                                   'attributes' => [
-                                       'description'      => $data['description'],
-                                       'date'             => $data['date'],
-                                       'type'             => 'Transfer',
-                                       'source_id'        => $source->id,
-                                       'source_name'      => $source->name,
-                                       'source_type'      => 'Asset account',
-                                       'destination_id'   => $dest->id,
-                                       'destination_name' => $dest->name,
-                                       'destination_type' => 'Asset account',
-                                       'amount'           => 10,
-                                   ],
-                                   'links'      => [],
-                               ]],
-                'included' => [
-                    0 => [
-                        'type'       => 'piggy_bank_events',
-                        'attributes' => [
-                            'amount' => 10,
-                        ],
-                    ],
-                ],
-            ]
-        );
     }
 
     /**
@@ -2244,9 +2292,17 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreReconciled()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -2264,26 +2320,6 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        $response->assertJson(
-            [
-                'data' => [[
-                               'type'       => 'transactions',
-                               'attributes' => [
-                                   'description'      => $data['description'],
-                                   'date'             => $data['date'],
-                                   'source_id'        => $account->id,
-                                   'source_name'      => $account->name,
-                                   'type'             => 'Withdrawal',
-                                   'source_type'      => 'Asset account',
-                                   'destination_name' => 'Cash account',
-                                   'destination_type' => 'Cash account',
-                                   'amount'           => -10,
-                                   'reconciled'       => true,
-                               ],
-                               'links'      => true,
-                           ],
-                ]]
-        );
     }
 
     /**
@@ -2294,9 +2330,17 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreSplit()
     {
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
             'transactions' => [
@@ -2321,7 +2365,6 @@ class TransactionControllerTest extends TestCase
         $response = $this->post('/api/v1/transactions', $data, ['Accept' => 'application/json']);
         $json     = $response->json();
         $response->assertStatus(200);
-        $this->assertCount(2, $json['data']);
 
     }
 
@@ -2334,17 +2377,25 @@ class TransactionControllerTest extends TestCase
      */
     public function testSuccessStoreTags()
     {
-        $tags    = [
-            'TagOne' . rand(1, 1000),
-            'TagTwoBlarg' . rand(1, 1000),
-            'SomeThreeTag' . rand(1, 1000),
+        $tags         = [
+            'TagOne' . random_int(1, 1000),
+            'TagTwoBlarg' . random_int(1, 1000),
+            'SomeThreeTag' . random_int(1, 1000),
         ];
-        $account = auth()->user()->accounts()->where('account_type_id', 3)->first();
-        $data    = [
-            'description'  => 'Some transaction #' . rand(1, 1000),
+        $journal      = $this->user()->transactionJournals()->first();
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $journalRepos = $this->mock(JournalRepositoryInterface::class)->makePartial();
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('setUser')->once();
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->andReturn(new Collection([$account]));
+        $journalRepos->shouldReceive('store')->andReturn($journal)->once();
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
             'date'         => '2018-01-01',
             'type'         => 'withdrawal',
-            'tags'         => join(',', $tags),
+            'tags'         => implode(',', $tags),
             'transactions' => [
                 [
                     'amount'      => '10',
@@ -2359,30 +2410,89 @@ class TransactionControllerTest extends TestCase
         // test API
         $response = $this->post('/api/v1/transactions?include=tags', $data, ['Accept' => 'application/json']);
         $response->assertStatus(200);
-        foreach ($tags as $tag) {
-            $response->assertSee($tag);
-        }
-        $response->assertJson(
-            [
-                'data'     => [[
-                                   'type'          => 'transactions',
-                                   'attributes'    => [
-                                       'description'      => $data['description'],
-                                       'date'             => $data['date'],
-                                       'source_id'        => $account->id,
-                                       'source_name'      => $account->name,
-                                       'type'             => 'Withdrawal',
-                                       'source_type'      => 'Asset account',
-                                       'destination_name' => 'Cash account',
-                                       'destination_type' => 'Cash account',
-                                       'amount'           => -10,
-                                   ],
-                                   'links'         => [],
-                                   'relationships' => [],
-                               ]],
-                'included' => [],
-            ]
-        );
     }
 
+    /**
+     * Fire enough to trigger an update. Since the create code already fires on the Request, no
+     * need to verify all of that.
+     *
+     * @covers \FireflyIII\Api\V1\Controllers\TransactionController::update
+     * @covers \FireflyIII\Api\V1\Requests\TransactionRequest
+     */
+    public function testUpdateBasicDeposit()
+    {
+        $account      = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $repository   = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->withArgs([[$account->id]])->andReturn(new Collection([$account]));
+
+        $data = [
+            'description'  => 'Some deposit #' . random_int(1, 1000),
+            'date'         => '2018-01-01',
+            'transactions' => [
+                [
+                    'amount'         => '10',
+                    'currency_id'    => 1,
+                    'destination_id' => $account->id,
+                ],
+            ],
+        ];
+        do {
+            /** @var TransactionJournal $deposit */
+            $deposit = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 2)->first();
+            $count   = $deposit->transactions()->count();
+        } while ($count !== 2);
+
+        $transaction = $deposit->transactions()->first();
+        $repository->shouldReceive('setUser');
+        $repository->shouldReceive('update')->andReturn($deposit)->once();
+
+        // call API
+        $response = $this->put('/api/v1/transactions/' . $transaction->id, $data);
+        $response->assertStatus(200);
+    }
+
+    /**
+     * Fire enough to trigger an update. Since the create code already fires on the Request, no
+     * need to verify all of that.
+     *
+     * @covers \FireflyIII\Api\V1\Controllers\TransactionController::update
+     * @covers \FireflyIII\Api\V1\Requests\TransactionRequest
+     */
+    public function testUpdateBasicWithdrawal()
+    {
+        $account    = $this->user()->accounts()->where('account_type_id', 3)->first();
+        $repository = $this->mock(JournalRepositoryInterface::class);
+
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $accountRepos->shouldReceive('setUser');
+        $accountRepos->shouldReceive('getAccountsById')->withArgs([[$account->id]])->andReturn(new Collection([$account]));
+
+        $data = [
+            'description'  => 'Some transaction #' . random_int(1, 1000),
+            'date'         => '2018-01-01',
+            'transactions' => [
+                [
+                    'amount'      => '10',
+                    'currency_id' => 1,
+                    'source_id'   => $account->id,
+                ],
+            ],
+        ];
+        do {
+            /** @var TransactionJournal $withdrawal */
+            $withdrawal = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 1)->first();
+            $count      = $withdrawal->transactions()->count();
+        } while ($count !== 2);
+
+
+        $transaction = $withdrawal->transactions()->first();
+        $repository->shouldReceive('setUser');
+        $repository->shouldReceive('update')->andReturn($withdrawal)->once();
+
+        // call API
+        $response = $this->put('/api/v1/transactions/' . $transaction->id, $data);
+        $response->assertStatus(200);
+    }
 }

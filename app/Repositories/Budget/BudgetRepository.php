@@ -23,7 +23,6 @@ declare(strict_types=1);
 namespace FireflyIII\Repositories\Budget;
 
 use Carbon\Carbon;
-use DB;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\AvailableBudget;
@@ -50,10 +49,40 @@ class BudgetRepository implements BudgetRepositoryInterface
     private $user;
 
     /**
+     * A method that returns the amount of money budgeted per day for this budget,
+     * on average.
+     *
+     * @param Budget $budget
+     *
+     * @return string
+     */
+    public function budgetedPerDay(Budget $budget): string
+    {
+        $total = '0';
+        $count = 0;
+        foreach ($budget->budgetlimits as $limit) {
+            $diff = (string)$limit->start_date->diffInDays($limit->end_date);
+            if (bccomp('0', $diff) === 0) {
+                $diff = '1';
+            }
+            $amount = (string)$limit->amount;
+            $perDay = bcdiv($amount, $diff);
+            $total  = bcadd($total, $perDay);
+            $count++;
+        }
+        $avg = $total;
+        if ($count > 0) {
+            $avg = bcdiv($total, (string)$count);
+        }
+
+        return $avg;
+    }
+
+    /**
      * @return bool
      *
-     * @throws \Exception
-     * @throws \Exception
+
+
      */
     public function cleanupBudgets(): bool
     {
@@ -128,7 +157,7 @@ class BudgetRepository implements BudgetRepositoryInterface
      *
      * @return bool
      *
-     * @throws \Exception
+
      */
     public function destroy(Budget $budget): bool
     {
@@ -154,7 +183,7 @@ class BudgetRepository implements BudgetRepositoryInterface
             /** @var stdClass $object */
             $result = $set->filter(
                 function (TransactionJournal $object) use ($budgetId, $period) {
-                    $result = strval($object->period_marker) === strval($period) && $budgetId === intval($object->budget_id);
+                    $result = (string)$object->period_marker === (string)$period && $budgetId === (int)$object->budget_id;
 
                     return $result;
                 }
@@ -318,10 +347,10 @@ class BudgetRepository implements BudgetRepositoryInterface
         $amount          = '0';
         $availableBudget = $this->user->availableBudgets()
                                       ->where('transaction_currency_id', $currency->id)
-                                      ->where('start_date', $start->format('Y-m-d'))
-                                      ->where('end_date', $end->format('Y-m-d'))->first();
+                                      ->where('start_date', $start->format('Y-m-d 00:00:00'))
+                                      ->where('end_date', $end->format('Y-m-d 00:00:00'))->first();
         if (null !== $availableBudget) {
-            $amount = strval($availableBudget->amount);
+            $amount = (string)$availableBudget->amount;
         }
 
         return $amount;
@@ -336,7 +365,7 @@ class BudgetRepository implements BudgetRepositoryInterface
      */
     public function getBudgetLimits(Budget $budget, Carbon $start, Carbon $end): Collection
     {
-        $set = $budget->budgetLimits()
+        $set = $budget->budgetlimits()
                       ->where(
                           function (Builder $q5) use ($start, $end) {
                               $q5->where(
@@ -405,7 +434,7 @@ class BudgetRepository implements BudgetRepositoryInterface
         // loop transactions:
         /** @var Transaction $transaction */
         foreach ($transactions as $transaction) {
-            $budgetId                          = max(intval($transaction->transaction_journal_budget_id), intval($transaction->transaction_budget_id));
+            $budgetId                          = max((int)$transaction->transaction_journal_budget_id, (int)$transaction->transaction_budget_id);
             $date                              = $transaction->date->format($carbonFormat);
             $data[$budgetId]['entries'][$date] = bcadd($data[$budgetId]['entries'][$date] ?? '0', $transaction->transaction_amount);
         }
@@ -465,7 +494,7 @@ class BudgetRepository implements BudgetRepositoryInterface
         $transactions = $collector->getJournals();
         $result       = [
             'entries' => [],
-            'name'    => strval(trans('firefly.no_budget')),
+            'name'    => (string)trans('firefly.no_budget'),
             'sum'     => '0',
         ];
 
@@ -493,8 +522,8 @@ class BudgetRepository implements BudgetRepositoryInterface
     {
         $availableBudget = $this->user->availableBudgets()
                                       ->where('transaction_currency_id', $currency->id)
-                                      ->where('start_date', $start->format('Y-m-d'))
-                                      ->where('end_date', $end->format('Y-m-d'))->first();
+                                      ->where('start_date', $start->format('Y-m-d 00:00:00'))
+                                      ->where('end_date', $end->format('Y-m-d 00:00:00'))->first();
         if (null === $availableBudget) {
             $availableBudget = new AvailableBudget;
             $availableBudget->user()->associate($this->user);
@@ -539,9 +568,8 @@ class BudgetRepository implements BudgetRepositoryInterface
         }
 
         $set = $collector->getJournals();
-        $sum = strval($set->sum('transaction_amount'));
 
-        return $sum;
+        return strval($set->sum('transaction_amount'));
     }
 
     /**
@@ -576,9 +604,7 @@ class BudgetRepository implements BudgetRepositoryInterface
             }
         );
 
-        $sum = strval($set->sum('transaction_amount'));
-
-        return $sum;
+        return strval($set->sum('transaction_amount'));
     }
 
     /**
@@ -623,7 +649,7 @@ class BudgetRepository implements BudgetRepositoryInterface
      *
      * @return BudgetLimit
      *
-     * @throws \Exception
+
      */
     public function updateLimitAmount(Budget $budget, Carbon $start, Carbon $end, string $amount): BudgetLimit
     {

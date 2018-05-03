@@ -123,7 +123,7 @@ class Amount
         setlocale(LC_MONETARY, $locale);
         $float     = round($amount, 12);
         $info      = localeconv();
-        $formatted = number_format($float, intval($format->decimal_places), $info['mon_decimal_point'], $info['mon_thousands_sep']);
+        $formatted = number_format($float, (int)$format->decimal_places, $info['mon_decimal_point'], $info['mon_thousands_sep']);
 
         // some complicated switches to format the amount correctly:
         $precedes  = $amount < 0 ? $info['n_cs_precedes'] : $info['p_cs_precedes'];
@@ -166,19 +166,18 @@ class Amount
         $cache->addProperty('getCurrencyCode');
         if ($cache->has()) {
             return $cache->get(); // @codeCoverageIgnore
-        } else {
-            $currencyPreference = Prefs::get('currencyPreference', config('firefly.default_currency', 'EUR'));
-
-            $currency = TransactionCurrency::where('code', $currencyPreference->data)->first();
-            if ($currency) {
-                $cache->store($currency->code);
-
-                return $currency->code;
-            }
-            $cache->store(config('firefly.default_currency', 'EUR'));
-
-            return strval(config('firefly.default_currency', 'EUR'));
         }
+        $currencyPreference = Prefs::get('currencyPreference', config('firefly.default_currency', 'EUR'));
+
+        $currency = TransactionCurrency::where('code', $currencyPreference->data)->first();
+        if ($currency) {
+            $cache->store($currency->code);
+
+            return $currency->code;
+        }
+        $cache->store(config('firefly.default_currency', 'EUR'));
+
+        return (string)config('firefly.default_currency', 'EUR');
     }
 
     /**

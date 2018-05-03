@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * config.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,16 +19,22 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
-    'html_language' => 'pl',
-    'locale'        => 'pl, Polish, polski, pl_PL, pl_PL.utf8, pl_PL.UTF-8',
-    'month'         => '%B %Y',
-    'month_and_day' => '%e %B %Y',
-    'date_time'     => '%e %B %Y o %T',
-    'specific_day'  => '%e %B %Y',
-    'week_in_year'  => 'Tydzień %W, %Y',
-    'year'          => '%Y',
-    'half_year'     => '%B %Y',
+    'html_language'    => 'pl',
+    'locale'           => 'pl, Polish, polski, pl_PL, pl_PL.utf8, pl_PL.UTF-8',
+    'month'            => '%B %Y',
+    'month_and_day'    => '%e %B %Y',
+    'date_time'        => '%e %B %Y o %T',
+    'specific_day'     => '%e %B %Y',
+    'week_in_year'     => 'Tydzień %W, %Y',
+    'year'             => '%Y',
+    'half_year'        => '%B %Y',
+    'month_js'         => 'MMMM YYYY',
+    'month_and_day_js' => 'D MMMM YYYY',
+    'date_time_js'     => 'D MMMM YYYY [o] HH:mm:ss',
+    'specific_day_js'  => 'D MMMM YYYY',
+    'week_in_year_js'  => '[Tydzień] w. YYYY',
+    'year_js'          => 'YYYY',
+    'half_year_js'     => 'Q YYYY',
 ];

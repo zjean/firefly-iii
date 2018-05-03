@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * CategoryFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,14 +20,13 @@
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
-declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
 
 use FireflyIII\Models\Category;
-use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use FireflyIII\User;
+use Illuminate\Support\Collection;
 use Log;
 
 /**
@@ -34,17 +34,28 @@ use Log;
  */
 class CategoryFactory
 {
-    /** @var CategoryRepositoryInterface */
-    private $repository;
     /** @var User */
     private $user;
 
     /**
-     * CategoryFactory constructor.
+     * @param string $name
+     *
+     * @return Category|null
      */
-    public function __construct()
+    public function findByName(string $name): ?Category
     {
-        $this->repository = app(CategoryRepositoryInterface::class);
+        $result = null;
+        /** @var Collection $collection */
+        $collection = $this->user->categories()->get();
+        /** @var Category $category */
+        foreach ($collection as $category) {
+            if ($category->name === $name) {
+                $result = $category;
+                break;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -55,8 +66,8 @@ class CategoryFactory
      */
     public function findOrCreate(?int $categoryId, ?string $categoryName): ?Category
     {
-        $categoryId   = intval($categoryId);
-        $categoryName = strval($categoryName);
+        $categoryId   = (int)$categoryId;
+        $categoryName = (string)$categoryName;
 
         Log::debug(sprintf('Going to find category with ID %d and name "%s"', $categoryId, $categoryName));
 
@@ -65,15 +76,16 @@ class CategoryFactory
         }
         // first by ID:
         if ($categoryId > 0) {
-            $category = $this->repository->findNull($categoryId);
-            if (!is_null($category)) {
+            /** @var Category $category */
+            $category = $this->user->categories()->find($categoryId);
+            if (null !== $category) {
                 return $category;
             }
         }
 
         if (strlen($categoryName) > 0) {
-            $category = $this->repository->findByName($categoryName);
-            if (!is_null($category)) {
+            $category = $this->findByName($categoryName);
+            if (null !== $category) {
                 return $category;
             }
 
@@ -94,7 +106,6 @@ class CategoryFactory
     public function setUser(User $user)
     {
         $this->user = $user;
-        $this->repository->setUser($user);
     }
 
 }

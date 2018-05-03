@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Crypt;
 use FireflyIII\Support\CacheProperties;
 use FireflyIII\Support\Models\TransactionJournalTrait;
+use FireflyIII\User;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -34,14 +35,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Log;
 use Preferences;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Watson\Validating\ValidatingTrait;
 
 /**
  * Class TransactionJournal.
+ *
+ * @property User $user
  */
 class TransactionJournal extends Model
 {
-    use SoftDeletes, ValidatingTrait, TransactionJournalTrait;
+    use SoftDeletes, TransactionJournalTrait;
 
     /**
      * The attributes that should be casted to native types.
@@ -70,29 +72,20 @@ class TransactionJournal extends Model
            'date', 'rent_date', 'encrypted', 'tag_count',];
     /** @var array */
     protected $hidden = ['encrypted'];
-    /** @var array */
-    protected $rules
-        = [
-            'user_id'             => 'required|exists:users,id',
-            'transaction_type_id' => 'required|exists:transaction_types,id',
-            'description'         => 'required|between:1,1024',
-            'completed'           => 'required|boolean',
-            'date'                => 'required|date',
-            'encrypted'           => 'required|boolean',
-        ];
 
     /**
      * @param string $value
      *
      * @return TransactionJournal
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value): TransactionJournal
     {
         if (auth()->check()) {
-            $journalId = intval($value);
+            $journalId = (int)$value;
             $journal   = auth()->user()->transactionJournals()->where('transaction_journals.id', $journalId)
                                ->first(['transaction_journals.*']);
-            if (!is_null($journal)) {
+            if (null !== $journal) {
                 return $journal;
             }
         }
@@ -138,6 +131,7 @@ class TransactionJournal extends Model
 
     /**
      * @codeCoverageIgnore
+     * @deprecated
      *
      * @param string $name
      *
@@ -152,6 +146,7 @@ class TransactionJournal extends Model
 
     /**
      * @codeCoverageIgnore
+     *
      * @return HasMany
      */
     public function destinationJournalLinks(): HasMany
@@ -165,6 +160,7 @@ class TransactionJournal extends Model
      * @param $value
      *
      * @return string
+     * @throws \Illuminate\Contracts\Encryption\DecryptException
      */
     public function getDescriptionAttribute($value)
     {
@@ -179,6 +175,7 @@ class TransactionJournal extends Model
      *
      * @param string $name
      *
+     * @deprecated
      * @return string
      */
     public function getMeta(string $name)
@@ -216,6 +213,7 @@ class TransactionJournal extends Model
      *
      * @param string $name
      *
+     * @deprecated
      * @return bool
      */
     public function hasMeta(string $name): bool
@@ -295,22 +293,6 @@ class TransactionJournal extends Model
 
     /**
      * @codeCoverageIgnore
-     * Save the model to the database.
-     *
-     * @param array $options
-     *
-     * @return bool
-     */
-    public function save(array $options = []): bool
-    {
-        $count           = $this->tags()->count();
-        $this->tag_count = $count;
-
-        return parent::save($options);
-    }
-
-    /**
-     * @codeCoverageIgnore
      *
      * @param EloquentBuilder $query
      * @param Carbon          $date
@@ -339,18 +321,6 @@ class TransactionJournal extends Model
      * @codeCoverageIgnore
      *
      * @param EloquentBuilder $query
-     */
-    public function scopeSortCorrectly(EloquentBuilder $query)
-    {
-        $query->orderBy('transaction_journals.date', 'DESC');
-        $query->orderBy('transaction_journals.order', 'ASC');
-        $query->orderBy('transaction_journals.id', 'DESC');
-    }
-
-    /**
-     * @codeCoverageIgnore
-     *
-     * @param EloquentBuilder $query
      * @param array           $types
      */
     public function scopeTransactionTypes(EloquentBuilder $query, array $types)
@@ -367,6 +337,8 @@ class TransactionJournal extends Model
      * @codeCoverageIgnore
      *
      * @param $value
+     *
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     public function setDescriptionAttribute($value)
     {
@@ -376,6 +348,8 @@ class TransactionJournal extends Model
     }
 
     /**
+     * @deprecated
+     *
      * @param string $name
      * @param        $value
      *

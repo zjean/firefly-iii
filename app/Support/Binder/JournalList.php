@@ -36,14 +36,15 @@ class JournalList implements BinderInterface
      * @param Route  $route
      *
      * @return mixed
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    public static function routeBinder(string $value, Route $route):  Collection
+    public static function routeBinder(string $value, Route $route): Collection
     {
         if (auth()->check()) {
             $list     = [];
             $incoming = explode(',', $value);
             foreach ($incoming as $entry) {
-                $list[] = intval($entry);
+                $list[] = (int)$entry;
             }
             $list = array_unique($list);
             if (count($list) === 0) {

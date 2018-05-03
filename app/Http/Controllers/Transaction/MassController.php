@@ -43,6 +43,9 @@ use View;
  */
 class MassController extends Controller
 {
+    /** @var JournalRepositoryInterface */
+    private $repository;
+
     /**
      *
      */
@@ -54,6 +57,7 @@ class MassController extends Controller
             function ($request, $next) {
                 app('view')->share('title', trans('firefly.transactions'));
                 app('view')->share('mainTitleIcon', 'fa-repeat');
+                $this->repository = app(JournalRepositoryInterface::class);
 
                 return $next($request);
             }
@@ -76,12 +80,11 @@ class MassController extends Controller
     }
 
     /**
-     * @param MassDeleteJournalRequest   $request
-     * @param JournalRepositoryInterface $repository
+     * @param MassDeleteJournalRequest $request
      *
      * @return mixed
      */
-    public function destroy(MassDeleteJournalRequest $request, JournalRepositoryInterface $repository)
+    public function destroy(MassDeleteJournalRequest $request)
     {
         $ids = $request->get('confirm_mass_delete');
         $set = new Collection;
@@ -89,8 +92,8 @@ class MassController extends Controller
             /** @var int $journalId */
             foreach ($ids as $journalId) {
                 /** @var TransactionJournal $journal */
-                $journal = $repository->find(intval($journalId));
-                if (null !== $journal->id && intval($journalId) === $journal->id) {
+                $journal = $this->repository->find((int)$journalId);
+                if (null !== $journal->id && (int)$journalId === $journal->id) {
                     $set->push($journal);
                 }
             }
@@ -100,7 +103,7 @@ class MassController extends Controller
 
         /** @var TransactionJournal $journal */
         foreach ($set as $journal) {
-            $repository->delete($journal);
+            $this->repository->destroy($journal);
             ++$count;
         }
 
@@ -134,8 +137,8 @@ class MassController extends Controller
         $messages = [];
         /** @var TransactionJournal $journal */
         foreach ($journals as $journal) {
-            $sources      = $journal->sourceAccountList();
-            $destinations = $journal->destinationAccountList();
+            $sources      = $this->repository->getJournalSourceAccounts($journal);
+            $destinations = $this->repository->getJournalDestinationAccounts($journal);
             if ($sources->count() > 1) {
                 $messages[] = trans('firefly.cannot_edit_multiple_source', ['description' => $journal->description, 'id' => $journal->id]);
                 continue;
@@ -145,13 +148,13 @@ class MassController extends Controller
                 $messages[] = trans('firefly.cannot_edit_multiple_dest', ['description' => $journal->description, 'id' => $journal->id]);
                 continue;
             }
-            if (TransactionType::OPENING_BALANCE === $journal->transactionType->type) {
+            if (TransactionType::OPENING_BALANCE === $this->repository->getTransactionType($journal)) {
                 $messages[] = trans('firefly.cannot_edit_opening_balance');
                 continue;
             }
 
             // cannot edit reconciled transactions / journals:
-            if ($journal->transactions->first()->reconciled) {
+            if ($this->repository->isJournalReconciled($journal)) {
                 $messages[] = trans('firefly.cannot_edit_reconciled', ['description' => $journal->description, 'id' => $journal->id]);
                 continue;
             }
@@ -169,16 +172,16 @@ class MassController extends Controller
         // collect some useful meta data for the mass edit:
         $filtered->each(
             function (TransactionJournal $journal) {
-                $transaction                    = $journal->positiveTransaction();
+                $transaction                    = $this->repository->getFirstPosTransaction($journal);
                 $currency                       = $transaction->transactionCurrency;
-                $journal->amount                = floatval($transaction->amount);
-                $sources                        = $journal->sourceAccountList();
-                $destinations                   = $journal->destinationAccountList();
+                $journal->amount                = (float)$transaction->amount;
+                $sources                        = $this->repository->getJournalSourceAccounts($journal);
+                $destinations                   = $this->repository->getJournalDestinationAccounts($journal);
                 $journal->transaction_count     = $journal->transactions()->count();
                 $journal->currency_symbol       = $currency->symbol;
                 $journal->transaction_type_type = $journal->transactionType->type;
 
-                $journal->foreign_amount   = floatval($transaction->foreign_amount);
+                $journal->foreign_amount   = (float)$transaction->foreign_amount;
                 $journal->foreign_currency = $transaction->foreignCurrency;
 
                 if (null !== $sources->first()) {
@@ -213,44 +216,62 @@ class MassController extends Controller
         $count      = 0;
         if (is_array($journalIds)) {
             foreach ($journalIds as $journalId) {
-                $journal = $repository->find(intval($journalId));
-                if (!is_null($journal)) {
+                $journal = $repository->find((int)$journalId);
+                if (null !== $journal) {
                     // get optional fields:
-                    $what              = strtolower($journal->transactionTypeStr());
-                    $sourceAccountId   = $request->get('source_account_id')[$journal->id] ?? 0;
-                    $sourceAccountName = $request->get('source_account_name')[$journal->id] ?? '';
-                    $destAccountId     = $request->get('destination_account_id')[$journal->id] ?? 0;
-                    $destAccountName   = $request->get('destination_account_name')[$journal->id] ?? '';
-                    $budgetId          = $request->get('budget_id')[$journal->id] ?? 0;
+                    $what              = strtolower($this->repository->getTransactionType($journal));
+                    $sourceAccountId   = $request->get('source_account_id')[$journal->id] ?? null;
+                    $currencyId        = $request->get('transaction_currency_id')[$journal->id] ?? 1;
+                    $sourceAccountName = $request->get('source_account_name')[$journal->id] ?? null;
+                    $destAccountId     = $request->get('destination_account_id')[$journal->id] ?? null;
+                    $destAccountName   = $request->get('destination_account_name')[$journal->id] ?? null;
+                    $budgetId          = (int)($request->get('budget_id')[$journal->id] ?? 0.0);
                     $category          = $request->get('category')[$journal->id];
                     $tags              = $journal->tags->pluck('tag')->toArray();
                     $amount            = round($request->get('amount')[$journal->id], 12);
                     $foreignAmount     = isset($request->get('foreign_amount')[$journal->id]) ? round($request->get('foreign_amount')[$journal->id], 12) : null;
                     $foreignCurrencyId = isset($request->get('foreign_currency_id')[$journal->id]) ?
-                        intval($request->get('foreign_currency_id')[$journal->id]) : null;
-
+                        (int)$request->get('foreign_currency_id')[$journal->id] : null;
                     // build data array
                     $data = [
-                        'id'                       => $journal->id,
-                        'what'                     => $what,
-                        'description'              => $request->get('description')[$journal->id],
-                        'source_account_id'        => intval($sourceAccountId),
-                        'source_account_name'      => $sourceAccountName,
-                        'destination_account_id'   => intval($destAccountId),
-                        'destination_account_name' => $destAccountName,
-                        'amount'                   => $foreignAmount,
-                        'native_amount'            => $amount,
-                        'source_amount'            => $amount,
-                        'date'                     => new Carbon($request->get('date')[$journal->id]),
-                        'interest_date'            => $journal->interest_date,
-                        'book_date'                => $journal->book_date,
-                        'process_date'             => $journal->process_date,
-                        'budget_id'                => intval($budgetId),
-                        'currency_id'              => $foreignCurrencyId,
-                        'foreign_amount'           => $foreignAmount,
-                        'destination_amount'       => $foreignAmount,
-                        'category'                 => $category,
-                        'tags'                     => $tags,
+                        'id'            => $journal->id,
+                        'what'          => $what,
+                        'description'   => $request->get('description')[$journal->id],
+                        'date'          => new Carbon($request->get('date')[$journal->id]),
+                        'bill_id'       => null,
+                        'bill_name'     => null,
+                        'notes'         => $repository->getNoteText($journal),
+                        'transactions'  => [[
+
+                                                'category_id'           => null,
+                                                'category_name'         => $category,
+                                                'budget_id'             => (int)$budgetId,
+                                                'budget_name'           => null,
+                                                'source_id'             => (int)$sourceAccountId,
+                                                'source_name'           => $sourceAccountName,
+                                                'destination_id'        => (int)$destAccountId,
+                                                'destination_name'      => $destAccountName,
+                                                'amount'                => $amount,
+                                                'identifier'            => 0,
+                                                'reconciled'            => false,
+                                                'currency_id'           => (int)$currencyId,
+                                                'currency_code'         => null,
+                                                'description'           => null,
+                                                'foreign_amount'        => $foreignAmount,
+                                                'foreign_currency_id'   => $foreignCurrencyId,
+                                                'foreign_currency_code' => null,
+                                                //'native_amount'            => $amount,
+                                                //'source_amount'            => $amount,
+                                                //'foreign_amount'           => $foreignAmount,
+                                                //'destination_amount'       => $foreignAmount,
+                                                //'amount'                   => $foreignAmount,
+                                            ]],
+                        'currency_id'   => $foreignCurrencyId,
+                        'tags'          => $tags,
+                        'interest_date' => $journal->interest_date,
+                        'book_date'     => $journal->book_date,
+                        'process_date'  => $journal->process_date,
+
                     ];
                     // call repository update function.
                     $repository->update($journal, $data);

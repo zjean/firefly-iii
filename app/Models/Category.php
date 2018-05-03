@@ -27,14 +27,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Watson\Validating\ValidatingTrait;
 
 /**
  * Class Category.
  */
 class Category extends Model
 {
-    use SoftDeletes, ValidatingTrait;
+    use SoftDeletes;
 
     /**
      * The attributes that should be casted to native types.
@@ -52,12 +51,11 @@ class Category extends Model
     protected $fillable = ['user_id', 'name'];
     /** @var array */
     protected $hidden = ['encrypted'];
-    /** @var array */
-    protected $rules = ['name' => 'required|between:1,200'];
 
     /**
      * @param array $fields
      *
+     * @deprecated
      * @return Category
      */
     public static function firstOrCreateEncrypted(array $fields)
@@ -86,13 +84,14 @@ class Category extends Model
      * @param string $value
      *
      * @return Category
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public static function routeBinder(string $value): Category
     {
         if (auth()->check()) {
-            $categoryId = intval($value);
+            $categoryId = (int)$value;
             $category   = auth()->user()->categories()->find($categoryId);
-            if (!is_null($category)) {
+            if (null !== $category) {
                 return $category;
             }
         }
@@ -105,6 +104,7 @@ class Category extends Model
      * @param $value
      *
      * @return string
+     * @throws \Illuminate\Contracts\Encryption\DecryptException
      */
     public function getNameAttribute($value)
     {
@@ -119,6 +119,8 @@ class Category extends Model
      * @codeCoverageIgnore
      *
      * @param $value
+     *
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
     public function setNameAttribute($value)
     {

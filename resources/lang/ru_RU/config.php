@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * config.php
  * Copyright (c) 2017 thegrumpydictator@gmail.com
@@ -18,16 +19,22 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
-declare(strict_types=1);
 
 return [
-    'html_language' => 'ru',
-    'locale'        => 'ru, Russian, ru_RU, ru_RU.utf8, ru_RU.UTF-8',
-    'month'         => '%B %Y',
-    'month_and_day' => '%e %B %Y',
-    'date_time'     => '%e %B %Y, @ %T',
-    'specific_day'  => '%e %B %Y',
-    'week_in_year'  => 'Неделя %W, %Y',
-    'year'          => '%Y',
-    'half_year'     => '%B %Y',
+    'html_language'    => 'ru',
+    'locale'           => 'ru, Russian, ru_RU, ru_RU.utf8, ru_RU.UTF-8',
+    'month'            => '%B %Y',
+    'month_and_day'    => '%e %B %Y',
+    'date_time'        => '%e %B %Y, @ %T',
+    'specific_day'     => '%e %B %Y',
+    'week_in_year'     => 'Неделя %W, %Y',
+    'year'             => '%Y',
+    'half_year'        => '%B %Y',
+    'month_js'         => 'MMMM YYYY',
+    'month_and_day_js' => 'Do MMMM YYYY',
+    'date_time_js'     => 'Do MMMM YYYY, @ HH:mm:ss',
+    'specific_day_js'  => 'D MMMM YYYY',
+    'week_in_year_js'  => '[Неделя] w, YYYY',
+    'year_js'          => 'YYYY',
+    'half_year_js'     => 'Q YYYY',
 ];

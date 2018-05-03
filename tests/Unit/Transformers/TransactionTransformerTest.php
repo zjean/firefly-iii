@@ -48,7 +48,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testBasic()
     {
@@ -57,7 +57,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -70,7 +70,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 4, // expense account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -87,6 +87,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions
@@ -131,7 +132,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testDeposit()
     {
@@ -140,7 +141,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -153,7 +154,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 5, // revenue account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -170,6 +171,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions
@@ -214,7 +216,7 @@ class TransactionTransformerTest extends TestCase
      * Deposit cannot have a budget
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testDepositBudget()
     {
@@ -223,7 +225,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -236,7 +238,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 5, // revenue account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -253,6 +255,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions
@@ -269,7 +272,7 @@ class TransactionTransformerTest extends TestCase
         $budget = Budget::create(
             [
                 'user_id' => $this->user()->id,
-                'name'    => 'Random budget #' . rand(1, 1000),
+                'name'    => 'Random budget #' . random_int(1, 1000),
                 'active'  => 1,
             ]
         );
@@ -306,7 +309,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal) with a foreign amount.
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testForeignAmount()
     {
@@ -315,7 +318,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -328,7 +331,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 4, // expense account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -345,6 +348,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions
@@ -397,7 +401,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal) with a budget
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testJournalBudget()
     {
@@ -406,7 +410,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -419,7 +423,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 4, // expense account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -436,6 +440,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
 
@@ -443,7 +448,7 @@ class TransactionTransformerTest extends TestCase
         $budget = Budget::create(
             [
                 'user_id' => $this->user()->id,
-                'name'    => 'Random budget #' . rand(1, 1000),
+                'name'    => 'Random budget #' . random_int(1, 1000),
                 'active'  => 1,
             ]
         );
@@ -494,7 +499,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal) with a category
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testJournalCategory()
     {
@@ -503,7 +508,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -516,7 +521,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 4, // expense account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -533,6 +538,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
 
@@ -540,7 +546,7 @@ class TransactionTransformerTest extends TestCase
         $category = Category::create(
             [
                 'user_id' => $this->user()->id,
-                'name'    => 'Random category #' . rand(1, 1000),
+                'name'    => 'Random category #' . random_int(1, 1000),
                 'active'  => 1,
             ]
         );
@@ -591,7 +597,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (opening balance)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testOpeningBalanceNeg()
     {
@@ -600,7 +606,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -629,6 +635,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions (negative opening balance).
@@ -675,7 +682,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (opening balance)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testOpeningBalancePos()
     {
@@ -684,7 +691,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -713,6 +720,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions (positive opening balance).
@@ -759,7 +767,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (reconciliation)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testReconciliationNeg()
     {
@@ -768,7 +776,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -797,6 +805,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions (negative reconciliation).
@@ -843,7 +852,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (reconciliation)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testReconciliationPos()
     {
@@ -852,7 +861,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -881,6 +890,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions (positive reconciliation).
@@ -927,7 +937,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal) with budget on the transactions.
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testTransactionBudget()
     {
@@ -936,7 +946,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -949,7 +959,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 4, // expense account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -966,6 +976,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
 
@@ -973,7 +984,7 @@ class TransactionTransformerTest extends TestCase
         $budget = Budget::create(
             [
                 'user_id' => $this->user()->id,
-                'name'    => 'Random budget #' . rand(1, 1000),
+                'name'    => 'Random budget #' . random_int(1, 1000),
                 'active'  => 1,
             ]
         );
@@ -1026,7 +1037,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal) with a category on the transactions
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testTransactionCategory()
     {
@@ -1035,7 +1046,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1048,7 +1059,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 4, // expense account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1065,6 +1076,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
 
@@ -1072,7 +1084,7 @@ class TransactionTransformerTest extends TestCase
         $category = Category::create(
             [
                 'user_id' => $this->user()->id,
-                'name'    => 'Random category #' . rand(1, 1000),
+                'name'    => 'Random category #' . random_int(1, 1000),
                 'active'  => 1,
             ]
         );
@@ -1124,7 +1136,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (withdrawal) with a description for transactions.
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testTransactionDescription()
     {
@@ -1133,7 +1145,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1146,7 +1158,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 4, // expense account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1163,6 +1175,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions
@@ -1207,7 +1220,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (transfer)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testTransferOne()
     {
@@ -1216,7 +1229,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1229,7 +1242,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1246,6 +1259,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions
@@ -1290,7 +1304,7 @@ class TransactionTransformerTest extends TestCase
      * Basic journal (transfer)
      *
      * @covers \FireflyIII\Transformers\TransactionTransformer::transform
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * throws \FireflyIII\Exceptions\FireflyException
      */
     public function testTransferTwo()
     {
@@ -1299,7 +1313,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1312,7 +1326,7 @@ class TransactionTransformerTest extends TestCase
             [
                 'user_id'         => $this->user()->id,
                 'account_type_id' => 3, // asset account
-                'name'            => 'Random name #' . rand(1, 10000),
+                'name'            => 'Random name #' . random_int(1, 10000),
                 'virtual_balance' => 12.34,
                 'iban'            => 'NL85ABNA0466812694',
                 'active'          => 1,
@@ -1329,6 +1343,7 @@ class TransactionTransformerTest extends TestCase
                 'description'             => 'Some journal',
                 'date'                    => '2018-01-01',
                 'completed'               => 1,
+                'tag_count'               => 0,
             ]
         );
         // basic transactions

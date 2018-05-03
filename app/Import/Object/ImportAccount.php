@@ -27,7 +27,6 @@ use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\User;
-use Illuminate\Support\Collection;
 use Log;
 
 /**
@@ -37,6 +36,8 @@ class ImportAccount
 {
     /** @var Account */
     private $account;
+    /** @var array */
+    private $accountBic = [];
     /** @var array */
     private $accountIban = [];
     /** @var array */
@@ -48,10 +49,10 @@ class ImportAccount
     /** @var int */
     private $defaultAccountId = 0;
     /** @var string */
-    private $expectedType = '';
+    private $expectedType;
     /**
      * This value is used to indicate the other account ID (the opposing transaction's account),
-     * if it is know. If so, this particular importaccount may never return an Account with this ID.
+     * if it is know. If so, this particular import account may never return an Account with this ID.
      * If it would, this would result in a transaction from-to the same account.
      *
      * @var int
@@ -68,18 +69,18 @@ class ImportAccount
     public function __construct()
     {
         $this->expectedType = AccountType::ASSET;
-        $this->account      = new Account;
         $this->repository   = app(AccountRepositoryInterface::class);
         Log::debug('Created ImportAccount.');
     }
 
     /**
      * @return Account
+     *
      * @throws FireflyException
      */
     public function getAccount(): Account
     {
-        if (null === $this->account->id) {
+        if (null === $this->account) {
             $this->store();
         }
 
@@ -88,6 +89,7 @@ class ImportAccount
 
     /**
      * @codeCoverageIgnore
+     *
      * @return string
      */
     public function getExpectedType(): string
@@ -103,6 +105,14 @@ class ImportAccount
     public function setExpectedType(string $expectedType)
     {
         $this->expectedType = $expectedType;
+    }
+
+    /**
+     * @param array $accountBic
+     */
+    public function setAccountBic(array $accountBic): void
+    {
+        $this->accountBic = $accountBic;
     }
 
     /**
@@ -177,43 +187,26 @@ class ImportAccount
     }
 
     /**
+     * Find account by IBAN and type.
+     *
+     * @param AccountType $type
+     *
      * @return Account|null
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    private function findExistingObject(): ?Account
+    private function findByIBAN(AccountType $type): ?Account
     {
-        Log::debug('In findExistingObject() for Account');
-        // 0: determin account type:
-        /** @var AccountType $accountType */
-        $accountType = $this->repository->getAccountType($this->expectedType);
-
-        // 1: find by ID, iban or name (and type)
-        if (3 === count($this->accountId)) {
-            Log::debug(sprintf('Finding account of type %d and ID %d', $accountType->id, $this->accountId['value']));
-            /** @var Account $account */
-
-            $account = $this->user->accounts()->where('id', '!=', $this->forbiddenAccountId)->where('account_type_id', $accountType->id)->where(
-                'id',
-                $this->accountId['value']
-            )->first();
-            if (null !== $account) {
-                Log::debug(sprintf('Found unmapped %s account by ID (#%d): %s', $this->expectedType, $account->id, $account->name));
-
-                return $account;
-            }
-            Log::debug('Found nothing.');
-        }
-        /** @var Collection $accounts */
-        $accounts = $this->repository->getAccountsByType([$accountType->type]);
-        // Two: find by IBAN (and type):
         if (3 === count($this->accountIban)) {
-            $iban = $this->accountIban['value'];
-            Log::debug(sprintf('Finding account of type %d and IBAN %s', $accountType->id, $iban));
+            $accounts = $this->repository->getAccountsByType([$type->type]);
+            $iban     = $this->accountIban['value'];
+            Log::debug(sprintf('Finding account of type %d and IBAN %s', $type->id, $iban));
             $filtered = $accounts->filter(
                 function (Account $account) use ($iban) {
                     if ($account->iban === $iban && $account->id !== $this->forbiddenAccountId) {
                         Log::debug(
-                            sprintf('Found unmapped %s account by IBAN (#%d): %s (%s)', $this->expectedType, $account->id, $account->name, $account->iban)
+                            sprintf(
+                                'Found unmapped %s account by IBAN (#%d): %s (%s)',
+                                $this->expectedType, $account->id, $account->name, $account->iban
+                            )
                         );
 
                         return $account;
@@ -228,10 +221,52 @@ class ImportAccount
             Log::debug('Found nothing.');
         }
 
+        return null;
+    }
+
+    /**
+     * Find account of type X by its ID.
+     *
+     * @param AccountType $type
+     *
+     * @return Account|null
+     */
+    private function findById(AccountType $type): ?Account
+    {
+        if (3 === count($this->accountId)) {
+            Log::debug(sprintf('Finding account of type %d and ID %d', $type->id, $this->accountId['value']));
+            /** @var Account $account */
+            $account = $this->user->accounts()
+                                  ->where('id', '!=', $this->forbiddenAccountId)
+                                  ->where('account_type_id', $type->id)
+                                  ->where('id', $this->accountId['value'])
+                                  ->first();
+
+            if (null !== $account) {
+                Log::debug(sprintf('Found unmapped %s account by ID (#%d): %s', $this->expectedType, $account->id, $account->name));
+
+                return $account;
+            }
+            Log::debug('Found nothing.');
+        }
+
+        return null;
+    }
+
+    /**
+     * Find account by account type and name.
+     *
+     * @param AccountType $type
+     *
+     * @return Account|null
+     */
+    private function findByName(AccountType $type): ?Account
+    {
         // Three: find by name (and type):
         if (3 === count($this->accountName)) {
-            $name = $this->accountName['value'];
-            Log::debug(sprintf('Finding account of type %d and name %s', $accountType->id, $name));
+            $accounts = $this->repository->getAccountsByType([$type->type]);
+            $name     = $this->accountName['value'];
+            Log::debug(sprintf('Finding account of type %d and name %s', $type->id, $name));
             $filtered = $accounts->filter(
                 function (Account $account) use ($name) {
                     if ($account->name === $name && $account->id !== $this->forbiddenAccountId) {
@@ -250,7 +285,36 @@ class ImportAccount
             Log::debug('Found nothing.');
         }
 
-        // 4: do not search by account number.
+        return null;
+    }
+
+    /**
+     * Determin account type to find, then use fields in object to try and find it.
+     *
+     * @return Account|null
+     */
+    private function findExistingObject(): ?Account
+    {
+        Log::debug('In findExistingObject() for Account');
+        /** @var AccountType $accountType */
+        $accountType = $this->repository->getAccountType($this->expectedType);
+        $result      = $this->findById($accountType);
+        if (null !== $result) {
+            return $result;
+        }
+
+        $result = $this->findByIBAN($accountType);
+
+        if (null !== $result) {
+            return $result;
+        }
+
+        $result = $this->findByName($accountType);
+
+        if (null !== $result) {
+            return $result;
+        }
+
         Log::debug('Found NO existing accounts.');
 
         return null;
@@ -301,10 +365,10 @@ class ImportAccount
 
         Log::debug('Finding a mapped account based on', $array);
 
-        $search  = intval($array['mapped'] ?? 0);
-        $account = $this->repository->find($search);
+        $search  = (int)($array['mapped'] ?? 0.0);
+        $account = $this->repository->findNull($search);
 
-        if (null === $account->id) {
+        if (null === $account) {
             Log::error(sprintf('There is no account with id #%d. Invalid mapping will be ignored!', $search));
 
             return null;
@@ -332,14 +396,15 @@ class ImportAccount
 
     /**
      * @return bool
+     *
      * @throws FireflyException
      */
     private function store(): bool
     {
-        if (is_null($this->user)) {
+        if (null === $this->user) {
             throw new FireflyException('ImportAccount cannot continue without user.');
         }
-        if ((is_null($this->defaultAccountId) || intval($this->defaultAccountId) === 0) && AccountType::ASSET === $this->expectedType) {
+        if ((null === $this->defaultAccountId || 0 === (int)$this->defaultAccountId) && AccountType::ASSET === $this->expectedType) {
             throw new FireflyException('ImportAccount cannot continue without a default account to fall back on.');
         }
         // 1: find mapped object:
@@ -372,7 +437,7 @@ class ImportAccount
 
         // 4: if search for an asset account, fall back to given "default account" (mandatory)
         if (AccountType::ASSET === $this->expectedType) {
-            $this->account = $this->repository->find($this->defaultAccountId);
+            $this->account = $this->repository->findNull($this->defaultAccountId);
             Log::debug(sprintf('Fall back to default account #%d "%s"', $this->account->id, $this->account->name));
 
             return true;
@@ -381,12 +446,27 @@ class ImportAccount
         // 5: then maybe, create one:
         Log::debug(sprintf('Found no account of type %s so must create one ourselves.', $this->expectedType));
 
+        // make sure name field is sensible.
+        $name = '(no name)';
+        if (isset($this->accountNumber['value'])) {
+            $name = $this->accountNumber['value'];
+        }
+        if (isset($this->accountIban['value'])) {
+            $name = $this->accountIban['value'];
+        }
+        if (isset($this->accountName['value'])) {
+            $name = $this->accountName['value'];
+        }
+
         $data = [
-            'accountType'    => config('firefly.shortNamesByFullName.' . $this->expectedType),
-            'name'           => $this->accountName['value'] ?? '(no name)',
-            'iban'           => $this->accountIban['value'] ?? null,
-            'active'         => true,
-            'virtualBalance' => '0',
+            'accountType'     => config('firefly.shortNamesByFullName.' . $this->expectedType),
+            'name'            => $name,
+            'iban'            => $this->accountIban['value'] ?? null,
+            'active'          => true,
+            'accountNumber'   => $this->accountNumber['value'] ?? null,
+            'virtualBalance'  => '0',
+            'account_type_id' => null,
+            'BIC'             => $this->accountBic['value'] ?? null,
         ];
 
         $this->account = $this->repository->store($data);

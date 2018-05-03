@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Repositories\Journal;
 
+use Carbon\Carbon;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\Note;
 use FireflyIII\Models\Transaction;
@@ -36,6 +37,7 @@ use Illuminate\Support\MessageBag;
  */
 interface JournalRepositoryInterface
 {
+
     /**
      * @param TransactionJournal $journal
      * @param TransactionType    $type
@@ -88,9 +90,17 @@ interface JournalRepositoryInterface
     /**
      * Get users very first transaction journal.
      *
+     * @deprecated
      * @return TransactionJournal
      */
     public function first(): TransactionJournal;
+
+    /**
+     * Get users very first transaction journal.
+     *
+     * @return TransactionJournal|null
+     */
+    public function firstNull(): ?TransactionJournal;
 
     /**
      * @param TransactionJournal $journal
@@ -100,11 +110,130 @@ interface JournalRepositoryInterface
     public function getAssetTransaction(TransactionJournal $journal): ?Transaction;
 
     /**
+     * Returns the first positive transaction for the journal. Useful when editing journals.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return Transaction
+     */
+    public function getFirstPosTransaction(TransactionJournal $journal): Transaction;
+
+    /**
+     * Return the ID of the budget linked to the journal (if any) or the transactions (if any).
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return int
+     */
+    public function getJournalBudgetId(TransactionJournal $journal): int;
+
+    /**
+     * Return the name of the category linked to the journal (if any) or to the transactions (if any).
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return string
+     */
+    public function getJournalCategoryName(TransactionJournal $journal): string;
+
+    /**
+     * Return requested date as string. When it's a NULL return the date of journal,
+     * otherwise look for meta field and return that one.
+     *
+     * @param TransactionJournal $journal
+     * @param null|string        $field
+     *
+     * @return string
+     */
+    public function getJournalDate(TransactionJournal $journal, ?string $field): string;
+
+    /**
+     * Return a list of all destination accounts related to journal.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return Collection
+     */
+    public function getJournalDestinationAccounts(TransactionJournal $journal): Collection;
+
+    /**
+     * Return a list of all source accounts related to journal.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return Collection
+     */
+    public function getJournalSourceAccounts(TransactionJournal $journal): Collection;
+
+    /**
+     * Return total amount of journal. Is always positive.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return string
+     */
+    public function getJournalTotal(TransactionJournal $journal): string;
+
+    /**
+     * Return Carbon value of a meta field (or NULL).
+     *
+     * @param TransactionJournal $journal
+     * @param string             $field
+     *
+     * @return null|Carbon
+     */
+    public function getMetaDate(TransactionJournal $journal, string $field): ?Carbon;
+
+    /**
+     * Return value of a meta field (or NULL).
+     *
+     * @param TransactionJournal $journal
+     * @param string             $field
+     *
+     * @return null|string
+     */
+    public function getMetaField(TransactionJournal $journal, string $field): ?string;
+
+    /**
      * @param TransactionJournal $journal
      *
      * @return Note|null
      */
     public function getNote(TransactionJournal $journal): ?Note;
+
+    /**
+     * Return text of a note attached to journal, or NULL
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return string|null
+     */
+    public function getNoteText(TransactionJournal $journal): ?string;
+
+    /**
+     * @param TransactionJournal $journal
+     *
+     * @return Collection
+     */
+    public function getPiggyBankEvents(TransactionJournal $journal): Collection;
+
+    /**
+     * Return all tags as strings in an array.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return array
+     */
+    public function getTags(TransactionJournal $journal): array;
+
+    /**
+     * Return the transaction type of the journal.
+     *
+     * @param TransactionJournal $journal
+     *
+     * @return string
+     */
+    public function getTransactionType(TransactionJournal $journal): string;
 
     /**
      * @return Collection
@@ -119,20 +248,13 @@ interface JournalRepositoryInterface
     public function getTransactionsById(array $transactionIds): Collection;
 
     /**
+     * Will tell you if journal is reconciled or not.
+     *
      * @param TransactionJournal $journal
      *
      * @return bool
      */
-    public function isTransfer(TransactionJournal $journal): bool;
-
-    /**
-     * Mark journal as completed and return it.
-     *
-     * @param TransactionJournal $journal
-     *
-     * @return TransactionJournal
-     */
-    public function markCompleted(TransactionJournal $journal): TransactionJournal;
+    public function isJournalReconciled(TransactionJournal $journal): bool;
 
     /**
      * @param Transaction $transaction
@@ -140,6 +262,33 @@ interface JournalRepositoryInterface
      * @return bool
      */
     public function reconcile(Transaction $transaction): bool;
+
+    /**
+     * @param int $transactionId
+     *
+     * @return bool
+     */
+    public function reconcileById(int $transactionId): bool;
+
+    /**
+     * Set meta field for journal that contains a date.
+     *
+     * @param TransactionJournal $journal
+     * @param string             $name
+     * @param Carbon             $date
+     *
+     * @return void
+     */
+    public function setMetaDate(TransactionJournal $journal, string $name, Carbon $date): void;
+
+    /**
+     * Set meta field for journal that contains string.
+     *
+     * @param TransactionJournal $journal
+     * @param string             $name
+     * @param string             $value
+     */
+    public function setMetaString(TransactionJournal $journal, string $name, string $value): void;
 
     /**
      * @param TransactionJournal $journal
@@ -162,24 +311,6 @@ interface JournalRepositoryInterface
     public function store(array $data): TransactionJournal;
 
     /**
-     * Store a new transaction journal based on the values given.
-     *
-     * @param array $values
-     *
-     * @return TransactionJournal
-     */
-    public function storeBasic(array $values): TransactionJournal;
-
-    /**
-     * Store a new transaction based on the values given.
-     *
-     * @param array $values
-     *
-     * @return Transaction
-     */
-    public function storeBasicTransaction(array $values): Transaction;
-
-    /**
      * @param TransactionJournal $journal
      * @param array              $data
      *
@@ -188,6 +319,8 @@ interface JournalRepositoryInterface
     public function update(TransactionJournal $journal, array $data): TransactionJournal;
 
     /**
+     * Update budget for a journal.
+     *
      * @param TransactionJournal $journal
      * @param int                $budgetId
      *
@@ -196,6 +329,8 @@ interface JournalRepositoryInterface
     public function updateBudget(TransactionJournal $journal, int $budgetId): TransactionJournal;
 
     /**
+     * Update category for a journal.
+     *
      * @param TransactionJournal $journal
      * @param string             $category
      *
@@ -204,18 +339,12 @@ interface JournalRepositoryInterface
     public function updateCategory(TransactionJournal $journal, string $category): TransactionJournal;
 
     /**
-     * @param TransactionJournal $journal
-     * @param array              $data
+     * Update tag(s) for a journal.
      *
-     * @return TransactionJournal
-     */
-    public function updateSplitJournal(TransactionJournal $journal, array $data): TransactionJournal;
-
-    /**
      * @param TransactionJournal $journal
      * @param array              $tags
      *
-     * @return bool
+     * @return TransactionJournal
      */
-    public function updateTags(TransactionJournal $journal, array $tags): bool;
+    public function updateTags(TransactionJournal $journal, array $tags): TransactionJournal;
 }

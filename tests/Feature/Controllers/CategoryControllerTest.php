@@ -33,8 +33,8 @@ use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Log;
 use Navigation;
-use Steam;
 use Tests\TestCase;
 
 /**
@@ -47,12 +47,23 @@ use Tests\TestCase;
 class CategoryControllerTest extends TestCase
 {
     /**
+     *
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', get_class($this)));
+    }
+
+    /**
      * @covers \FireflyIII\Http\Controllers\CategoryController::create
      */
     public function testCreate()
     {
         // mock stuff
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());
@@ -68,7 +79,9 @@ class CategoryControllerTest extends TestCase
     public function testDelete()
     {
         // mock stuff
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());
@@ -84,11 +97,12 @@ class CategoryControllerTest extends TestCase
     public function testDestroy()
     {
         // mock stuff
-        $repository   = $this->mock(CategoryRepositoryInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
-        $repository->shouldReceive('destroy')->andReturn(true);
+        $categoryRepos->shouldReceive('destroy')->andReturn(true);
 
         $this->session(['categories.delete.uri' => 'http://localhost']);
         $this->be($this->user());
@@ -103,7 +117,9 @@ class CategoryControllerTest extends TestCase
     public function testEdit()
     {
         // mock stuff
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());
@@ -120,12 +136,13 @@ class CategoryControllerTest extends TestCase
     public function testIndex()
     {
         // mock stuff
-        $category     = factory(Category::class)->make();
-        $repository   = $this->mock(CategoryRepositoryInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $category      = factory(Category::class)->make();
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
-        $repository->shouldReceive('getCategories')->andReturn(new Collection([$category]))->once();
-        $repository->shouldReceive('lastUseDate')->andReturn(new Carbon)->once();
+        $categoryRepos->shouldReceive('getCategories')->andReturn(new Collection([$category]))->once();
+        $categoryRepos->shouldReceive('lastUseDate')->andReturn(new Carbon)->once();
 
         $this->be($this->user());
         $response = $this->get(route('categories.index'));
@@ -144,8 +161,10 @@ class CategoryControllerTest extends TestCase
     public function testNoCategory(string $range)
     {
         // mock stuff
-        $collector    = $this->mock(JournalCollectorInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $collector     = $this->mock(JournalCollectorInterface::class);
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
 
         $collector->shouldReceive('setAllAssetAccounts')->andReturnSelf();
@@ -175,13 +194,14 @@ class CategoryControllerTest extends TestCase
      *
      * @param string $range
      *
-     * @throws \Exception
      */
     public function testNoCategoryAll(string $range)
     {
         // mock stuff
-        $collector    = $this->mock(JournalCollectorInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $collector     = $this->mock(JournalCollectorInterface::class);
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
 
         $collector->shouldReceive('setAllAssetAccounts')->andReturnSelf();
@@ -214,8 +234,10 @@ class CategoryControllerTest extends TestCase
     public function testNoCategoryDate(string $range)
     {
         // mock stuff
-        $collector    = $this->mock(JournalCollectorInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $collector     = $this->mock(JournalCollectorInterface::class);
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
 
         $collector->shouldReceive('setAllAssetAccounts')->andReturnSelf();
@@ -235,7 +257,7 @@ class CategoryControllerTest extends TestCase
         Navigation::shouldReceive('startOfPeriod')->andReturn(new Carbon);
         Navigation::shouldReceive('endOfPeriod')->andReturn(new Carbon);
         Navigation::shouldReceive('periodShow')->andReturn('Some date');
-        Navigation::shouldReceive('blockPeriods')->andReturn([['period' =>'1M','start' => new Carbon, 'end' => new Carbon]])->once();
+        Navigation::shouldReceive('blockPeriods')->andReturn([['period' => '1M', 'start' => new Carbon, 'end' => new Carbon]])->once();
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);
@@ -255,16 +277,16 @@ class CategoryControllerTest extends TestCase
      */
     public function testShow(string $range)
     {
-        $transaction  = factory(Transaction::class)->make();
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $transaction   = factory(Transaction::class)->make();
+        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->twice()->andReturn(new TransactionJournal);
 
         // mock stuff
-        $repository = $this->mock(CategoryRepositoryInterface::class);
-        $repository->shouldReceive('spentInPeriod')->andReturn('0');
-        $repository->shouldReceive('earnedInPeriod')->andReturn('0');
+        $categoryRepos->shouldReceive('spentInPeriod')->andReturn('0');
+        $categoryRepos->shouldReceive('earnedInPeriod')->andReturn('0');
 
-        $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $accountRepos->shouldReceive('getAccountsByType')->once()->andReturn(new Collection);
 
         $collector = $this->mock(JournalCollectorInterface::class);
@@ -287,7 +309,7 @@ class CategoryControllerTest extends TestCase
         Navigation::shouldReceive('startOfPeriod')->andReturn(new Carbon);
         Navigation::shouldReceive('endOfPeriod')->andReturn(new Carbon);
         Navigation::shouldReceive('periodShow')->andReturn('Some date');
-        Navigation::shouldReceive('blockPeriods')->andReturn([['period' =>'1M','start' => new Carbon, 'end' => new Carbon]])->once();
+        Navigation::shouldReceive('blockPeriods')->andReturn([['period' => '1M', 'start' => new Carbon, 'end' => new Carbon]])->once();
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);
@@ -309,6 +331,7 @@ class CategoryControllerTest extends TestCase
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $repository   = $this->mock(CategoryRepositoryInterface::class);
         $collector    = $this->mock(JournalCollectorInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
 
         $collector->shouldReceive('setPage')->andReturnSelf()->once();
         $collector->shouldReceive('setLimit')->andReturnSelf()->once();
@@ -419,19 +442,21 @@ class CategoryControllerTest extends TestCase
 
     /**
      * @covers \FireflyIII\Http\Controllers\CategoryController::store
+     * @covers \FireflyIII\Http\Requests\CategoryFormRequest
      */
     public function testStore()
     {
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $repository   = $this->mock(CategoryRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
-        $repository->shouldReceive('find')->andReturn(new Category);
+        $repository->shouldReceive('findNull')->andReturn(new Category);
         $repository->shouldReceive('store')->andReturn(new Category);
 
         $this->session(['categories.create.uri' => 'http://localhost']);
 
         $data = [
-            'name' => 'New Category ' . rand(1000, 9999),
+            'name' => 'New Category ' . random_int(1000, 9999),
         ];
         $this->be($this->user());
         $response = $this->post(route('categories.store'), $data);
@@ -441,19 +466,22 @@ class CategoryControllerTest extends TestCase
 
     /**
      * @covers \FireflyIII\Http\Controllers\CategoryController::update
+     * @covers \FireflyIII\Http\Requests\CategoryFormRequest
      */
     public function testUpdate()
     {
+        $category     = Category::first();
         $repository   = $this->mock(CategoryRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $journalRepos->shouldReceive('first')->once()->andReturn(new TransactionJournal);
         $repository->shouldReceive('update');
-        $repository->shouldReceive('find')->andReturn(new Category);
+        $repository->shouldReceive('findNull')->andReturn($category);
 
         $this->session(['categories.edit.uri' => 'http://localhost']);
 
         $data = [
-            'name'   => 'Updated Category ' . rand(1000, 9999),
+            'name'   => 'Updated Category ' . random_int(1000, 9999),
             'active' => 1,
         ];
         $this->be($this->user());

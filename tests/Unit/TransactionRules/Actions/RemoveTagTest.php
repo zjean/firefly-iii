@@ -42,7 +42,7 @@ class RemoveTagTest extends TestCase
 
         // find journal with at least one tag
         $journalIds = DB::table('tag_transaction_journal')->get(['transaction_journal_id'])->pluck('transaction_journal_id')->toArray();
-        $journalId  = intval($journalIds[0]);
+        $journalId  = (int)$journalIds[0];
         /** @var TransactionJournal $journal */
         $journal       = TransactionJournal::find($journalId);
         $originalCount = $journal->tags()->count();
@@ -57,7 +57,7 @@ class RemoveTagTest extends TestCase
         foreach ($journal->tags()->get() as $tag) {
             $this->assertNotEquals($firstTag->id, $tag->id);
         }
-        $this->assertEquals(($originalCount - 1), $journal->tags()->count());
+        $this->assertEquals($originalCount - 1, $journal->tags()->count());
     }
 
     /**
@@ -68,14 +68,14 @@ class RemoveTagTest extends TestCase
     {
         // get journal, link al tags:
         /** @var TransactionJournal $journal */
-        $journal = TransactionJournal::find(11);
+        $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $tags    = $journal->user->tags()->get();
         $journal->tags()->sync($tags->pluck('id')->toArray());
         $this->assertEquals($tags->count(), $journal->tags()->get()->count());
 
         // fire the action:
         $ruleAction               = new RuleAction;
-        $ruleAction->action_value = rand(1, 1234) . 'nosuchtag';
+        $ruleAction->action_value = random_int(1, 1234) . 'nosuchtag';
         $action                   = new RemoveTag($ruleAction);
         $result                   = $action->act($journal);
         $this->assertTrue($result);
