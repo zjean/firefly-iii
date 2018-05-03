@@ -22,10 +22,6 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers;
 
-use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
-use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
-use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
-use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use Illuminate\Http\Request;
 
 /**
@@ -37,8 +33,7 @@ class JsonController extends Controller
      * @param Request $request
      *
      * @return \Illuminate\Http\JsonResponse
-     *
-
+     * @throws \Throwable
      */
     public function action(Request $request)
     {
@@ -57,6 +52,7 @@ class JsonController extends Controller
      * @param Request $request
      *
      * @return \Illuminate\Http\JsonResponse
+     * @throws \Throwable
      */
     public function trigger(Request $request)
     {

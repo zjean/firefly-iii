@@ -5,10 +5,13 @@ use FireflyIII\Import\Configuration\BunqConfigurator;
 use FireflyIII\Import\Configuration\FileConfigurator;
 use FireflyIII\Import\Configuration\SpectreConfigurator;
 use FireflyIII\Import\FileProcessor\CsvProcessor;
+use FireflyIII\Import\JobConfiguration\FakeJobConfiguration;
 use FireflyIII\Import\Prerequisites\BunqPrerequisites;
+use FireflyIII\Import\Prerequisites\FakePrerequisites;
 use FireflyIII\Import\Prerequisites\FilePrerequisites;
 use FireflyIII\Import\Prerequisites\SpectrePrerequisites;
 use FireflyIII\Import\Routine\BunqRoutine;
+use FireflyIII\Import\Routine\FakeRoutine;
 use FireflyIII\Import\Routine\FileRoutine;
 use FireflyIII\Import\Routine\SpectreRoutine;
 
@@ -35,42 +38,74 @@ use FireflyIII\Import\Routine\SpectreRoutine;
 
 return [
     'enabled'       => [
+        'fake'    => true,
         'file'    => true,
         'bunq'    => true,
         'spectre' => true,
         'plaid'   => false,
+        'quovo'   => false,
+        'yodlee'  => false,
+    ],
+    'has_prereq'    => [
+        'fake'    => false,
+        'file'    => true,
+        'bunq'    => true,
+        'spectre' => true,
+        'plaid'   => true,
+        'quovo'   => true,
+        'yodlee'  => true,
     ],
     'prerequisites' => [
+        'fake'    => FakePrerequisites::class,
         'file'    => FilePrerequisites::class,
         'bunq'    => BunqPrerequisites::class,
         'spectre' => SpectrePrerequisites::class,
-        'plaid'   => 'FireflyIII\Import\Prerequisites\PlaidPrerequisites',
-
+        'plaid'   => false,
+        'quovo'   => false,
+        'yodlee'  => false,
+    ],
+    'has_config'    => [
+        'fake'    => false,
+        'file'    => true,
+        'bunq'    => true,
+        'spectre' => true,
+        'plaid'   => true,
+        'quovo'   => true,
+        'yodlee'  => true,
     ],
     'configuration' => [
+        'fake'    => FakeJobConfiguration::class,
         'file'    => FileConfigurator::class,
         'bunq'    => BunqConfigurator::class,
         'spectre' => SpectreConfigurator::class,
-        'plaid'   => 'FireflyIII\Import\Configuration\PlaidConfigurator',
+        'plaid'   => false,
+        'quovo'   => false,
+        'yodlee'  => false,
     ],
     'routine'       => [
+        'fake'    => FakeRoutine::class,
         'file'    => FileRoutine::class,
         'bunq'    => BunqRoutine::class,
         'spectre' => SpectreRoutine::class,
-        'plaid'   => 'FireflyIII\Import\Routine\PlaidRoutine',
+        'plaid'   => false,
+        'quovo'   => false,
+        'yodlee'  => false,
     ],
 
     'options'        => [
-        'file' => [
+        'file'    => [
             'import_formats'        => ['csv'], // mt940
             'default_import_format' => 'csv',
             'processors'            => [
                 'csv' => CsvProcessor::class,
             ],
         ],
-        'bunq' => [
+        'bunq'    => [
             'server'  => 'sandbox.public.api.bunq.com', // sandbox.public.api.bunq.com - api.bunq.com
             'version' => 'v1',
+        ],
+        'spectre' => [
+            'server' => 'www.saltedge.com',
         ],
     ],
     'default_config' => [

@@ -23,36 +23,41 @@ declare(strict_types=1);
 
 return [
     // status of import:
-    'status_wait_title'                    => 'Please hold...',
-    'status_wait_text'                     => 'This box will disappear in a moment.',
-    'status_fatal_title'                   => 'A fatal error occurred',
-    'status_fatal_text'                    => 'A fatal error occurred, which the import-routine cannot recover from. Please see the explanation in red below.',
-    'status_fatal_more'                    => 'If the error is a time-out, the import will have stopped half-way. For some server configurations, it is merely the server that stopped while the import keeps running in the background. To verify this, check out the log files. If the problem persists, consider importing over the command line instead.',
-    'status_ready_title'                   => 'Import is ready to start',
-    'status_ready_text'                    => 'The import is ready to start. All the configuration you needed to do has been done. Please download the configuration file. It will help you with the import should it not go as planned. To actually run the import, you can either execute the following command in your console, or run the web-based import. Depending on your configuration, the console import will give you more feedback.',
-    'status_ready_noconfig_text'           => 'The import is ready to start. All the configuration you needed to do has been done. To actually run the import, you can either execute the following command in your console, or run the web-based import. Depending on your configuration, the console import will give you more feedback.',
-    'status_ready_config'                  => 'Download configuration',
-    'status_ready_start'                   => 'Start the import',
-    'status_ready_share'                   => 'Please consider downloading your configuration and sharing it at the <strong><a href="https://github.com/firefly-iii/import-configurations/wiki">import configuration center</a></strong>. This will allow other users of Firefly III to import their files more easily.',
-    'status_job_new'                       => 'The job is brand new.',
-    'status_job_configuring'               => 'The import is being configured.',
-    'status_job_configured'                => 'The import is configured.',
-    'status_job_running'                   => 'The import is running.. Please wait..',
-    'status_job_error'                     => 'The job has generated an error.',
-    'status_job_finished'                  => 'The import has finished!',
-    'status_running_title'                 => 'The import is running',
-    'status_running_placeholder'           => 'Please hold for an update...',
-    'status_finished_title'                => 'Import routine finished',
-    'status_finished_text'                 => 'The import routine has imported your data.',
-    'status_errors_title'                  => 'Errors during the import',
-    'status_errors_single'                 => 'An error has occurred during the import. It does not appear to be fatal.',
-    'status_errors_multi'                  => 'Some errors occurred during the import. These do not appear to be fatal.',
+    'status_wait_title'          => 'Please hold...',
+    'status_wait_text'           => 'This box will disappear in a moment.',
+    'status_fatal_title'         => 'A fatal error occurred',
+    'status_fatal_text'          => 'A fatal error occurred, which the import-routine cannot recover from. Please see the explanation in red below.',
+    'status_fatal_more'          => 'If the error is a time-out, the import will have stopped half-way. For some server configurations, it is merely the server that stopped while the import keeps running in the background. To verify this, check out the log files. If the problem persists, consider importing over the command line instead.',
+    'status_ready_title'         => 'Import is ready to start',
+    'status_ready_text'          => 'The import is ready to start. All the configuration you needed to do has been done. Please download the configuration file. It will help you with the import should it not go as planned. To actually run the import, you can either execute the following command in your console, or run the web-based import. Depending on your configuration, the console import will give you more feedback.',
+    'status_ready_noconfig_text' => 'The import is ready to start. All the configuration you needed to do has been done. To actually run the import, you can either execute the following command in your console, or run the web-based import. Depending on your configuration, the console import will give you more feedback.',
+    'status_ready_config'        => 'Download configuration',
+    'status_ready_start'         => 'Start the import',
+    'status_ready_share'         => 'Please consider downloading your configuration and sharing it at the <strong><a href="https://github.com/firefly-iii/import-configurations/wiki">import configuration center</a></strong>. This will allow other users of Firefly III to import their files more easily.',
+    'status_job_new'             => 'The job is brand new.',
+    'status_job_configuring'     => 'The import is being configured.',
+    'status_job_configured'      => 'The import is configured.',
+    'status_job_running'         => 'The import is running.. Please wait..',
+    'status_job_storing'         => 'The import is storing your data.. Please wait..',
+    'status_job_error'           => 'The job has generated an error.',
+    'status_job_finished'        => 'The import has finished!',
+    'status_running_title'       => 'The import is running',
+    'status_running_placeholder' => 'Please hold for an update...',
+    'status_finished_title'      => 'Import routine finished',
+    'status_finished_text'       => 'The import routine has imported your data.',
+    'status_errors_title'        => 'Errors during the import',
+    'status_errors_single'       => 'An error has occurred during the import. It does not appear to be fatal.',
+    'status_errors_multi'        => 'Some errors occurred during the import. These do not appear to be fatal.',
+    'status_with_count'          => 'One transaction has been imported|:count transactions have been imported.',
+    'job_status_breadcrumb'      => 'Import job state',
+
     'status_bread_crumb'                   => 'Import status',
     'status_sub_title'                     => 'Import status',
     'config_sub_title'                     => 'Set up your import',
     'status_finished_job'                  => 'The :count transactions imported can be found in tag <a href=":link" class="label label-success" style="font-size:100%;font-weight:normal;">:tag</a>.',
     'status_finished_no_tag'               => 'Firefly III has not collected any transactions from your import file.',
     'import_with_key'                      => 'Import with key \':key\'',
+    'finished_with_errors'                 => 'The import reported some problems.',
 
     // file, upload something
     'file_upload_title'                    => 'Import setup (1/4) - Upload your file',
@@ -160,6 +165,70 @@ return [
 
     // prerequisites
     'prerequisites'                        => 'Prerequisites',
+    'prerequisites_breadcrumb_fake'        => 'Prerequisites for fake provider',
+    'prerequisites_breadcrumb_file'        => 'Prerequisites for file imports',
+    'prerequisites_breadcrumb_bunq'        => 'Prerequisites for Bunq',
+    'prerequisites_breadcrumb_spectre'     => 'Prerequisites for Spectre',
+    'prerequisites_breadcrumb_plaid'       => 'Prerequisites for Plaid',
+    'prerequisites_breadcrumb_quovo'       => 'Prerequisites for Quovo',
+    'prerequisites_breadcrumb_yodlee'      => 'Prerequisites for Yodlee',
+
+    // success messages:
+    'prerequisites_saved_for_fake'         => 'API key stored for fake provider',
+    'prerequisites_saved_for_file'         => 'Data stored for file imports',
+    'prerequisites_saved_for_bunq'         => 'API key and IP stored for bunq',
+    'prerequisites_saved_for_spectre'      => 'App ID and secret stored for Spectre',
+    'prerequisites_saved_for_plaid'        => 'Data stored for Plaid',
+    'prerequisites_saved_for_quovo'        => 'Data stored for Quovo',
+    'prerequisites_saved_for_yodlee'       => 'Data stored for Yodlee',
+
+    // index of import:
+    'general_index_title'                  => 'Import a file',
+    'general_index_intro'                  => 'Welcome to Firefly III\'s import routine. There are a few ways of importing data into Firefly III, displayed here as buttons.',
+    'bad_job_status'                       => 'You cannot access this page when the job is at this point. Sorry!',
+
+    // import provider strings (index):
+    'button_fake'                          => 'Fake an import',
+    'button_file'                          => 'Import a file',
+    'button_bunq'                          => 'Import from bunq',
+    'button_spectre'                       => 'Import using Spectre',
+    'button_plaid'                         => 'Import using Plaid',
+    'button_yodlee'                        => 'Import using Yodlee',
+    'button_quovo'                         => 'Import using Quovo',
+
+    // global config box
+    'global_config_title'                  => 'Global import configuration',
+    'global_config_text'                   => 'In the future, this box will feature preferences that apply to ALL import providers above.',
+
+    // prereq box:
+    'need_prereq_title'                    => 'Import prerequisites',
+    'need_prereq_intro'                    => 'Some import methods need your attention before they can be used. For example, they might require special API keys or application secrets. You can configure them here. The icon indicates if these prerequisites have been met.',
+    'do_prereq_fake'                       => 'Prerequisites for the fake provider',
+    'do_prereq_file'                       => 'Prerequisites for file imports',
+    'do_prereq_bunq'                       => 'Prerequisites for imports from bunq',
+    'do_prereq_spectre'                    => 'Prerequisites for imports using Spectre',
+    'do_prereq_plaid'                      => 'Prerequisites for imports using Plaid',
+    'do_prereq_yodlee'                     => 'Prerequisites for imports using Yodlee',
+    'do_prereq_quovo'                      => 'Prerequisites for imports using Quovo',
+
+    // provider config box:
+    'can_config_title'                     => 'Import configuration',
+    'can_config_intro'                     => 'Some import methods can be configured to your liking. They have extra settings you can tweak.',
+    'do_config_fake'                       => 'Configuration for the fake provider',
+    'do_config_file'                       => 'Configuration for file imports',
+    'do_config_bunq'                       => 'Configuration for bunq imports',
+    'do_config_spectre'                    => 'Configuration for imports from Spectre',
+    'do_config_plaid'                      => 'Configuration for imports from Plaid',
+    'do_config_yodlee'                     => 'Configuration for imports from Yodlee',
+    'do_config_quovo'                      => 'Configuration for imports from Quovo',
+
+    // job configuration:
+    'job_configuration_breadcrumb'         => 'Configuration for job ":key"',
+
+    // import index page:
+    'index_breadcrumb'                     => 'Index',
+    'upload_error'                         => 'The file you have uploaded could not be processed. Possibly it is of an invalid file type or encoding. The log files will have more information.',
+
 
     // bunq
     'bunq_prerequisites_title'             => 'Prerequisites for an import from bunq',
@@ -172,11 +241,12 @@ return [
     // Spectre
     'spectre_title'                        => 'Import using Spectre',
     'spectre_prerequisites_title'          => 'Prerequisites for an import using Spectre',
-    'spectre_prerequisites_text'           => 'In order to import data using the Spectre API, you must provide Firefly III with two secret values. They can be found on the <a href="https://www.saltedge.com/clients/profile/secrets">secrets page</a>.',
-    'spectre_enter_pub_key'                => 'The import will only work when you enter this public key on your <a href="https://www.saltedge.com/clients/security/edit">security page</a>.',
+    'spectre_prerequisites_text'           => 'In order to import data using the Spectre API (v4), you must provide Firefly III with two secret values. They can be found on the <a href="https://www.saltedge.com/clients/profile/secrets">secrets page</a>.',
+    'spectre_enter_pub_key'                => 'The import will only work when you enter this public key on your <a href="https://www.saltedge.com/clients/profile/secrets">secrets page</a>.',
     'spectre_accounts_title'               => 'Select accounts to import from',
     'spectre_accounts_text'                => 'Each account on the left below has been found by Spectre and can be imported into Firefly III. Please select the asset account that should hold any given transactions. If you do not wish to import from any particular account, remove the check from the checkbox.',
     'spectre_do_import'                    => 'Yes, import from this account',
+    'spectre_no_supported_accounts'        => 'You cannot import from this account due to a currency mismatch.',
 
     // keys from "extra" array:
     'spectre_extra_key_iban'               => 'IBAN',

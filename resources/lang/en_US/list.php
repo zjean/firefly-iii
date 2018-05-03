@@ -111,5 +111,11 @@ return [
     'sepa-cc'                 => 'SEPA Clearing Code',
     'sepa-ep'                 => 'SEPA External Purpose',
     'sepa-ci'                 => 'SEPA Creditor Identifier',
+    'external_id'             => 'External ID',
     'account_at_bunq'         => 'Account with bunq',
+    'file_name'               => 'File name',
+    'file_size'               => 'File size',
+    'file_type'               => 'File type',
+    'attached_to'             => 'Attached to',
+    'file_exists'             => 'File exists',
 ];

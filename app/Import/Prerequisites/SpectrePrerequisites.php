@@ -71,9 +71,8 @@ class SpectrePrerequisites implements PrerequisitesInterface
     public function hasPrerequisites(): bool
     {
         $values = [
-            Preferences::getForUser($this->user, 'spectre_client_id', false),
-            Preferences::getForUser($this->user, 'spectre_app_secret', false),
-            Preferences::getForUser($this->user, 'spectre_service_secret', false),
+            Preferences::getForUser($this->user, 'spectre_app_id', false),
+            Preferences::getForUser($this->user, 'spectre_secret', false),
         ];
         /** @var Preference $value */
         foreach ($values as $value) {
@@ -89,6 +88,29 @@ class SpectrePrerequisites implements PrerequisitesInterface
     }
 
     /**
+     * Indicate if all prerequisites have been met.
+     *
+     * @return bool
+     */
+    public function isComplete(): bool
+    {
+        // return true when user has set the App Id and the Spectre Secret.
+        $values = [
+            Preferences::getForUser($this->user, 'spectre_app_id', false),
+            Preferences::getForUser($this->user, 'spectre_secret', false),
+        ];
+        $result = true;
+        /** @var Preference $value */
+        foreach ($values as $value) {
+            if (false === $value->data || null === $value->data) {
+                $result = false;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Set the user for this Prerequisites-routine. Class is expected to implement and save this.
      *
      * @param User $user
@@ -97,7 +119,6 @@ class SpectrePrerequisites implements PrerequisitesInterface
     {
         $this->user = $user;
 
-        return;
     }
 
     /**
@@ -111,9 +132,8 @@ class SpectrePrerequisites implements PrerequisitesInterface
     public function storePrerequisites(Request $request): MessageBag
     {
         Log::debug('Storing Spectre API keys..');
-        Preferences::setForUser($this->user, 'spectre_client_id', $request->get('client_id'));
-        Preferences::setForUser($this->user, 'spectre_app_secret', $request->get('app_secret'));
-        Preferences::setForUser($this->user, 'spectre_service_secret', $request->get('service_secret'));
+        Preferences::setForUser($this->user, 'spectre_app_id', $request->get('app_id'));
+        Preferences::setForUser($this->user, 'spectre_secret', $request->get('secret'));
         Log::debug('Done!');
 
         return new MessageBag;
@@ -146,7 +166,6 @@ class SpectrePrerequisites implements PrerequisitesInterface
         Preferences::setForUser($this->user, 'spectre_public_key', $pubKey['key']);
         Log::debug('Created key pair');
 
-        return;
     }
 
     /**

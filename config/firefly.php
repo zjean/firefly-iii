@@ -89,7 +89,7 @@ return [
     ],
     'encryption'     => null === env('USE_ENCRYPTION') || env('USE_ENCRYPTION') === true,
     'version'        => '4.7.3',
-    'api_version'    => '0.2',
+    'api_version'    => '0.3',
     'db_version'     => 3,
     'maxUploadSize'  => 15242880,
     'allowedMimes'   => [
@@ -165,7 +165,7 @@ return [
     'default_export_format'    => 'csv',
     'default_import_format'    => 'csv',
     'bill_periods'             => ['weekly', 'monthly', 'quarterly', 'half-year', 'yearly'],
-    'accountRoles'             => ['defaultAsset', 'sharedAsset', 'savingAsset', 'ccAsset','cashWalletAsset'],
+    'accountRoles'             => ['defaultAsset', 'sharedAsset', 'savingAsset', 'ccAsset', 'cashWalletAsset'],
     'ccTypes'                  => [
         'monthlyFull' => 'Full payment every month',
     ],
@@ -283,6 +283,7 @@ return [
         'user'              => \FireflyIII\User::class,
 
         // strings
+        'import_provider'        => \FireflyIII\Support\Binder\ImportProvider::class,
 
         // dates
         'start_date'        => \FireflyIII\Support\Binder\Date::class,
@@ -296,6 +297,7 @@ return [
         'journalList'       => \FireflyIII\Support\Binder\JournalList::class,
         'categoryList'      => \FireflyIII\Support\Binder\CategoryList::class,
         'tagList'           => \FireflyIII\Support\Binder\TagList::class,
+        'simpleJournalList' => \FireflyIII\Support\Binder\SimpleJournalList::class,
 
         // others
         'fromCurrencyCode'  => \FireflyIII\Support\Binder\CurrencyCode::class,

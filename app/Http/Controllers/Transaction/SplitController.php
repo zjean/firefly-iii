@@ -42,7 +42,6 @@ use FireflyIII\Transformers\TransactionTransformer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Preferences;
-use Session;
 use Steam;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use View;
@@ -122,7 +121,7 @@ class SplitController extends Controller
         if (true !== session('transactions.edit-split.fromUpdate')) {
             $this->rememberPreviousUri('transactions.edit-split.uri');
         }
-        Session::forget('transactions.edit-split.fromUpdate');
+        session()->forget('transactions.edit-split.fromUpdate');
 
         return view(
             'transactions.split.edit', compact(
@@ -143,7 +142,11 @@ class SplitController extends Controller
         if ($this->isOpeningBalance($journal)) {
             return $this->redirectToAccount($journal); // @codeCoverageIgnore
         }
-        $data    = $request->getAll();
+        $data = $request->getAll();
+
+        // keep current bill:
+        $data['bill_id'] = $journal->bill_id;
+
         $journal = $this->repository->update($journal, $data);
 
         /** @var array $files */
@@ -154,19 +157,19 @@ class SplitController extends Controller
 
         // flash messages
         // @codeCoverageIgnoreStart
-        if (count($this->attachments->getMessages()->get('attachments')) > 0) {
-            Session::flash('info', $this->attachments->getMessages()->get('attachments'));
+        if (\count($this->attachments->getMessages()->get('attachments')) > 0) {
+            session()->flash('info', $this->attachments->getMessages()->get('attachments'));
         }
         // @codeCoverageIgnoreEnd
 
         $type = strtolower($this->repository->getTransactionType($journal));
-        Session::flash('success', (string)trans('firefly.updated_' . $type, ['description' => $journal->description]));
+        session()->flash('success', (string)trans('firefly.updated_' . $type, ['description' => $journal->description]));
         Preferences::mark();
 
         // @codeCoverageIgnoreStart
         if (1 === (int)$request->get('return_to_edit')) {
             // set value so edit routine will not overwrite URL:
-            Session::put('transactions.edit-split.fromUpdate', true);
+            session()->put('transactions.edit-split.fromUpdate', true);
 
             return redirect(route('transactions.split.edit', [$journal->id]))->withInput(['return_to_edit' => 1]);
         }
@@ -189,7 +192,8 @@ class SplitController extends Controller
         $destinationAccounts = $this->repository->getJournalDestinationAccounts($journal);
         $array               = [
             'journal_description'            => $request->old('journal_description', $journal->description),
-            'journal_amount'                 => $this->repository->getJournalTotal($journal),
+            'journal_amount'                 => '0',
+            'journal_foreign_amount'         => '0',
             'sourceAccounts'                 => $sourceAccounts,
             'journal_source_account_id'      => $request->old('journal_source_account_id', $sourceAccounts->first()->id),
             'journal_source_account_name'    => $request->old('journal_source_account_name', $sourceAccounts->first()->name),
@@ -213,8 +217,11 @@ class SplitController extends Controller
             'transactions'                   => $this->getTransactionDataFromJournal($journal),
         ];
         // update transactions array with old request data.
-
         $array['transactions'] = $this->updateWithPrevious($array['transactions'], $request->old());
+
+        // update journal amount and foreign amount:
+        $array['journal_amount']         = array_sum(array_column($array['transactions'], 'amount'));
+        $array['journal_foreign_amount'] = array_sum(array_column($array['transactions'], 'foreign_amount'));
 
         return $array;
     }
@@ -246,9 +253,10 @@ class SplitController extends Controller
                 $res = $transformer->transform($transaction);
             }
 
-            if (count($res) > 0) {
-                $res['amount']  = app('steam')->positive((string)$res['amount']);
-                $transactions[] = $res;
+            if (\count($res) > 0) {
+                $res['amount']         = app('steam')->positive((string)$res['amount']);
+                $res['foreign_amount'] = app('steam')->positive((string)$res['foreign_amount']);
+                $transactions[]        = $res;
             }
         }
 
@@ -263,7 +271,7 @@ class SplitController extends Controller
      */
     private function updateWithPrevious($array, $old): array
     {
-        if (0 === count($old) || !isset($old['transactions'])) {
+        if (0 === \count($old) || !isset($old['transactions'])) {
             return $array;
         }
         $old = $old['transactions'];

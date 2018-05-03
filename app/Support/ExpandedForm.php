@@ -27,8 +27,12 @@ use Carbon\Carbon;
 use Eloquent;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
+use FireflyIII\Models\RuleGroup;
+use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
+use FireflyIII\Repositories\RuleGroup\RuleGroupRepositoryInterface;
+use Form;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use RuntimeException;
@@ -46,6 +50,7 @@ class ExpandedForm
      *
      * @return string
      * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \Throwable
      */
     public function amount(string $name, $value = null, array $options = []): string
     {
@@ -58,7 +63,6 @@ class ExpandedForm
      * @param array  $options
      *
      * @return string
-     * @throws \FireflyIII\Exceptions\FireflyException
      * @throws \Throwable
      */
     public function amountNoCurrency(string $name, $value = null, array $options = []): string
@@ -95,10 +99,49 @@ class ExpandedForm
 
     /**
      * @param string $name
+     * @param        $selected
+     * @param null   $options
+     *
+     * @return string
+     * @throws \Throwable
+     */
+    public function assetAccountCheckList(string $name, $options = null): string
+    {
+        $options  = $options ?? [];
+        $label    = $this->label($name, $options);
+        $options  = $this->expandOptionArray($name, $label, $options);
+        $classes  = $this->getHolderClasses($name);
+        $selected = request()->old($name) ?? [];
+
+        // get all asset accounts:
+        /** @var AccountRepositoryInterface $repository */
+        $repository    = app(AccountRepositoryInterface::class);
+        $assetAccounts = $repository->getAccountsByType([AccountType::ASSET, AccountType::DEFAULT]);
+        $grouped       = [];
+        // group accounts:
+        /** @var Account $account */
+        foreach ($assetAccounts as $account) {
+            $role = $repository->getMetaValue($account, 'accountRole');
+            if (null === $role) {
+                $role = 'no_account_type'; // @codeCoverageIgnore
+            }
+            $key                         = (string)trans('firefly.opt_group_' . $role);
+            $grouped[$key][$account->id] = $account->name;
+        }
+
+        unset($options['class']);
+        $html = view('form.assetAccountCheckList', compact('classes', 'selected', 'name', 'label', 'options', 'grouped'))->render();
+
+        return $html;
+    }
+
+    /**
+     * @param string $name
      * @param null   $value
      * @param array  $options
      *
      * @return string
+     * @throws \Throwable
      */
     public function assetAccountList(string $name, $value = null, array $options = []): string
     {
@@ -128,7 +171,7 @@ class ExpandedForm
             $currencyId = (int)$account->getMeta('currency_id');
             $currency   = $currencyRepos->findNull($currencyId);
             $role       = $account->getMeta('accountRole');
-            if (0 === strlen($role)) {
+            if (0 === \strlen($role)) {
                 $role = 'no_account_type'; // @codeCoverageIgnore
             }
             if (null === $currency) {
@@ -158,22 +201,27 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param int   $value
-     * @param null  $checked
-     * @param array $options
+     * @param string $name
+     * @param int    $value
+     * @param null   $checked
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function checkbox(string $name, $value = 1, $checked = null, $options = []): string
     {
-        $options['checked'] = true === $checked ? true : null;
-        $label              = $this->label($name, $options);
-        $options            = $this->expandOptionArray($name, $label, $options);
-        $classes            = $this->getHolderClasses($name);
-        $value              = $this->fillFieldValue($name, $value);
+        $options['checked'] = true === $checked ? true : false;
+
+        if (Session::has('preFilled')) {
+            $preFilled          = session('preFilled');
+            $options['checked'] = $preFilled[$name] ?? $options['checked'];
+        }
+
+        $label   = $this->label($name, $options);
+        $options = $this->expandOptionArray($name, $label, $options);
+        $classes = $this->getHolderClasses($name);
+        $value   = $this->fillFieldValue($name, $value);
 
         unset($options['placeholder'], $options['autocomplete'], $options['class']);
 
@@ -183,13 +231,37 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
+     * @throws \Throwable
+     */
+    public function currencyList(string $name, $value = null, array $options = []): string
+    {
+        /** @var CurrencyRepositoryInterface $currencyRepos */
+        $currencyRepos = app(CurrencyRepositoryInterface::class);
 
+        // get all currencies:
+        $list  = $currencyRepos->get();
+        $array = [];
+        /** @var TransactionCurrency $currency */
+        foreach ($list as $currency) {
+            $array[$currency->id] = $currency->name . ' (' . $currency->symbol . ')';
+        }
+        $res = $this->select($name, $array, $value, $options);
+
+        return $res;
+    }
+
+    /**
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
+     *
+     * @return string
+     * @throws \Throwable
      */
     public function date(string $name, $value = null, array $options = []): string
     {
@@ -204,12 +276,11 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param array $options
+     * @param string $name
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function file(string $name, array $options = []): string
     {
@@ -222,13 +293,12 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function integer(string $name, $value = null, array $options = []): string
     {
@@ -243,13 +313,12 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function location(string $name, $value = null, array $options = []): string
     {
@@ -316,37 +385,13 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param array $list
-     * @param null  $selected
-     * @param array $options
+     * @param string $name
+     * @param array  $list
+     * @param null   $selected
+     * @param array  $options
      *
      * @return string
-     *
-
-     */
-    public function multiCheckbox(string $name, array $list = [], $selected = null, array $options = []): string
-    {
-        $label    = $this->label($name, $options);
-        $options  = $this->expandOptionArray($name, $label, $options);
-        $classes  = $this->getHolderClasses($name);
-        $selected = $this->fillFieldValue($name, $selected);
-
-        unset($options['class']);
-        $html = view('form.multiCheckbox', compact('classes', 'name', 'label', 'selected', 'options', 'list'))->render();
-
-        return $html;
-    }
-
-    /**
-     * @param       $name
-     * @param array $list
-     * @param null  $selected
-     * @param array $options
-     *
-     * @return string
-     *
-
+     * @throws \Throwable
      */
     public function multiRadio(string $name, array $list = [], $selected = null, array $options = []): string
     {
@@ -367,8 +412,8 @@ class ExpandedForm
      * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \Throwable
      */
     public function nonSelectableAmount(string $name, $value = null, array $options = []): string
     {
@@ -396,8 +441,8 @@ class ExpandedForm
      * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \Throwable
      */
     public function nonSelectableBalance(string $name, $value = null, array $options = []): string
     {
@@ -426,8 +471,7 @@ class ExpandedForm
      * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function number(string $name, $value = null, array $options = []): string
     {
@@ -444,12 +488,11 @@ class ExpandedForm
     }
 
     /**
-     * @param $type
-     * @param $name
+     * @param string $type
+     * @param string $name
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function optionsList(string $type, string $name): string
     {
@@ -468,12 +511,11 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param array $options
+     * @param string $name
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function password(string $name, array $options = []): string
     {
@@ -486,14 +528,66 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param array $list
-     * @param null  $selected
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
+     * @throws \Throwable
+     */
+    public function ruleGroupList(string $name, $value = null, array $options = []): string
+    {
+        /** @var RuleGroupRepositoryInterface $groupRepos */
+        $groupRepos = app(RuleGroupRepositoryInterface::class);
 
+        // get all currencies:
+        $list  = $groupRepos->get();
+        $array = [];
+        /** @var RuleGroup $group */
+        foreach ($list as $group) {
+            $array[$group->id] = $group->title;
+        }
+
+        return $this->select($name, $array, $value, $options);
+    }
+
+    /**
+     * @param string $name
+     * @param null   $value
+     * @param null   $options
+     *
+     * @return \Illuminate\Support\HtmlString
+     */
+    public function ruleGroupListWithEmpty(string $name, $value = null, $options = null)
+    {
+        $options          = $options ?? [];
+        $options['class'] = 'form-control';
+        /** @var RuleGroupRepositoryInterface $groupRepos */
+        $groupRepos = app(RuleGroupRepositoryInterface::class);
+
+        // get all currencies:
+        $list  = $groupRepos->get();
+        $array = [
+            0 => trans('firefly.none_in_select_list'),
+        ];
+        /** @var RuleGroup $group */
+        foreach ($list as $group) {
+            if (isset($options['hidden']) && (int)$options['hidden'] !== $group->id) {
+                $array[$group->id] = $group->title;
+            }
+        }
+
+        return Form::select($name, $array, $value, $options);
+    }
+
+    /**
+     * @param string $name
+     * @param array  $list
+     * @param null   $selected
+     * @param array  $options
+     *
+     * @return string
+     * @throws \Throwable
      */
     public function select(string $name, array $list = [], $selected = null, array $options = []): string
     {
@@ -508,13 +602,12 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function staticText(string $name, $value, array $options = []): string
     {
@@ -527,13 +620,12 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function tags(string $name, $value = null, array $options = []): string
     {
@@ -548,13 +640,12 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function text(string $name, $value = null, array $options = []): string
     {
@@ -568,13 +659,12 @@ class ExpandedForm
     }
 
     /**
-     * @param       $name
-     * @param null  $value
-     * @param array $options
+     * @param string $name
+     * @param null   $value
+     * @param array  $options
      *
      * @return string
-     *
-
+     * @throws \Throwable
      */
     public function textarea(string $name, $value = null, array $options = []): string
     {
@@ -676,6 +766,7 @@ class ExpandedForm
      * @return string
      *
      * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws \Throwable
      */
     private function currencyField(string $name, string $view, $value = null, array $options = []): string
     {

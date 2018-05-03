@@ -23,17 +23,14 @@ declare(strict_types=1);
 namespace FireflyIII\Http\Controllers;
 
 use Carbon\Carbon;
-use ExpandedForm;
 use FireflyIII\Http\Requests\RuleGroupFormRequest;
 use FireflyIII\Http\Requests\SelectTransactionsRequest;
 use FireflyIII\Jobs\ExecuteRuleGroupOnExistingTransactions;
-use FireflyIII\Models\AccountType;
 use FireflyIII\Models\RuleGroup;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\RuleGroup\RuleGroupRepositoryInterface;
 use Illuminate\Http\Request;
 use Preferences;
-use Session;
 use View;
 
 /**
@@ -70,28 +67,24 @@ class RuleGroupController extends Controller
         if (true !== session('rule-groups.create.fromStore')) {
             $this->rememberPreviousUri('rule-groups.create.uri');
         }
-        Session::forget('rule-groups.create.fromStore');
+        session()->forget('rule-groups.create.fromStore');
 
         return view('rules.rule-group.create', compact('subTitleIcon', 'subTitle'));
     }
 
     /**
-     * @param RuleGroupRepositoryInterface $repository
-     * @param RuleGroup                    $ruleGroup
+     * @param RuleGroup $ruleGroup
      *
      * @return View
      */
-    public function delete(RuleGroupRepositoryInterface $repository, RuleGroup $ruleGroup)
+    public function delete(RuleGroup $ruleGroup)
     {
         $subTitle = trans('firefly.delete_rule_group', ['title' => $ruleGroup->title]);
-
-        $ruleGroupList = ExpandedForm::makeSelectListWithEmpty($repository->get());
-        unset($ruleGroupList[$ruleGroup->id]);
 
         // put previous url in session
         $this->rememberPreviousUri('rule-groups.delete.uri');
 
-        return view('rules.rule-group.delete', compact('ruleGroup', 'subTitle', 'ruleGroupList'));
+        return view('rules.rule-group.delete', compact('ruleGroup', 'subTitle'));
     }
 
     /**
@@ -108,7 +101,7 @@ class RuleGroupController extends Controller
 
         $repository->destroy($ruleGroup, $moveTo);
 
-        Session::flash('success', (string)trans('firefly.deleted_rule_group', ['title' => $title]));
+        session()->flash('success', (string)trans('firefly.deleted_rule_group', ['title' => $title]));
         Preferences::mark();
 
         return redirect($this->getPreviousUri('rule-groups.delete.uri'));
@@ -140,7 +133,7 @@ class RuleGroupController extends Controller
         if (true !== session('rule-groups.edit.fromUpdate')) {
             $this->rememberPreviousUri('rule-groups.edit.uri');
         }
-        Session::forget('rule-groups.edit.fromUpdate');
+        session()->forget('rule-groups.edit.fromUpdate');
 
         return view('rules.rule-group.edit', compact('ruleGroup', 'subTitle'));
     }
@@ -174,28 +167,23 @@ class RuleGroupController extends Controller
         $this->dispatch($job);
 
         // Tell the user that the job is queued
-        Session::flash('success', (string)trans('firefly.applied_rule_group_selection', ['title' => $ruleGroup->title]));
+        session()->flash('success', (string)trans('firefly.applied_rule_group_selection', ['title' => $ruleGroup->title]));
 
         return redirect()->route('rules.index');
     }
 
     /**
-     * @param AccountRepositoryInterface $repository
-     * @param RuleGroup                  $ruleGroup
+     * @param RuleGroup $ruleGroup
      *
      * @return View
      */
-    public function selectTransactions(AccountRepositoryInterface $repository, RuleGroup $ruleGroup)
+    public function selectTransactions(RuleGroup $ruleGroup)
     {
-        // does the user have shared accounts?
-        $accounts        = $repository->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET]);
-        $accountList     = ExpandedForm::makeSelectList($accounts);
-        $checkedAccounts = array_keys($accountList);
-        $first           = session('first')->format('Y-m-d');
-        $today           = Carbon::create()->format('Y-m-d');
-        $subTitle        = (string)trans('firefly.apply_rule_group_selection', ['title' => $ruleGroup->title]);
+        $first    = session('first')->format('Y-m-d');
+        $today    = Carbon::create()->format('Y-m-d');
+        $subTitle = (string)trans('firefly.apply_rule_group_selection', ['title' => $ruleGroup->title]);
 
-        return view('rules.rule-group.select-transactions', compact('checkedAccounts', 'accountList', 'first', 'today', 'ruleGroup', 'subTitle'));
+        return view('rules.rule-group.select-transactions', compact('first', 'today', 'ruleGroup', 'subTitle'));
     }
 
     /**
@@ -209,12 +197,12 @@ class RuleGroupController extends Controller
         $data      = $request->getRuleGroupData();
         $ruleGroup = $repository->store($data);
 
-        Session::flash('success', (string)trans('firefly.created_new_rule_group', ['title' => $ruleGroup->title]));
+        session()->flash('success', (string)trans('firefly.created_new_rule_group', ['title' => $ruleGroup->title]));
         Preferences::mark();
 
         if (1 === (int)$request->get('create_another')) {
             // @codeCoverageIgnoreStart
-            Session::put('rule-groups.create.fromStore', true);
+            session()->put('rule-groups.create.fromStore', true);
 
             return redirect(route('rule-groups.create'))->withInput();
             // @codeCoverageIgnoreEnd
@@ -253,12 +241,12 @@ class RuleGroupController extends Controller
 
         $repository->update($ruleGroup, $data);
 
-        Session::flash('success', (string)trans('firefly.updated_rule_group', ['title' => $ruleGroup->title]));
+        session()->flash('success', (string)trans('firefly.updated_rule_group', ['title' => $ruleGroup->title]));
         Preferences::mark();
 
         if (1 === (int)$request->get('return_to_edit')) {
             // @codeCoverageIgnoreStart
-            Session::put('rule-groups.edit.fromUpdate', true);
+            session()->put('rule-groups.edit.fromUpdate', true);
 
             return redirect(route('rule-groups.edit', [$ruleGroup->id]))->withInput(['return_to_edit' => 1]);
             // @codeCoverageIgnoreEnd

@@ -179,6 +179,7 @@ return [
     'authorization_request_intro'                => '<strong>:client</strong> is requesting permission to access your financial administration. Would you like to authorize <strong>:client</strong> to access these records?',
     'scopes_will_be_able'                        => 'This application will be able to:',
     'button_authorize'                           => 'Authorize',
+    'none_in_select_list'                        => '(none)',
 
     // check for updates:
     'update_check_title'                         => 'Check for updates',
@@ -541,6 +542,7 @@ return [
     'attachment_deleted'                      => 'Deleted attachment ":name"',
     'attachment_updated'                      => 'Updated attachment ":name"',
     'upload_max_file_size'                    => 'Maximum file size: :size',
+    'list_all_attachments'                    => 'List of all attachments',
 
     // transaction index
     'title_expenses'                          => 'Expenses',
@@ -583,6 +585,7 @@ return [
     'converted_to_Deposit'                    => 'The transaction has been converted to a deposit',
     'converted_to_Transfer'                   => 'The transaction has been converted to a transfer',
     'invalid_convert_selection'               => 'The account you have selected is already used in this transaction or does not exist.',
+    'source_or_dest_invalid'                  => 'Cannot find the correct transaction details. Conversion is not possible.',
 
     // create new stuff:
     'create_new_withdrawal'                   => 'Create new withdrawal',
@@ -664,6 +667,7 @@ return [
     'bill_will_automatch'                     => 'Bill will automatically linked to matching transactions',
     'skips_over'                              => 'skips over',
     'bill_store_error'                        => 'An unexpected error occurred while storing your new bill. Please check the log files',
+    'list_inactive_rule'                      => 'inactive rule',
 
     // accounts:
     'details_for_asset'                       => 'Details for asset account ":name"',
@@ -799,6 +803,7 @@ return [
     'opt_group_savingAsset'                   => 'Savings accounts',
     'opt_group_sharedAsset'                   => 'Shared asset accounts',
     'opt_group_ccAsset'                       => 'Credit cards',
+    'opt_group_cashWalletAsset'               => 'Cash wallets',
     'notes'                                   => 'Notes',
     'unknown_journal_error'                   => 'Could not store the transaction. Please check the log files.',
 
@@ -1022,6 +1027,7 @@ return [
     'events'                    => 'Events',
     'target_amount'             => 'Target amount',
     'start_date'                => 'Start date',
+    'no_start_date'             => 'No start date',
     'target_date'               => 'Target date',
     'no_target_date'            => 'No target date',
     'table'                     => 'Table',
@@ -1145,20 +1151,9 @@ return [
     'no_edit_multiple_left'                 => 'You have selected no valid transactions to edit.',
     'cannot_convert_split_journal'          => 'Cannot convert a split transaction',
 
-    // import bread crumbs and titles:
-    'import'                                => 'Import',
-    'import_data'                           => 'Import data',
-    'import_general_index_file'             => 'Import a file',
-    'import_from_bunq'                      => 'Import from bunq',
-    'import_using_spectre'                  => 'Import using Spectre',
-    'import_using_plaid'                    => 'Import using Plaid',
-    'import_config_bread_crumb'             => 'Set up your import',
-
-    // import index page:
+    // Import page (general strings only)
     'import_index_title'                    => 'Import data into Firefly III',
-    'import_index_sub_title'                => 'Index',
-    'import_general_index_intro'            => 'Welcome to Firefly III\'s import routine. There are a few ways of importing data into Firefly III, displayed here as buttons.',
-    'upload_error'                          => 'The file you have uploaded could not be processed. Possibly it is of an invalid file type or encoding. The log files will have more information.',
+    'import_data'                           => 'Import data',
 
     // sandstorm.io errors and messages:
     'sandstorm_not_available'               => 'This function is not available when you are using Firefly III within a Sandstorm.io environment.',

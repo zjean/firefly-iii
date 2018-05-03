@@ -94,6 +94,8 @@ return [
     'convert_Transfer'            => 'Convert transfer',
 
     'amount'                     => 'Amount',
+    'foreign_amount'             => 'Foreign amount',
+    'existing_attachments'       => 'Existing attachments',
     'date'                       => 'Date',
     'interest_date'              => 'Interest date',
     'book_date'                  => 'Book date',
@@ -200,6 +202,8 @@ return [
     'client_id'             => 'Client ID',
     'service_secret'        => 'Service secret',
     'app_secret'            => 'App secret',
+    'app_id'                => 'App ID',
+    'secret'                => 'Secret',
     'public_key'            => 'Public key',
     'country_code'          => 'Country code',
     'provider_code'         => 'Bank or data-provider',

@@ -210,7 +210,7 @@
                             {% endif %}
                         {% endfor %}
                         {# all other meta values #}
-                        {% for metaField in ['internal_reference','sepa-ct-id','sepa-ct-op','sepa-db','sepa-country','sepa-cc','sepa-ep','sepa-ci'] %}
+                        {% for metaField in ['external_id','internal_reference','sepa-ct-id','sepa-ct-op','sepa-db','sepa-country','sepa-cc','sepa-ep','sepa-ci'] %}
                             {% if journalHasMeta(journal, metaField) %}
                                 <tr>
                                     <td>{{ trans('list.'~metaField) }}</td>
@@ -347,8 +347,6 @@
                     <h3 class="box-title">{{ 'transactions'|_ }}</h3>
                 </div>
                 <div class="box-body no-padding">
-                    {{ dump(transactions) }}
-                    {{ dump(transactions|length) }}
                     <table class="table table-bordered table-striped">
                         <thead>
                         <tr>
@@ -362,9 +360,7 @@
                         </thead>
                         <tbody>
 
-
-                        {%  set maxIdentifier = 1 %}
-                        {#{% set maxIdentifier = ((transactions|length) / 2) -1 %}#}
+                        {% set maxIdentifier = ((transactions|length) / 2) -1 %}
                         {% for x in 0..maxIdentifier %}
                             <tr>
                                 {# loop each transaction in the array.#}

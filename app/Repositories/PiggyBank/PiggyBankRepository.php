@@ -105,6 +105,22 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
     }
 
     /**
+     * Correct order of piggies in case of issues.
+     */
+    public function correctOrder(): void
+    {
+        $set     = $this->user->piggyBanks()->orderBy('order', 'ASC')->get();
+        $current = 1;
+        foreach ($set as $piggyBank) {
+            if ((int)$piggyBank->order !== $current) {
+                $piggyBank->order = $current;
+                $piggyBank->save();
+            }
+            $current++;
+        }
+    }
+
+    /**
      * @param PiggyBank $piggyBank
      * @param string    $amount
      *
@@ -143,8 +159,7 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
      * @param PiggyBank $piggyBank
      *
      * @return bool
-     *
-
+     * @throws \Exception
      */
     public function destroy(PiggyBank $piggyBank): bool
     {
@@ -197,8 +212,7 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
      */
     public function getCurrentAmount(PiggyBank $piggyBank): string
     {
-        /** @var PiggyBankRepetition $rep */
-        $rep = $piggyBank->piggyBankRepetitions()->first(['piggy_bank_repetitions.*']);
+        $rep = $this->getRepetition($piggyBank);
         if (null === $rep) {
             return '0';
         }
@@ -239,7 +253,7 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
         Log::debug(sprintf('Will add/remove %f to piggy bank #%d ("%s")', $amount, $piggyBank->id, $piggyBank->name));
 
         // if piggy account matches source account, the amount is positive
-        if (in_array($piggyBank->account_id, $sources)) {
+        if (\in_array($piggyBank->account_id, $sources)) {
             $amount = bcmul($amount, '-1');
             Log::debug(sprintf('Account #%d is the source, so will remove amount from piggy bank.', $piggyBank->account_id));
         }
@@ -302,18 +316,39 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
 
     /**
      * @param PiggyBank $piggyBank
+     *
+     * @return PiggyBankRepetition|null
+     */
+    public function getRepetition(PiggyBank $piggyBank): ?PiggyBankRepetition
+    {
+        return $piggyBank->piggyBankRepetitions()->first();
+    }
+
+    /**
+     * Get for piggy account what is left to put in piggies.
+     *
+     * @param PiggyBank $piggyBank
      * @param Carbon    $date
      *
-     * @return PiggyBankRepetition
+     * @return string
      */
-    public function getRepetition(PiggyBank $piggyBank, Carbon $date): PiggyBankRepetition
+    public function leftOnAccount(PiggyBank $piggyBank, Carbon $date): string
     {
-        $repetition = $piggyBank->piggyBankRepetitions()->relevantOnDate($date)->first();
-        if (null === $repetition) {
-            return new PiggyBankRepetition;
+
+        $balance = app('steam')->balanceIgnoreVirtual($piggyBank->account, $date);
+
+        /** @var Collection $piggies */
+        $piggies = $piggyBank->account->piggyBanks;
+
+        /** @var PiggyBank $current */
+        foreach ($piggies as $current) {
+            $repetition = $this->getRepetition($current);
+            if (null !== $repetition) {
+                $balance = bcsub($balance, $repetition->currentamount);
+            }
         }
 
-        return $repetition;
+        return $balance;
     }
 
     /**
@@ -360,14 +395,10 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
      *
      * @return bool
      */
-    public function setOrder(int $piggyBankId, int $order): bool
+    public function setOrder(PiggyBank $piggyBank, int $order): bool
     {
-        $piggyBank = PiggyBank::leftJoin('accounts', 'accounts.id', '=', 'piggy_banks.account_id')->where('accounts.user_id', $this->user->id)
-                              ->where('piggy_banks.id', $piggyBankId)->first(['piggy_banks.*']);
-        if ($piggyBank) {
-            $piggyBank->order = $order;
-            $piggyBank->save();
-        }
+        $piggyBank->order = $order;
+        $piggyBank->save();
 
         return true;
     }
@@ -436,7 +467,7 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
      */
     private function updateNote(PiggyBank $piggyBank, string $note): bool
     {
-        if (0 === strlen($note)) {
+        if (0 === \strlen($note)) {
             $dbNote = $piggyBank->notes()->first();
             if (null !== $dbNote) {
                 $dbNote->delete();

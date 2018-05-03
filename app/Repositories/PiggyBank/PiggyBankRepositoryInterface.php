@@ -87,6 +87,11 @@ interface PiggyBankRepositoryInterface
     public function createEventWithJournal(PiggyBank $piggyBank, string $amount, TransactionJournal $journal): PiggyBankEvent;
 
     /**
+     * Correct order of piggies in case of issues.
+     */
+    public function correctOrder(): void;
+
+    /**
      * Destroy piggy bank.
      *
      * @param PiggyBank $piggyBank
@@ -163,11 +168,20 @@ interface PiggyBankRepositoryInterface
 
     /**
      * @param PiggyBank $piggyBank
+     *
+     * @return PiggyBankRepetition|null
+     */
+    public function getRepetition(PiggyBank $piggyBank): ?PiggyBankRepetition;
+
+    /**
+     * Get for piggy account what is left to put in piggies.
+     *
+     * @param PiggyBank $piggyBank
      * @param Carbon    $date
      *
-     * @return PiggyBankRepetition
+     * @return string
      */
-    public function getRepetition(PiggyBank $piggyBank, Carbon $date): PiggyBankRepetition;
+    public function leftOnAccount(PiggyBank $piggyBank, Carbon $date): string;
 
     /**
      * @param PiggyBank $piggyBank
@@ -187,12 +201,12 @@ interface PiggyBankRepositoryInterface
     /**
      * Set specific piggy bank to specific order.
      *
-     * @param int $piggyBankId
+     * @param PiggyBank $piggyBank
      * @param int $order
      *
      * @return bool
      */
-    public function setOrder(int $piggyBankId, int $order): bool;
+    public function setOrder(PiggyBank $piggyBank, int $order): bool;
 
     /**
      * @param User $user

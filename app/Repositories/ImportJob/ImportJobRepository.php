@@ -25,6 +25,7 @@ namespace FireflyIII\Repositories\ImportJob;
 use Crypt;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Models\ImportJob;
+use FireflyIII\Models\Tag;
 use FireflyIII\Models\TransactionJournalMeta;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
 use FireflyIII\User;
@@ -108,34 +109,36 @@ class ImportJobRepository implements ImportJobRepositoryInterface
     }
 
     /**
-     * @param string $type
+     * @param string $importProvider
      *
      * @return ImportJob
      *
      * @throws FireflyException
      */
-    public function create(string $type): ImportJob
+    public function create(string $importProvider): ImportJob
     {
-        $count = 0;
-        $type  = strtolower($type);
+        $count          = 0;
+        $importProvider = strtolower($importProvider);
 
         while ($count < 30) {
             $key      = Str::random(12);
             $existing = $this->findByKey($key);
             if (null === $existing->id) {
-                $importJob = new ImportJob;
-                $importJob->user()->associate($this->user);
-                $importJob->file_type       = $type;
-                $importJob->key             = Str::random(12);
-                $importJob->status          = 'new';
-                $importJob->configuration   = [];
-                $importJob->extended_status = [
-                    'steps'  => 0,
-                    'done'   => 0,
-                    'tag'    => 0,
-                    'errors' => [],
-                ];
-                $importJob->save();
+                $importJob = ImportJob::create(
+                    [
+                        'user_id'         => $this->user->id,
+                        'tag_id'          => null,
+                        'provider'        => $importProvider,
+                        'file_type'       => '',
+                        'key'             => Str::random(12),
+                        'status'          => 'new',
+                        'stage'           => 'new',
+                        'configuration'   => [],
+                        'extended_status' => [],
+                        'transactions'    => [],
+                        'errors'          => [],
+                    ]
+                );
 
                 // breaks the loop:
                 return $importJob;
@@ -171,7 +174,7 @@ class ImportJobRepository implements ImportJobRepositoryInterface
     public function getConfiguration(ImportJob $job): array
     {
         $config = $job->configuration;
-        if (is_array($config)) {
+        if (\is_array($config)) {
             return $config;
         }
 
@@ -188,7 +191,7 @@ class ImportJobRepository implements ImportJobRepositoryInterface
     public function getExtendedStatus(ImportJob $job): array
     {
         $status = $job->extended_status;
-        if (is_array($status)) {
+        if (\is_array($status)) {
             return $status;
         }
 
@@ -226,7 +229,7 @@ class ImportJobRepository implements ImportJobRepositoryInterface
             $configRaw        = $configFileObject->fread($configFileObject->getSize());
             $configuration    = json_decode($configRaw, true);
             Log::debug(sprintf('Raw configuration is %s', $configRaw));
-            if (null !== $configuration && is_array($configuration)) {
+            if (null !== $configuration && \is_array($configuration)) {
                 Log::debug('Found configuration', $configuration);
                 $this->setConfiguration($job, $configuration);
             }
@@ -336,12 +339,27 @@ class ImportJobRepository implements ImportJobRepositoryInterface
 
     /**
      * @param ImportJob $job
+     * @param string    $stage
+     *
+     * @return ImportJob
+     */
+    public function setStage(ImportJob $job, string $stage): ImportJob
+    {
+        $job->stage = $stage;
+        $job->save();
+
+        return $job;
+    }
+
+    /**
+     * @param ImportJob $job
      * @param string    $status
      *
      * @return ImportJob
      */
     public function setStatus(ImportJob $job, string $status): ImportJob
     {
+        Log::debug(sprintf('Set status of job "%s" to "%s"', $job->key, $status));
         $job->status = $status;
         $job->save();
 
@@ -411,5 +429,51 @@ class ImportJobRepository implements ImportJobRepositoryInterface
     public function uploadFileContents(ImportJob $job): string
     {
         return $job->uploadFileContents();
+    }
+
+    /**
+     * @param ImportJob $job
+     * @param array     $transactions
+     *
+     * @return ImportJob
+     */
+    public function setTransactions(ImportJob $job, array $transactions): ImportJob
+    {
+        $job->transactions = $transactions;
+        $job->save();
+
+        return $job;
+    }
+
+    /**
+     * Add message to job.
+     *
+     * @param ImportJob $job
+     * @param string    $error
+     *
+     * @return ImportJob
+     */
+    public function addErrorMessage(ImportJob $job, string $error): ImportJob
+    {
+        $errors      = $job->errors;
+        $errors[]    = $error;
+        $job->errors = $errors;
+        $job->save();
+
+        return $job;
+    }
+
+    /**
+     * @param ImportJob $job
+     * @param Tag       $tag
+     *
+     * @return ImportJob
+     */
+    public function setTag(ImportJob $job, Tag $tag): ImportJob
+    {
+        $job->tag()->associate($tag);
+        $job->save();
+
+        return $job;
     }
 }

@@ -28,7 +28,6 @@ use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use Preferences;
-use Session;
 use View;
 
 /**
@@ -126,7 +125,7 @@ class NewUserController extends Controller
         ];
         Preferences::set('transaction_journal_optional_fields', $visibleFields);
 
-        Session::flash('success', (string)trans('firefly.stored_new_accounts_new_user'));
+        session()->flash('success', (string)trans('firefly.stored_new_accounts_new_user'));
         Preferences::mark();
 
         return redirect(route('index'));

@@ -314,29 +314,31 @@ class BunqRoutine implements RoutineInterface
      * @param string               $expectedType
      *
      * @return Account
-     * @throws \FireflyIII\Exceptions\FireflyException
-     * @throws FireflyException
      */
     private function convertToAccount(LabelMonetaryAccount $party, string $expectedType): Account
     {
         Log::debug('in convertToAccount()');
-        // find opposing party by IBAN first.
-        $result = $this->accountRepository->findByIbanNull($party->getIban(), [$expectedType]);
-        if (null !== $result) {
-            Log::debug(sprintf('Search for %s resulted in account %s (#%d)', $party->getIban(), $result->name, $result->id));
 
-            return $result;
-        }
-
-        // try to find asset account just in case:
-        if ($expectedType !== AccountType::ASSET) {
-            $result = $this->accountRepository->findByIbanNull($party->getIban(), [AccountType::ASSET]);
+        if ($party->getIban() !== null) {
+            // find opposing party by IBAN first.
+            $result = $this->accountRepository->findByIbanNull($party->getIban(), [$expectedType]);
             if (null !== $result) {
-                Log::debug(sprintf('Search for Asset "%s" resulted in account %s (#%d)', $party->getIban(), $result->name, $result->id));
+                Log::debug(sprintf('Search for %s resulted in account %s (#%d)', $party->getIban(), $result->name, $result->id));
 
                 return $result;
             }
+
+            // try to find asset account just in case:
+            if ($expectedType !== AccountType::ASSET) {
+                $result = $this->accountRepository->findByIbanNull($party->getIban(), [AccountType::ASSET]);
+                if (null !== $result) {
+                    Log::debug(sprintf('Search for Asset "%s" resulted in account %s (#%d)', $party->getIban(), $result->name, $result->id));
+
+                    return $result;
+                }
+            }
         }
+
         // create new account:
         $data    = [
             'user_id'         => $this->job->user_id,
@@ -537,7 +539,6 @@ class BunqRoutine implements RoutineInterface
      *
      * @return string
      *
-     * @throws FireflyException
      */
     private function getRemoteIp(): ?string
     {
@@ -598,7 +599,7 @@ class BunqRoutine implements RoutineInterface
         $journals = new Collection;
         $config   = $this->getConfig();
         foreach ($payments as $accountId => $data) {
-            Log::debug(sprintf('Now running for bunq account #%d with %d payment(s).', $accountId, count($data['payments'])));
+            Log::debug(sprintf('Now running for bunq account #%d with %d payment(s).', $accountId, \count($data['payments'])));
             /** @var Payment $payment */
             foreach ($data['payments'] as $index => $payment) {
                 Log::debug(sprintf('Now at payment #%d with ID #%d', $index, $payment->getId()));
@@ -798,18 +799,19 @@ class BunqRoutine implements RoutineInterface
         $mapping = $config['accounts-mapped'];
         $token   = new SessionToken($config['session_token']);
         $count   = 0;
+        $all     = [];
         if (0 === $user->getId()) {
             $user = new UserCompany($config['user_company']);
             Log::debug(sprintf('Will try to get transactions for company #%d', $user->getId()));
         }
 
-        $this->addTotalSteps(count($config['accounts']) * 2);
+        $this->addTotalSteps(\count($config['accounts']) * 2);
 
         foreach ($config['accounts'] as $accountData) {
             $this->addStep();
             $account  = new MonetaryAccountBank($accountData);
             $importId = $account->getId();
-            if (1 === $mapping[$importId]) {
+            if (isset($mapping[$importId])) {
                 Log::debug(sprintf('Will grab payments for account %s', $account->getDescription()));
                 $request = new ListPaymentRequest();
                 $request->setPrivateKey($this->getPrivateKey());
@@ -826,7 +828,7 @@ class BunqRoutine implements RoutineInterface
                     'import_id' => $importId,
                     'payments'  => $payments,
                 ];
-                $count                  += count($payments);
+                $count                  += \count($payments);
             }
             Log::debug(sprintf('Total number of payments: %d', $count));
             $this->addStep();

@@ -75,8 +75,7 @@ class TagRepository implements TagRepositoryInterface
      * @param Tag $tag
      *
      * @return bool
-     *
-
+     * @throws \Exception
      */
     public function destroy(Tag $tag): bool
     {
@@ -100,12 +99,13 @@ class TagRepository implements TagRepositoryInterface
         $collector->setRange($start, $end)->setTypes([TransactionType::DEPOSIT])->setAllAssetAccounts()->setTag($tag);
         $set = $collector->getJournals();
 
-        return strval($set->sum('transaction_amount'));
+        return (string)$set->sum('transaction_amount');
     }
 
     /**
      * @param int $tagId
      *
+     * @deprecated
      * @return Tag
      */
     public function find(int $tagId): Tag
@@ -223,7 +223,7 @@ class TagRepository implements TagRepositoryInterface
         $collector->setRange($start, $end)->setTypes([TransactionType::WITHDRAWAL])->setAllAssetAccounts()->setTag($tag);
         $set = $collector->getJournals();
 
-        return strval($set->sum('transaction_amount'));
+        return (string)$set->sum('transaction_amount');
     }
 
     /**
@@ -354,7 +354,7 @@ class TagRepository implements TagRepositoryInterface
         /** @var Tag $tag */
         foreach ($result as $tag) {
             $tagsWithAmounts[$tag->id] = (string)$tag->amount_sum;
-            $amount                    = strlen($tagsWithAmounts[$tag->id]) ? $tagsWithAmounts[$tag->id] : '0';
+            $amount                    = \strlen($tagsWithAmounts[$tag->id]) ? $tagsWithAmounts[$tag->id] : '0';
             if (null === $min) {
                 $min = $amount;
             }
@@ -453,5 +453,15 @@ class TagRepository implements TagRepositoryInterface
         $extra = $step / $amount;
 
         return (int)($range[0] + $extra);
+    }
+
+    /**
+     * @param int $tagId
+     *
+     * @return Tag|null
+     */
+    public function findNull(int $tagId): ?Tag
+    {
+        return $this->user->tags()->find($tagId);
     }
 }
