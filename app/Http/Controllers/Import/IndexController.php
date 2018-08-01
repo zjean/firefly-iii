@@ -22,21 +22,26 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers\Import;
 
-use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Http\Controllers\Controller;
-use FireflyIII\Http\Middleware\IsDemoUser;
 use FireflyIII\Import\Prerequisites\PrerequisitesInterface;
+use FireflyIII\Models\ImportJob;
 use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
-use View;
-
+use FireflyIII\Repositories\User\UserRepositoryInterface;
+use FireflyIII\Support\Binder\ImportProvider;
+use Illuminate\Http\Response as LaravelResponse;
+use Log;
 
 /**
  * Class FileController.
  */
 class IndexController extends Controller
 {
+    /** @var array */
+    public $providers;
     /** @var ImportJobRepositoryInterface */
     public $repository;
+    /** @var UserRepositoryInterface */
+    public $userRepository;
 
     /**
      *
@@ -48,13 +53,14 @@ class IndexController extends Controller
         $this->middleware(
             function ($request, $next) {
                 app('view')->share('mainTitleIcon', 'fa-archive');
-                app('view')->share('title', trans('firefly.import_index_title'));
-                $this->repository = app(ImportJobRepositoryInterface::class);
+                app('view')->share('title', (string)trans('firefly.import_index_title'));
+                $this->repository     = app(ImportJobRepositoryInterface::class);
+                $this->userRepository = app(UserRepositoryInterface::class);
+                $this->providers      = ImportProvider::getProviders();
 
                 return $next($request);
             }
         );
-        $this->middleware(IsDemoUser::class)->except(['index']);
     }
 
     /**
@@ -64,193 +70,116 @@ class IndexController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      *
-     * @throws FireflyException
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function create(string $importProvider)
     {
+        Log::debug(sprintf('Will create job for provider "%s"', $importProvider));
+
         $importJob = $this->repository->create($importProvider);
+        $hasPreReq = (bool)config(sprintf('import.has_prereq.%s', $importProvider));
+        $hasConfig = (bool)config(sprintf('import.has_job_config.%s', $importProvider));
 
-        // if job provider has no prerequisites:
-        if (!(bool)config(sprintf('import.has_prereq.%s', $importProvider))) {
+        Log::debug(sprintf('Created job #%d for provider %s', $importJob->id, $importProvider));
 
-            // if job provider also has no configuration:
-            if (!(bool)config(sprintf('import.has_config.%s', $importProvider))) {
-                $this->repository->updateStatus($importJob, 'ready_to_run');
+        // no prerequisites and no config:
+        if (false === $hasPreReq && false === $hasConfig) {
+            Log::debug('Provider needs no configuration for job. Job is ready to start.');
+            $this->repository->updateStatus($importJob, 'ready_to_run');
+            Log::debug('Redirect to status-page.');
 
-                return redirect(route('import.job.status.index', [$importJob->key]));
-            }
+            return redirect(route('import.job.status.index', [$importJob->key]));
+        }
 
-            // update job to say "has_prereq".
+        // no prerequisites but job has config:
+        if (false === $hasPreReq && false !== $hasConfig) {
+            Log::debug('Provider has no prerequisites. Continue.');
             $this->repository->setStatus($importJob, 'has_prereq');
+            Log::debug('Redirect to configuration.');
 
-            // redirect to job configuration.
             return redirect(route('import.job.configuration.index', [$importJob->key]));
         }
 
-        // if need to set prerequisites, do that first.
-        $class = (string)config(sprintf('import.prerequisites.%s', $importProvider));
-        if (!class_exists($class)) {
-            throw new FireflyException(sprintf('No class to handle configuration for "%s".', $importProvider)); // @codeCoverageIgnore
-        }
+        // job has prerequisites:
+        Log::debug('Job provider has prerequisites.');
         /** @var PrerequisitesInterface $providerPre */
-        $providerPre = app($class);
-        $providerPre->setUser(auth()->user());
+        $providerPre = app((string)config(sprintf('import.prerequisites.%s', $importProvider)));
+        $providerPre->setUser($importJob->user);
 
+        // and are not filled in:
         if (!$providerPre->isComplete()) {
+            Log::debug('Job provider prerequisites are not yet filled in. Redirect to prerequisites-page.');
+
             // redirect to global prerequisites
             return redirect(route('import.prerequisites.index', [$importProvider, $importJob->key]));
         }
+        Log::debug('Prerequisites are complete.');
 
-        // update job to say "has_prereq".
+        // but are filled in:
         $this->repository->setStatus($importJob, 'has_prereq');
+
+        // and has no config:
+        if (false === $hasConfig) {
+            // @codeCoverageIgnoreStart
+            Log::debug('Provider has no configuration. Job is ready to start.');
+            $this->repository->updateStatus($importJob, 'ready_to_run');
+            Log::debug('Redirect to status-page.');
+
+            return redirect(route('import.job.status.index', [$importJob->key]));
+            // @codeCoverageIgnoreEnd
+        }
+
+        // but also needs config:
+        Log::debug('Job has configuration. Redirect to job-config.');
 
         // Otherwise just redirect to job configuration.
         return redirect(route('import.job.configuration.index', [$importJob->key]));
 
     }
 
+    /**
+     * Generate a JSON file of the job's configuration and send it to the user.
+     *
+     * @param ImportJob $job
+     *
+     * @return LaravelResponse
+     */
+    public function download(ImportJob $job): LaravelResponse
+    {
+        Log::debug('Now in download()', ['job' => $job->key]);
+        $config = $this->repository->getConfiguration($job);
+        // This is CSV import specific:
+        $config['delimiter'] = $config['delimiter'] ?? ',';
+        $config['delimiter'] = "\t" === $config['delimiter'] ? 'tab' : $config['delimiter'];
+
+        $result = json_encode($config, JSON_PRETTY_PRINT);
+        $name   = sprintf('"%s"', addcslashes('import-configuration-' . date('Y-m-d') . '.json', '"\\'));
+        /** @var LaravelResponse $response */
+        $response = response($result, 200);
+        $response->header('Content-disposition', 'attachment; filename=' . $name)
+                 ->header('Content-Type', 'application/json')
+                 ->header('Content-Description', 'File Transfer')
+                 ->header('Connection', 'Keep-Alive')
+                 ->header('Expires', '0')
+                 ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
+                 ->header('Pragma', 'public')
+                 ->header('Content-Length', \strlen($result));
+
+        return $response;
+    }
 
     /**
      * General import index.
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
     {
-        // get all import routines:
-        /** @var array $config */
-        $config    = config('import.enabled');
-        $providers = [];
-        foreach ($config as $name => $enabled) {
-            if ($enabled || (bool)config('app.debug')) {
-                $providers[$name] = [];
-            }
-        }
-
-        // has prereq or config?
-        foreach (array_keys($providers) as $name) {
-            $providers[$name]['has_prereq'] = (bool)config('import.has_prereq.' . $name);
-            $providers[$name]['has_config'] = (bool)config('import.has_config.' . $name);
-            $class                          = (string)config('import.prerequisites.' . $name);
-            $result                         = false;
-            if ($class !== '' && class_exists($class)) {
-                /** @var PrerequisitesInterface $object */
-                $object = app($class);
-                $object->setUser(auth()->user());
-                $result = $object->isComplete();
-            }
-            $providers[$name]['prereq_complete'] = $result;
-        }
-
-        $subTitle     = trans('import.index_breadcrumb');
+        $providers    = $this->providers;
+        $subTitle     = (string)trans('import.index_breadcrumb');
         $subTitleIcon = 'fa-home';
 
         return view('import.index', compact('subTitle', 'subTitleIcon', 'providers'));
     }
-    //
-    //    /**
-    //     * @param Request $request
-    //     * @param string  $bank
-    //     *
-    //     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-    //     */
-    //    public function reset(Request $request, string $bank)
-    //    {
-    //        if ($bank === 'bunq') {
-    //            // remove bunq related preferences.
-    //            Preferences::delete('bunq_api_key');
-    //            Preferences::delete('bunq_server_public_key');
-    //            Preferences::delete('bunq_private_key');
-    //            Preferences::delete('bunq_public_key');
-    //            Preferences::delete('bunq_installation_token');
-    //            Preferences::delete('bunq_installation_id');
-    //            Preferences::delete('bunq_device_server_id');
-    //            Preferences::delete('external_ip');
-    //
-    //        }
-    //
-    //        if ($bank === 'spectre') {
-    //            // remove spectre related preferences:
-    //            Preferences::delete('spectre_client_id');
-    //            Preferences::delete('spectre_app_secret');
-    //            Preferences::delete('spectre_service_secret');
-    //            Preferences::delete('spectre_app_id');
-    //            Preferences::delete('spectre_secret');
-    //            Preferences::delete('spectre_private_key');
-    //            Preferences::delete('spectre_public_key');
-    //            Preferences::delete('spectre_customer');
-    //        }
-    //
-    //        Preferences::mark();
-    //        $request->session()->flash('info', (string)trans('firefly.settings_reset_for_' . $bank));
-    //
-    //        return redirect(route('import.index'));
-    //
-    //    }
-
-    //    /**
-    //     * @param ImportJob $job
-    //     *
-    //     * @return \Illuminate\Http\JsonResponse
-    //     *
-    //     * @throws FireflyException
-    //     */
-    //    public function start(ImportJob $job)
-    //    {
-    //        $type      = $job->file_type;
-    //        $key       = sprintf('import.routine.%s', $type);
-    //        $className = config($key);
-    //        if (null === $className || !class_exists($className)) {
-    //            throw new FireflyException(sprintf('Cannot find import routine class for job of type "%s".', $type)); // @codeCoverageIgnore
-    //        }
-    //
-    //        /** @var RoutineInterface $routine */
-    //        $routine = app($className);
-    //        $routine->setJob($job);
-    //        $result = $routine->run();
-    //
-    //        if ($result) {
-    //            return response()->json(['run' => 'ok']);
-    //        }
-    //
-    //        throw new FireflyException('Job did not complete successfully. Please review the log files.');
-    //    }
-
-
-    //    /**
-    //     * Generate a JSON file of the job's configuration and send it to the user.
-    //     *
-    //     * @param ImportJob $job
-    //     *
-    //     * @return LaravelResponse
-    //     */
-    //    public function download(ImportJob $job)
-    //    {
-    //        Log::debug('Now in download()', ['job' => $job->key]);
-    //        $config = $job->configuration;
-    //
-    //        // This is CSV import specific:
-    //        $config['column-roles-complete']   = false;
-    //        $config['column-mapping-complete'] = false;
-    //        $config['initial-config-complete'] = false;
-    //        $config['has-file-upload']         = false;
-    //        $config['delimiter']               = "\t" === $config['delimiter'] ? 'tab' : $config['delimiter'];
-    //        unset($config['stage']);
-    //
-    //        $result = json_encode($config, JSON_PRETTY_PRINT);
-    //        $name   = sprintf('"%s"', addcslashes('import-configuration-' . date('Y-m-d') . '.json', '"\\'));
-    //
-    //        /** @var LaravelResponse $response */
-    //        $response = response($result, 200);
-    //        $response->header('Content-disposition', 'attachment; filename=' . $name)
-    //                 ->header('Content-Type', 'application/json')
-    //                 ->header('Content-Description', 'File Transfer')
-    //                 ->header('Connection', 'Keep-Alive')
-    //                 ->header('Expires', '0')
-    //                 ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
-    //                 ->header('Pragma', 'public')
-    //                 ->header('Content-Length', \strlen($result));
-    //
-    //        return $response;
-    //    }
 }

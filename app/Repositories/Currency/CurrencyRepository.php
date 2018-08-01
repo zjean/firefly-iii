@@ -32,7 +32,6 @@ use FireflyIII\Services\Internal\Update\CurrencyUpdateService;
 use FireflyIII\User;
 use Illuminate\Support\Collection;
 use Log;
-use Preferences;
 
 /**
  * Class CurrencyRepository.
@@ -66,7 +65,7 @@ class CurrencyRepository implements CurrencyRepositoryInterface
         }
 
         // is the default currency for the user or the system
-        $defaultCode = Preferences::getForUser($this->user, 'currencyPreference', config('firefly.default_currency', 'EUR'))->data;
+        $defaultCode = app('preferences')->getForUser($this->user, 'currencyPreference', config('firefly.default_currency', 'EUR'))->data;
         if ($currency->code === $defaultCode) {
             return false;
         }
@@ -265,13 +264,15 @@ class CurrencyRepository implements CurrencyRepositoryInterface
     }
 
     /**
+     * Get currency exchange rate.
+     *
      * @param TransactionCurrency $fromCurrency
      * @param TransactionCurrency $toCurrency
      * @param Carbon              $date
      *
-     * @return CurrencyExchangeRate
+     * @return CurrencyExchangeRate|null
      */
-    public function getExchangeRate(TransactionCurrency $fromCurrency, TransactionCurrency $toCurrency, Carbon $date): CurrencyExchangeRate
+    public function getExchangeRate(TransactionCurrency $fromCurrency, TransactionCurrency $toCurrency, Carbon $date): ?CurrencyExchangeRate
     {
         if ($fromCurrency->id === $toCurrency->id) {
             $rate       = new CurrencyExchangeRate;
@@ -280,7 +281,7 @@ class CurrencyRepository implements CurrencyRepositoryInterface
 
             return $rate;
         }
-
+        /** @var CurrencyExchangeRate $rate */
         $rate = $this->user->currencyExchangeRates()
                            ->where('from_currency_id', $fromCurrency->id)
                            ->where('to_currency_id', $toCurrency->id)
@@ -291,7 +292,7 @@ class CurrencyRepository implements CurrencyRepositoryInterface
             return $rate;
         }
 
-        return new CurrencyExchangeRate;
+        return null;
     }
 
     /**
@@ -305,9 +306,9 @@ class CurrencyRepository implements CurrencyRepositoryInterface
     /**
      * @param array $data
      *
-     * @return TransactionCurrency
+     * @return TransactionCurrency|null
      */
-    public function store(array $data): TransactionCurrency
+    public function store(array $data): ?TransactionCurrency
     {
         /** @var TransactionCurrencyFactory $factory */
         $factory = app(TransactionCurrencyFactory::class);

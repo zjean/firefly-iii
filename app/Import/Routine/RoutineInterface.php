@@ -35,15 +35,14 @@ interface RoutineInterface
      *
      * The final status of the routine must be "provider_finished".
      *
-     * @return bool
      * @throws FireflyException
      */
     public function run(): void;
 
     /**
-     * @param ImportJob $job
+     * @param ImportJob $importJob
      *
-     * @return mixed
+     * @return void
      */
-    public function setJob(ImportJob $job);
+    public function setImportJob(ImportJob $importJob): void;
 }

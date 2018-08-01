@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+
 /**
  * BillFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -20,6 +20,7 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
@@ -57,8 +58,8 @@ class BillFactory
                 'date'                    => $data['date'],
                 'repeat_freq'             => $data['repeat_freq'],
                 'skip'                    => $data['skip'],
-                'automatch'               => true,
-                'active'                  => $data['active'],
+                'automatch'               => $data['automatch'] ?? true,
+                'active'                  => $data['active'] ?? true,
             ]
         );
 
@@ -80,25 +81,19 @@ class BillFactory
     {
         $billId   = (int)$billId;
         $billName = (string)$billName;
-
+        $bill     = null;
         // first find by ID:
         if ($billId > 0) {
             /** @var Bill $bill */
             $bill = $this->user->bills()->find($billId);
-            if (null !== $bill) {
-                return $bill;
-            }
         }
 
         // then find by name:
-        if (\strlen($billName) > 0) {
+        if (null === $bill && \strlen($billName) > 0) {
             $bill = $this->findByName($billName);
-            if (null !== $bill) {
-                return $bill;
-            }
         }
 
-        return null;
+        return $bill;
 
     }
 
@@ -111,22 +106,24 @@ class BillFactory
     {
         /** @var Collection $collection */
         $collection = $this->user->bills()->get();
+        $return     = null;
         /** @var Bill $bill */
         foreach ($collection as $bill) {
             Log::debug(sprintf('"%s" vs. "%s"', $bill->name, $name));
             if ($bill->name === $name) {
-                return $bill;
+                $return = $bill;
+                break;
             }
         }
-        Log::debug(sprintf('Bill::Find by name returns NULL based on "%s"', $name));
+        Log::debug(sprintf('Bill::find("%s") by name returns null? %s', $name, var_export($return, true)));
 
-        return null;
+        return $return;
     }
 
     /**
      * @param User $user
      */
-    public function setUser(User $user)
+    public function setUser(User $user): void
     {
         $this->user = $user;
     }

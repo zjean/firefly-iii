@@ -1,8 +1,8 @@
 <?php
-declare(strict_types=1);
+
 /**
  * AdminRequestedTestMessage.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +20,8 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace FireflyIII\Events;
 
 use FireflyIII\User;
@@ -33,13 +35,9 @@ class AdminRequestedTestMessage extends Event
 {
     use SerializesModels;
 
-    /**
-     * @var string
-     */
+    /** @var string The users IP address */
     public $ipAddress;
-    /**
-     * @var User
-     */
+    /** @var User The user */
     public $user;
 
     /**

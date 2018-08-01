@@ -42,14 +42,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasic()
+    public function testCreateBasic(): void
     {
 
         $data = [
             'account_type_id' => null,
             'accountType'     => 'asset',
             'iban'            => null,
-            'name'            => 'Basic asset account #' . random_int(1, 1000),
+            'name'            => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'  => null,
             'active'          => true,
             'accountRole'     => 'defaultAsset',
@@ -81,14 +81,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicEmptyVb()
+    public function testCreateBasicEmptyVb(): void
     {
 
         $data = [
             'account_type_id' => null,
             'accountType'     => 'asset',
             'iban'            => null,
-            'name'            => 'Basic asset account #' . random_int(1, 1000),
+            'name'            => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'  => '',
             'active'          => true,
             'accountRole'     => 'defaultAsset',
@@ -120,14 +120,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicCC()
+    public function testCreateBasicCC(): void
     {
 
         $data = [
             'account_type_id'      => null,
             'accountType'          => 'asset',
             'iban'                 => null,
-            'name'                 => 'Basic CC account #' . random_int(1, 1000),
+            'name'                 => 'Basic CC account #' . random_int(1, 10000),
             'virtualBalance'       => null,
             'active'               => true,
             'accountRole'          => 'ccAsset',
@@ -167,14 +167,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicExpense()
+    public function testCreateBasicExpense(): void
     {
 
         $data = [
             'account_type_id' => null,
             'accountType'     => 'expense',
             'iban'            => null,
-            'name'            => 'Basic expense account #' . random_int(1, 1000),
+            'name'            => 'Basic expense account #' . random_int(1, 10000),
             'virtualBalance'  => '1243',
             'active'          => true,
             'accountRole'     => 'defaultAsset',
@@ -206,14 +206,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicExpenseFullType()
+    public function testCreateBasicExpenseFullType(): void
     {
 
         $data = [
             'account_type_id' => null,
             'accountType'     => 'Expense account',
             'iban'            => null,
-            'name'            => 'Basic expense account #' . random_int(1, 1000),
+            'name'            => 'Basic expense account #' . random_int(1, 10000),
             'virtualBalance'  => '1243',
             'active'          => true,
             'accountRole'     => 'defaultAsset',
@@ -244,14 +244,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicIB()
+    public function testCreateBasicIB(): void
     {
 
         $data = [
             'account_type_id'    => null,
             'accountType'        => 'asset',
             'iban'               => null,
-            'name'               => 'Basic asset account #' . random_int(1, 1000),
+            'name'               => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'     => null,
             'active'             => true,
             'accountRole'        => 'defaultAsset',
@@ -290,14 +290,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicIBZero()
+    public function testCreateBasicIBZero(): void
     {
 
         $data = [
             'account_type_id'    => null,
             'accountType'        => 'asset',
             'iban'               => null,
-            'name'               => 'Basic asset account #' . random_int(1, 1000),
+            'name'               => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'     => null,
             'active'             => true,
             'accountRole'        => 'defaultAsset',
@@ -335,14 +335,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicIban()
+    public function testCreateBasicIban(): void
     {
 
         $data = [
             'account_type_id' => null,
             'accountType'     => 'asset',
-            'iban'            => 'NL18RABO0326747238',
-            'name'            => 'Basic asset account #' . random_int(1, 1000),
+            'iban'            => 'NL02ABNA0870809585',
+            'name'            => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'  => null,
             'active'          => true,
             'accountRole'     => 'defaultAsset',
@@ -356,7 +356,7 @@ class AccountFactoryTest extends TestCase
         // assert stuff about account:
         $this->assertEquals($account->name, $data['name']);
         $this->assertEquals(AccountType::ASSET, $account->accountType->type);
-        $this->assertEquals('NL18RABO0326747238', $account->iban);
+        $this->assertEquals('NL02ABNA0870809585', $account->iban);
         $this->assertTrue($account->active);
         $this->assertEquals('0', $account->virtual_balance);
 
@@ -374,14 +374,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicInvalidIban()
+    public function testCreateBasicInvalidIban(): void
     {
 
         $data = [
             'account_type_id' => null,
             'accountType'     => 'asset',
             'iban'            => 'NL1XRABO032674X238',
-            'name'            => 'Basic asset account #' . random_int(1, 1000),
+            'name'            => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'  => null,
             'active'          => true,
             'accountRole'     => 'defaultAsset',
@@ -413,14 +413,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicNegativeIB()
+    public function testCreateBasicNegativeIB(): void
     {
 
         $data = [
             'account_type_id'    => null,
             'accountType'        => 'asset',
             'iban'               => null,
-            'name'               => 'Basic asset account #' . random_int(1, 1000),
+            'name'               => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'     => null,
             'active'             => true,
             'accountRole'        => 'defaultAsset',
@@ -459,14 +459,14 @@ class AccountFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\AccountMetaFactory
      * @covers \FireflyIII\Services\Internal\Support\AccountServiceTrait
      */
-    public function testCreateBasicNotes()
+    public function testCreateBasicNotes(): void
     {
 
         $data = [
             'account_type_id' => null,
             'accountType'     => 'asset',
             'iban'            => null,
-            'name'            => 'Basic asset account #' . random_int(1, 1000),
+            'name'            => 'Basic asset account #' . random_int(1, 10000),
             'virtualBalance'  => null,
             'active'          => true,
             'accountRole'     => 'defaultAsset',
@@ -500,7 +500,7 @@ class AccountFactoryTest extends TestCase
      *
      * @covers \FireflyIII\Factory\AccountFactory
      */
-    public function testCreateExisting()
+    public function testCreateExisting(): void
     {
         $existing = $this->user()->accounts()->where('account_type_id', 3)->first();
         $data     = [

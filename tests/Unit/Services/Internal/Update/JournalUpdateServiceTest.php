@@ -44,7 +44,7 @@ class JournalUpdateServiceTest extends TestCase
      * @covers \FireflyIII\Services\Internal\Update\JournalUpdateService
      * @covers \FireflyIII\Services\Internal\Support\JournalServiceTrait
      */
-    public function testUpdateBasic()
+    public function testUpdateBasic(): void
     {
         // mock other stuff:
         $transactionFactory = $this->mock(TransactionFactory::class);
@@ -65,7 +65,7 @@ class JournalUpdateServiceTest extends TestCase
         /** @var TransactionJournal $journal */
         $journal = $this->user()->transactionJournals()->where('transaction_type_id', 2)->first();
         $data    = [
-            'description'  => 'Updated journal #' . random_int(1, 1000),
+            'description'  => 'Updated journal #' . random_int(1, 10000),
             'date'         => new Carbon('2018-01-01'),
             'bill_id'      => null,
             'bill_name'    => null,
@@ -86,7 +86,7 @@ class JournalUpdateServiceTest extends TestCase
      * @covers \FireflyIII\Services\Internal\Update\JournalUpdateService
      * @covers \FireflyIII\Services\Internal\Support\JournalServiceTrait
      */
-    public function testUpdateBasicEmptyNote()
+    public function testUpdateBasicEmptyNote(): void
     {
         // mock other stuff:
         $transactionFactory = $this->mock(TransactionFactory::class);
@@ -107,7 +107,7 @@ class JournalUpdateServiceTest extends TestCase
         /** @var TransactionJournal $journal */
         $journal = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 2)->first();
         $data    = [
-            'description'  => 'Updated journal #' . random_int(1, 1000),
+            'description'  => 'Updated journal #' . random_int(1, 10000),
             'date'         => new Carbon('2018-01-01'),
             'bill_id'      => null,
             'bill_name'    => null,
@@ -128,7 +128,7 @@ class JournalUpdateServiceTest extends TestCase
     /**
      * @covers \FireflyIII\Services\Internal\Update\JournalUpdateService
      */
-    public function testUpdateBudget()
+    public function testUpdateBudget(): void
     {
         $budget  = $this->user()->budgets()->first();
         $service = $this->mock(TransactionUpdateService::class);
@@ -151,7 +151,7 @@ class JournalUpdateServiceTest extends TestCase
     /**
      * @covers \FireflyIII\Services\Internal\Update\JournalUpdateService
      */
-    public function testUpdateCategory()
+    public function testUpdateCategory(): void
     {
         $service = $this->mock(TransactionUpdateService::class);
         $service->shouldReceive('setUser');
@@ -175,7 +175,7 @@ class JournalUpdateServiceTest extends TestCase
      * @covers \FireflyIII\Services\Internal\Update\JournalUpdateService
      * @covers \FireflyIII\Services\Internal\Support\JournalServiceTrait
      */
-    public function testUpdateLotsOfTransactions()
+    public function testUpdateLotsOfTransactions(): void
     {
         // mock other stuff:
         $transactionFactory = $this->mock(TransactionFactory::class);
@@ -199,7 +199,7 @@ class JournalUpdateServiceTest extends TestCase
         /** @var TransactionJournal $journal */
         $journal = $this->user()->transactionJournals()->skip(4)->where('transaction_type_id', 1)->first();
         $data    = [
-            'description'  => 'Updated journal #' . random_int(1, 1000),
+            'description'  => 'Updated journal #' . random_int(1, 10000),
             'date'         => new Carbon('2018-01-01'),
             'bill_id'      => null,
             'bill_name'    => null,

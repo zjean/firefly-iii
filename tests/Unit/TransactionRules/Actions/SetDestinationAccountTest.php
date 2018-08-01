@@ -44,7 +44,7 @@ class SetDestinationAccountTest extends TestCase
      *
      * @covers \FireflyIII\TransactionRules\Actions\SetDestinationAccount
      */
-    public function testActDepositExisting()
+    public function testActDepositExisting(): void
     {
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $type         = TransactionType::whereType(TransactionType::DEPOSIT)->first();
@@ -86,7 +86,7 @@ class SetDestinationAccountTest extends TestCase
      *
      * @covers \FireflyIII\TransactionRules\Actions\SetDestinationAccount
      */
-    public function testActDepositNotExisting()
+    public function testActDepositNotExisting(): void
     {
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $type         = TransactionType::whereType(TransactionType::DEPOSIT)->first();
@@ -103,7 +103,7 @@ class SetDestinationAccountTest extends TestCase
 
         // fire the action:
         $ruleAction               = new RuleAction;
-        $ruleAction->action_value = 'Not existing asset account #' . random_int(1, 1000);
+        $ruleAction->action_value = 'Not existing asset account #' . random_int(1, 10000);
         $action                   = new SetDestinationAccount($ruleAction);
         $result                   = $action->act($journal);
         $this->assertFalse($result);
@@ -114,7 +114,7 @@ class SetDestinationAccountTest extends TestCase
      *
      * @covers \FireflyIII\TransactionRules\Actions\SetDestinationAccount
      */
-    public function testActWithDrawalNotExisting()
+    public function testActWithDrawalNotExisting(): void
     {
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $type         = TransactionType::whereType(TransactionType::WITHDRAWAL)->first();
@@ -134,7 +134,7 @@ class SetDestinationAccountTest extends TestCase
 
         // fire the action:
         $ruleAction               = new RuleAction;
-        $ruleAction->action_value = 'Not existing expense account #' . random_int(1, 1000);
+        $ruleAction->action_value = 'Not existing expense account #' . random_int(1, 10000);
         $action                   = new SetDestinationAccount($ruleAction);
         $result                   = $action->act($journal);
 
@@ -146,7 +146,7 @@ class SetDestinationAccountTest extends TestCase
      *
      * @covers \FireflyIII\TransactionRules\Actions\SetDestinationAccount
      */
-    public function testActWithdrawalExisting()
+    public function testActWithdrawalExisting(): void
     {
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $type         = TransactionType::whereType(TransactionType::WITHDRAWAL)->first();
@@ -189,7 +189,7 @@ class SetDestinationAccountTest extends TestCase
      *
      * @covers \FireflyIII\TransactionRules\Actions\SetDestinationAccount
      */
-    public function testSplitJournal()
+    public function testSplitJournal(): void
     {
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $transaction  = Transaction::orderBy('count', 'DESC')->groupBy('transaction_journal_id')
@@ -202,7 +202,7 @@ class SetDestinationAccountTest extends TestCase
 
         // fire the action:
         $ruleAction               = new RuleAction;
-        $ruleAction->action_value = 'Some new asset ' . random_int(1, 1000);
+        $ruleAction->action_value = 'Some new asset ' . random_int(1, 10000);
         $action                   = new SetDestinationAccount($ruleAction);
         $result                   = $action->act($journal);
         $this->assertFalse($result);

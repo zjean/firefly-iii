@@ -29,10 +29,6 @@ use Tests\TestCase;
 
 /**
  * Class ConfigurationControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ConfigurationControllerTest extends TestCase
 {
@@ -49,7 +45,7 @@ class ConfigurationControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController::index
      * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController::__construct
      */
-    public function testIndex()
+    public function testIndex(): void
     {
         $this->be($this->user());
 
@@ -72,7 +68,7 @@ class ConfigurationControllerTest extends TestCase
     /**
      * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController::postIndex
      */
-    public function testPostIndex()
+    public function testPostIndex(): void
     {
         $falseConfig       = new Configuration;
         $falseConfig->data = false;

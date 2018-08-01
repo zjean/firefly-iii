@@ -1,9 +1,7 @@
 <?php
-declare(strict_types=1);
-
 /**
  * UseEncryption.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +18,8 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+declare(strict_types=1);
 
 namespace FireflyIII\Console\Commands;
 
@@ -47,12 +47,12 @@ class UseEncryption extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
-        if (config('firefly.encryption') === true) {
+        if (true === config('firefly.encryption')) {
             $this->info('Firefly III configuration calls for encrypted data.');
         }
-        if (config('firefly.encryption') === false) {
+        if (false === config('firefly.encryption')) {
             $this->info('Firefly III configuration calls for unencrypted data.');
         }
         $this->handleObjects('Account', 'name', 'encrypted');
@@ -71,18 +71,21 @@ class UseEncryption extends Command
      * @param string $field
      * @param string $indicator
      */
-    public function handleObjects(string $class, string $field, string $indicator)
+    public function handleObjects(string $class, string $field, string $indicator): void
     {
         $fqn     = sprintf('FireflyIII\Models\%s', $class);
-        $encrypt = config('firefly.encryption') === true ? 0 : 1;
-        $set     = $fqn::where($indicator, $encrypt)->get();
+        $encrypt = true === config('firefly.encryption') ? 0 : 1;
+        /** @noinspection PhpUndefinedMethodInspection */
+        $set = $fqn::where($indicator, $encrypt)->get();
 
         foreach ($set as $entry) {
             $newName       = $entry->$field;
             $entry->$field = $newName;
+            /** @noinspection PhpUndefinedMethodInspection */
             $entry->save();
         }
 
+        /** @noinspection PhpUndefinedMethodInspection */
         $this->line(sprintf('Updated %d %s.', $set->count(), strtolower(Str::plural($class))));
     }
 }

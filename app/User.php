@@ -1,8 +1,8 @@
 <?php
-declare(strict_types=1);
+
 /**
  * User.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,10 +20,29 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace FireflyIII;
 
 use FireflyIII\Events\RequestedNewPassword;
+use FireflyIII\Models\Account;
+use FireflyIII\Models\Attachment;
+use FireflyIII\Models\AvailableBudget;
+use FireflyIII\Models\Bill;
+use FireflyIII\Models\Budget;
+use FireflyIII\Models\Category;
 use FireflyIII\Models\CurrencyExchangeRate;
+use FireflyIII\Models\ExportJob;
+use FireflyIII\Models\ImportJob;
+use FireflyIII\Models\PiggyBank;
+use FireflyIII\Models\Preference;
+use FireflyIII\Models\Recurrence;
+use FireflyIII\Models\Role;
+use FireflyIII\Models\Rule;
+use FireflyIII\Models\RuleGroup;
+use FireflyIII\Models\Tag;
+use FireflyIII\Models\Transaction;
+use FireflyIII\Models\TransactionJournal;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -34,25 +53,16 @@ use Laravel\Passport\HasApiTokens;
 use Log;
 use Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use FireflyIII\Models\TransactionJournal;
-use FireflyIII\Models\Transaction;
-use FireflyIII\Models\Tag;
-use FireflyIII\Models\Rule;
-use FireflyIII\Models\RuleGroup;
-use FireflyIII\Models\Role;
-use FireflyIII\Models\Preference;
-use FireflyIII\Models\Account;
-use FireflyIII\Models\PiggyBank;
-use FireflyIII\Models\ImportJob;
-use FireflyIII\Models\ExportJob;
-use FireflyIII\Models\Category;
-use FireflyIII\Models\Budget;
-use FireflyIII\Models\Bill;
-use FireflyIII\Models\AvailableBudget;
-use FireflyIII\Models\Attachment;
 
 /**
  * Class User.
+ *
+ * @property int    $id
+ * @property string $email
+ * @property bool   $isAdmin used in admin user controller.
+ * @property bool   $has2FA  used in admin user controller.
+ * @property array  $prefs   used in admin user controller.
+ * @property mixed  password
  */
 class User extends Authenticatable
 {
@@ -284,6 +294,17 @@ class User extends Authenticatable
     public function preferences(): HasMany
     {
         return $this->hasMany(Preference::class);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * Link to recurring transactions.
+     *
+     * @return HasMany
+     */
+    public function recurrences(): HasMany
+    {
+        return $this->hasMany(Recurrence::class);
     }
 
     /**

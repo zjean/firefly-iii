@@ -29,6 +29,8 @@ use FireflyIII\Models\PiggyBank;
 use FireflyIII\Models\PiggyBankEvent;
 use FireflyIII\Repositories\PiggyBank\PiggyBankRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
+use FireflyIII\Support\Http\Controllers\DateCalculation;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
 /**
@@ -36,6 +38,7 @@ use Illuminate\Support\Collection;
  */
 class PiggyBankController extends Controller
 {
+    use DateCalculation;
     /** @var GeneratorInterface */
     protected $generator;
 
@@ -55,9 +58,12 @@ class PiggyBankController extends Controller
      * @param PiggyBankRepositoryInterface $repository
      * @param PiggyBank                    $piggyBank
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return JsonResponse
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
-    public function history(PiggyBankRepositoryInterface $repository, PiggyBank $piggyBank)
+    public function history(PiggyBankRepositoryInterface $repository, PiggyBank $piggyBank): JsonResponse
     {
         // chart properties for cache:
         $cache = new CacheProperties;
@@ -80,17 +86,7 @@ class PiggyBankController extends Controller
         $oldest = $startDate->lt($firstDate) ? $startDate : $firstDate;
         $today  = new Carbon;
         // depending on diff, do something with range of chart.
-        $step   = '1D';
-        $months = $oldest->diffInMonths($today);
-        if ($months > 3) {
-            $step = '1W'; // @codeCoverageIgnore
-        }
-        if ($months > 24) {
-            $step = '1M'; // @codeCoverageIgnore
-        }
-        if ($months > 100) {
-            $step = '1Y'; // @codeCoverageIgnore
-        }
+        $step = $this->calculateStep($oldest, $today);
 
         $chartData = [];
         while ($oldest <= $today) {
@@ -105,13 +101,13 @@ class PiggyBankController extends Controller
             $chartData[$label] = $currentSum;
             $oldest            = app('navigation')->addPeriod($oldest, $step, 0);
         }
-        /** @var Collection $filtered */
+        /** @var Collection $finalFiltered */
         $finalFiltered          = $set->filter(
             function (PiggyBankEvent $event) use ($today) {
                 return $event->date->lte($today);
             }
         );
-        $finalSum               = $filtered->sum('amount');
+        $finalSum               = $finalFiltered->sum('amount');
         $finalLabel             = $today->formatLocalized((string)trans('config.month_and_day'));
         $chartData[$finalLabel] = $finalSum;
 

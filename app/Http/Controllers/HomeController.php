@@ -22,25 +22,18 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers;
 
-use Artisan;
 use Carbon\Carbon;
-use Exception;
 use FireflyIII\Events\RequestedVersionCheckStatus;
-use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Http\Middleware\Installer;
-use FireflyIII\Http\Middleware\IsDemoUser;
-use FireflyIII\Http\Middleware\IsSandStormUser;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
+use FireflyIII\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
 use Log;
-use Preferences;
-use Route as RouteFacade;
-use View;
 
 /**
  * Class HomeController.
@@ -56,17 +49,14 @@ class HomeController extends Controller
         app('view')->share('title', 'Firefly III');
         app('view')->share('mainTitleIcon', 'fa-fire');
         $this->middleware(Installer::class);
-        $this->middleware(IsDemoUser::class)->except(['dateRange', 'index']);
-        $this->middleware(IsSandStormUser::class)->only('routes');
-
     }
 
     /**
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function dateRange(Request $request)
+    public function dateRange(Request $request): JsonResponse
     {
         $start         = new Carbon($request->get('start'));
         $end           = new Carbon($request->get('end'));
@@ -100,54 +90,9 @@ class HomeController extends Controller
 
 
     /**
-     * @throws FireflyException
-     */
-    public function displayError()
-    {
-        Log::debug('This is a test message at the DEBUG level.');
-        Log::info('This is a test message at the INFO level.');
-        Log::notice('This is a test message at the NOTICE level.');
-        Log::warning('This is a test message at the WARNING level.');
-        Log::error('This is a test message at the ERROR level.');
-        Log::critical('This is a test message at the CRITICAL level.');
-        Log::alert('This is a test message at the ALERT level.');
-        Log::emergency('This is a test message at the EMERGENCY level.');
-        throw new FireflyException('A very simple test error.');
-    }
-
-    /**
-     * @param Request $request
-     *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     */
-    public function flush(Request $request)
-    {
-        Preferences::mark();
-        $request->session()->forget(['start', 'end', '_previous', 'viewRange', 'range', 'is_custom_range']);
-        Log::debug('Call cache:clear...');
-        Artisan::call('cache:clear');
-        Log::debug('Call config:clear...');
-        Artisan::call('config:clear');
-        Log::debug('Call route:clear...');
-        Artisan::call('route:clear');
-        Log::debug('Call twig:clean...');
-        try {
-            Artisan::call('twig:clean');
-        } catch (Exception $e) {
-            // dont care
-            Log::debug('Called twig:clean.');
-        }
-        Log::debug('Call view:clear...');
-        Artisan::call('view:clear');
-        Log::debug('Done! Redirecting...');
-
-        return redirect(route('index'));
-    }
-
-    /**
      * @param AccountRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
      */
     public function index(AccountRepositoryInterface $repository)
     {
@@ -157,20 +102,17 @@ class HomeController extends Controller
         if (0 === $count) {
             return redirect(route('new-user.index'));
         }
-        $subTitle     = trans('firefly.welcomeBack');
+        $subTitle     = (string)trans('firefly.welcomeBack');
         $transactions = [];
-        $frontPage    = Preferences::get(
-            'frontPageAccounts',
-            $repository->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET])->pluck('id')->toArray()
-        );
+        $frontPage    = app('preferences')->get('frontPageAccounts', $repository->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET])->pluck('id')->toArray());
         /** @var Carbon $start */
         $start = session('start', Carbon::now()->startOfMonth());
         /** @var Carbon $end */
-        $end      = session('end', Carbon::now()->endOfMonth());
+        $end = session('end', Carbon::now()->endOfMonth());
+        /** @noinspection NullPointerExceptionInspection */
         $accounts = $repository->getAccountsById($frontPage->data);
         $today    = new Carbon;
 
-        // zero bills? Hide some elements from view.
         /** @var BillRepositoryInterface $billRepository */
         $billRepository = app(BillRepositoryInterface::class);
         $billCount      = $billRepository->getBills()->count();
@@ -182,65 +124,11 @@ class HomeController extends Controller
             $transactions[] = [$set, $account];
         }
 
-        // fire check update event:
-        event(new RequestedVersionCheckStatus(auth()->user()));
+        /** @var User $user */
+        $user = auth()->user();
+        event(new RequestedVersionCheckStatus($user));
 
-        return view(
-            'index',
-            compact('count', 'subTitle', 'transactions', 'billCount', 'start', 'end', 'today')
-        );
+        return view('index', compact('count', 'subTitle', 'transactions', 'billCount', 'start', 'end', 'today'));
     }
 
-    /**
-     * @return string
-     */
-    public function routes()
-    {
-        $set    = RouteFacade::getRoutes();
-        $ignore = ['chart.', 'javascript.', 'json.', 'report-data.', 'popup.', 'debugbar.', 'attachments.download', 'attachments.preview',
-                   'bills.rescan', 'budgets.income', 'currencies.def', 'error', 'flush', 'help.show', 'import.file',
-                   'login', 'logout', 'password.reset', 'profile.confirm-email-change', 'profile.undo-email-change',
-                   'register', 'report.options', 'routes', 'rule-groups.down', 'rule-groups.up', 'rules.up', 'rules.down',
-                   'rules.select', 'search.search', 'test-flash', 'transactions.link.delete', 'transactions.link.switch',
-                   'two-factor.lost', 'reports.options', 'debug', 'import.create-job', 'import.download', 'import.start', 'import.status.json',
-                   'preferences.delete-code', 'rules.test-triggers', 'piggy-banks.remove-money', 'piggy-banks.add-money',
-                   'accounts.reconcile.transactions', 'accounts.reconcile.overview', 'export.download',
-                   'transactions.clone', 'two-factor.index',
-        ];
-        $return = '&nbsp;';
-        /** @var Route $route */
-        foreach ($set as $route) {
-            $name = $route->getName();
-            if (null !== $name && \in_array('GET', $route->methods()) && \strlen($name) > 0) {
-
-                $found = false;
-                foreach ($ignore as $string) {
-                    if (!(false === stripos($name, $string))) {
-                        $found = true;
-                        break;
-                    }
-                }
-                if ($found === false) {
-                    $return .= 'touch ' . $route->getName() . '.md;';
-                }
-            }
-        }
-
-        return $return;
-    }
-
-    /**
-     * @param Request $request
-     *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     */
-    public function testFlash(Request $request)
-    {
-        $request->session()->flash('success', 'This is a success message.');
-        $request->session()->flash('info', 'This is an info message.');
-        $request->session()->flash('warning', 'This is a warning.');
-        $request->session()->flash('error', 'This is an error!');
-
-        return redirect(route('home'));
-    }
 }

@@ -27,15 +27,23 @@ use Crypt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Steam;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use FireflyIII\Models\PiggyBankRepetition;
-use FireflyIII\Models\PiggyBankEvent;
-use FireflyIII\Models\Note;
-use FireflyIII\Models\Account;
 
 /**
  * Class PiggyBank.
+ *
+ * @property Carbon  $targetdate
+ * @property Carbon  $startdate
+ * @property string  $targetamount
+ * @property int     $id
+ * @property string  $name
+ * @property Account $account
+ * @property Carbon  $updated_at
+ * @property Carbon  $created_at
+ * @property int     $order
+ * @property bool    $active
+ * @property int     $account_id
+ *
  */
 class PiggyBank extends Model
 {
@@ -133,32 +141,6 @@ class PiggyBank extends Model
     }
 
     /**
-     * @deprecated
-     * @return string
-     */
-    public function getSuggestedMonthlyAmount(): string
-    {
-        $savePerMonth = '0';
-        if ($this->targetdate && $this->currentRelevantRep()->currentamount < $this->targetamount) {
-            $now             = Carbon::now();
-            $diffInMonths    = $now->diffInMonths($this->targetdate, false);
-            $remainingAmount = bcsub($this->targetamount, $this->currentRelevantRep()->currentamount);
-
-            // more than 1 month to go and still need money to save:
-            if ($diffInMonths > 0 && 1 === bccomp($remainingAmount, '0')) {
-                $savePerMonth = bcdiv($remainingAmount, (string)$diffInMonths);
-            }
-
-            // less than 1 month to go but still need money to save:
-            if (0 === $diffInMonths && 1 === bccomp($remainingAmount, '0')) {
-                $savePerMonth = $remainingAmount;
-            }
-        }
-
-        return $savePerMonth;
-    }
-
-    /**
      * @param Carbon $date
      *
      * @deprecated
@@ -166,7 +148,7 @@ class PiggyBank extends Model
      */
     public function leftOnAccount(Carbon $date): string
     {
-        $balance = Steam::balanceIgnoreVirtual($this->account, $date);
+        $balance = app('steam')->balanceIgnoreVirtual($this->account, $date);
         /** @var PiggyBank $piggyBank */
         foreach ($this->account->piggyBanks as $piggyBank) {
             $currentAmount = $piggyBank->currentRelevantRep()->currentamount ?? '0';

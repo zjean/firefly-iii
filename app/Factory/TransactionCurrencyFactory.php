@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * TransactionCurrencyFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -20,6 +19,11 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @noinspection PhpDynamicAsStaticMethodCallInspection */
+/** @noinspection PhpUndefinedMethodInspection */
+/** @noinspection MultipleReturnStatementsInspection */
+
+declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
@@ -62,13 +66,16 @@ class TransactionCurrencyFactory
      * @param null|string $currencyCode
      *
      * @return TransactionCurrency|null
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function find(?int $currencyId, ?string $currencyCode): ?TransactionCurrency
     {
         $currencyCode = (string)$currencyCode;
         $currencyId   = (int)$currencyId;
 
-        if (\strlen($currencyCode) === 0 && (int)$currencyId === 0) {
+        if ('' === $currencyCode && 0 === $currencyId) {
+            Log::warning('Cannot find anything on empty currency code and empty currency ID!');
+
             return null;
         }
 
@@ -78,6 +85,7 @@ class TransactionCurrencyFactory
             if (null !== $currency) {
                 return $currency;
             }
+            Log::warning(sprintf('Currency ID is %d but found nothing!', $currencyId));
         }
         // then by code:
         if (\strlen($currencyCode) > 0) {
@@ -85,7 +93,9 @@ class TransactionCurrencyFactory
             if (null !== $currency) {
                 return $currency;
             }
+            Log::warning(sprintf('Currency code is %d but found nothing!', $currencyCode));
         }
+        Log::warning('Found nothing for currency.');
 
         return null;
     }

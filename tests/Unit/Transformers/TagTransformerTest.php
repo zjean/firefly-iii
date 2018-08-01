@@ -39,12 +39,12 @@ class TagTransformerTest extends TestCase
      *
      * @covers \FireflyIII\Transformers\TagTransformer::transform
      */
-    public function testBasic()
+    public function testBasic(): void
     {
         $tag         = Tag::create(
             [
                 'user_id'     => $this->user()->id,
-                'tag'         => 'Some tag ' . random_int(1, 1000),
+                'tag'         => 'Some tag ' . random_int(1, 10000),
                 'tagMode'     => 'nothing',
                 'date'        => '2018-01-01',
                 'description' => 'Some tag',

@@ -37,18 +37,9 @@ use Log;
 class FakeRoutine implements RoutineInterface
 {
     /** @var ImportJob */
-    private $job;
+    private $importJob;
     /** @var ImportJobRepositoryInterface */
     private $repository;
-
-    /**
-     * FakeRoutine constructor.
-     */
-    public function __construct()
-    {
-        $this->repository = app(ImportJobRepositoryInterface::class);
-    }
-
 
     /**
      * Fake import routine has three stages:
@@ -58,51 +49,58 @@ class FakeRoutine implements RoutineInterface
      * "ahoy": will log some nonsense and then drop job into status:"need_job_config" to force it back to the job config routine.
      * "final": will do some logging, sleep for 10 seconds and then finish. Generates 5 random transactions.
      *
-     * @return bool
+     * @return void
      * @throws FireflyException
      */
     public function run(): void
     {
-        Log::debug(sprintf('Now in run() for fake routine with status: %s', $this->job->status));
-        if ($this->job->status !== 'running') {
-            throw new FireflyException('This fake job should not be started.');
+        Log::debug(sprintf('Now in run() for fake routine with status: %s', $this->importJob->status));
+        if ($this->importJob->status !== 'ready_to_run') {
+            throw new FireflyException(sprintf('Fake job should have status "ready_to_run", not "%s"', $this->importJob->status)); // @codeCoverageIgnore
         }
 
-        switch ($this->job->stage) {
+        switch ($this->importJob->stage) {
             default:
-                throw new FireflyException(sprintf('Fake routine cannot handle stage "%s".', $this->job->stage));
+                throw new FireflyException(sprintf('Fake routine cannot handle stage "%s".', $this->importJob->stage)); // @codeCoverageIgnore
             case 'new':
-                $handler = new StageNewHandler;
+                $this->repository->setStatus($this->importJob, 'running');
+                /** @var StageNewHandler $handler */
+                $handler = app(StageNewHandler::class);
                 $handler->run();
-                $this->repository->setStage($this->job, 'ahoy');
+                $this->repository->setStage($this->importJob, 'ahoy');
                 // set job finished this step:
-                $this->repository->setStatus($this->job, 'ready_to_run');
+                $this->repository->setStatus($this->importJob, 'ready_to_run');
 
                 return;
             case 'ahoy':
-                $handler = new StageAhoyHandler;
+                $this->repository->setStatus($this->importJob, 'running');
+                /** @var StageAhoyHandler $handler */
+                $handler = app(StageAhoyHandler::class);
                 $handler->run();
-                $this->repository->setStatus($this->job, 'need_job_config');
-                $this->repository->setStage($this->job, 'final');
+                $this->repository->setStatus($this->importJob, 'need_job_config');
+                $this->repository->setStage($this->importJob, 'final');
                 break;
             case 'final':
-                $handler = new StageFinalHandler;
-                $handler->setJob($this->job);
+                $this->repository->setStatus($this->importJob, 'running');
+                /** @var StageFinalHandler $handler */
+                $handler = app(StageFinalHandler::class);
+                $handler->setImportJob($this->importJob);
                 $transactions = $handler->getTransactions();
-                $this->repository->setStatus($this->job, 'provider_finished');
-                $this->repository->setStage($this->job, 'final');
-                $this->repository->setTransactions($this->job, $transactions);
+                $this->repository->setStatus($this->importJob, 'provider_finished');
+                $this->repository->setStage($this->importJob, 'final');
+                $this->repository->setTransactions($this->importJob, $transactions);
         }
     }
 
     /**
-     * @param ImportJob $job
+     * @param ImportJob $importJob
      *
-     * @return mixed
+     * @return
      */
-    public function setJob(ImportJob $job)
+    public function setImportJob(ImportJob $importJob): void
     {
-        $this->job = $job;
-        $this->repository->setUser($job->user);
+        $this->importJob  = $importJob;
+        $this->repository = app(ImportJobRepositoryInterface::class);
+        $this->repository->setUser($importJob->user);
     }
 }

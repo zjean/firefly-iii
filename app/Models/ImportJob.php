@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace FireflyIII\Models;
 
-use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\User;
 use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -30,7 +29,18 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * Class ImportJob.
  *
- * @property User $user
+ * @property array  $transactions
+ * @property array  $configuration
+ * @property User   $user
+ * @property int    $user_id
+ * @property string $status
+ * @property string $stage
+ * @property string $key
+ * @property string $provider
+ * @property string $file_type
+ * @property int    $tag_id
+ * @property Tag    $tag
+ * @property array  $errors
  */
 class ImportJob extends Model
 {
@@ -58,7 +68,6 @@ class ImportJob extends Model
      * @return mixed
      *
      * @throws NotFoundHttpException
-     * @throws FireflyException
      */
     public static function routeBinder(string $value): ImportJob
     {
@@ -74,11 +83,11 @@ class ImportJob extends Model
 
     /**
      * @codeCoverageIgnore
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
-    public function user()
+    public function attachments()
     {
-        return $this->belongsTo(User::class);
+        return $this->morphMany(Attachment::class, 'attachable');
     }
 
     /**
@@ -88,5 +97,14 @@ class ImportJob extends Model
     public function tag()
     {
         return $this->belongsTo(Tag::class);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

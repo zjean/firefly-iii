@@ -24,7 +24,6 @@ declare(strict_types=1);
 namespace FireflyIII\Http\Controllers\Transaction;
 
 
-use ExpandedForm;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Http\Requests\BulkEditJournalRequest;
 use FireflyIII\Models\TransactionJournal;
@@ -32,8 +31,6 @@ use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Illuminate\Support\Collection;
 use Log;
-use Preferences;
-use View;
 
 /**
  * Class BulkController
@@ -45,7 +42,7 @@ class BulkController extends Controller
 
 
     /**
-     *
+     * BulkController constructor.
      */
     public function __construct()
     {
@@ -54,7 +51,7 @@ class BulkController extends Controller
         $this->middleware(
             function ($request, $next) {
                 $this->repository = app(JournalRepositoryInterface::class);
-                app('view')->share('title', trans('firefly.transactions'));
+                app('view')->share('title', (string)trans('firefly.transactions'));
                 app('view')->share('mainTitleIcon', 'fa-repeat');
 
                 return $next($request);
@@ -65,16 +62,16 @@ class BulkController extends Controller
     /**
      * @param Collection $journals
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function edit(Collection $journals)
     {
-        $subTitle = trans('firefly.mass_bulk_journals');
+        $subTitle = (string)trans('firefly.mass_bulk_journals');
 
         // get list of budgets:
         /** @var BudgetRepositoryInterface $repository */
         $repository = app(BudgetRepositoryInterface::class);
-        $budgetList = ExpandedForm::makeSelectListWithEmpty($repository->getActiveBudgets());
+        $budgetList = app('expandedform')->makeSelectListWithEmpty($repository->getActiveBudgets());
         // collect some useful meta data for the mass edit:
         $journals->each(
             function (TransactionJournal $journal) {
@@ -87,17 +84,19 @@ class BulkController extends Controller
 
 
     /**
-     * @param BulkEditJournalRequest     $request
+     * @param BulkEditJournalRequest $request
      *
      * @return mixed
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function update(BulkEditJournalRequest $request)
     {
         $journalIds     = $request->get('journals');
         $journalIds     = \is_array($journalIds) ? $journalIds : [];
-        $ignoreCategory = (int)$request->get('ignore_category') === 1;
-        $ignoreBudget   = (int)$request->get('ignore_budget') === 1;
-        $ignoreTags     = (int)$request->get('ignore_tags') === 1;
+        $ignoreCategory = 1 === (int)$request->get('ignore_category');
+        $ignoreBudget   = 1 === (int)$request->get('ignore_budget');
+        $ignoreTags     = 1 === (int)$request->get('ignore_tags');
         $count          = 0;
 
         foreach ($journalIds as $journalId) {
@@ -110,27 +109,27 @@ class BulkController extends Controller
             Log::debug(sprintf('Found journal #%d', $journal->id));
 
             // update category if not told to ignore
-            if ($ignoreCategory === false) {
+            if (false === $ignoreCategory) {
                 Log::debug(sprintf('Set category to %s', $request->string('category')));
 
                 $this->repository->updateCategory($journal, $request->string('category'));
             }
 
             // update budget if not told to ignore (and is withdrawal)
-            if ($ignoreBudget === false) {
+            if (false === $ignoreBudget) {
                 Log::debug(sprintf('Set budget to %d', $request->integer('budget_id')));
                 $this->repository->updateBudget($journal, $request->integer('budget_id'));
             }
 
             // update tags:
-            if ($ignoreTags === false) {
+            if (false === $ignoreTags) {
                 Log::debug(sprintf('Set tags to %s', $request->string('budget_id')));
                 $this->repository->updateTags($journal, ['tags' => explode(',', $request->string('tags'))]);
             }
         }
 
-        Preferences::mark();
-        $request->session()->flash('success', trans('firefly.mass_edited_transactions_success', ['amount' => $count]));
+        app('preferences')->mark();
+        $request->session()->flash('success', (string)trans('firefly.mass_edited_transactions_success', ['amount' => $count]));
 
         // redirect to previous URL:
         return redirect($this->getPreviousUri('transactions.bulk-edit.uri'));

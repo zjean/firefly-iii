@@ -30,9 +30,8 @@ use FireflyIII\Http\Requests\ExportFormRequest;
 use FireflyIII\Models\ExportJob;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\ExportJob\ExportJobRepositoryInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response as LaravelResponse;
-use Preferences;
-use View;
 
 /**
  * Class ExportController.
@@ -49,7 +48,7 @@ class ExportController extends Controller
         $this->middleware(
             function ($request, $next) {
                 app('view')->share('mainTitleIcon', 'fa-file-archive-o');
-                app('view')->share('title', trans('firefly.export_and_backup_data'));
+                app('view')->share('title', (string)trans('firefly.export_and_backup_data'));
 
                 return $next($request);
             }
@@ -99,15 +98,15 @@ class ExportController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getStatus(ExportJob $job)
+    public function getStatus(ExportJob $job): JsonResponse
     {
-        return response()->json(['status' => trans('firefly.' . $job->status)]);
+        return response()->json(['status' => (string)trans('firefly.' . $job->status)]);
     }
 
     /**
      * @param ExportJobRepositoryInterface $jobs
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index(ExportJobRepositoryInterface $jobs)
     {
@@ -118,7 +117,7 @@ class ExportController extends Controller
 
         // does the user have shared accounts?
         $formats       = array_keys(config('firefly.export_formats'));
-        $defaultFormat = Preferences::get('export_format', config('firefly.default_export_format'))->data;
+        $defaultFormat = app('preferences')->get('export_format', config('firefly.default_export_format'))->data;
         $first         = session('first')->format('Y-m-d');
         $today         = Carbon::create()->format('Y-m-d');
 
@@ -130,9 +129,11 @@ class ExportController extends Controller
      * @param AccountRepositoryInterface   $repository
      * @param ExportJobRepositoryInterface $jobs
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
-    public function postIndex(ExportFormRequest $request, AccountRepositoryInterface $repository, ExportJobRepositoryInterface $jobs)
+    public function postIndex(ExportFormRequest $request, AccountRepositoryInterface $repository, ExportJobRepositoryInterface $jobs): JsonResponse
     {
         $job      = $jobs->findByKey($request->get('job'));
         $accounts = $request->get('accounts') ?? [];

@@ -210,7 +210,7 @@
                             {% endif %}
                         {% endfor %}
                         {# all other meta values #}
-                        {% for metaField in ['external_id','internal_reference','sepa-ct-id','sepa-ct-op','sepa-db','sepa-country','sepa-cc','sepa-ep','sepa-ci'] %}
+                        {% for metaField in ['external_id','bunq_payment_id','internal_reference','sepa-batch-id','sepa-ct-id','sepa-ct-op','sepa-db','sepa-country','sepa-cc','sepa-ep','sepa-ci'] %}
                             {% if journalHasMeta(journal, metaField) %}
                                 <tr>
                                     <td>{{ trans('list.'~metaField) }}</td>
@@ -238,15 +238,7 @@
                                     {% for tag in journal.tags %}
 
                                         <h4 style="display: inline;"><a class="label label-success" href="{{ route('tags.show',tag) }}">
-                                                {% if tag.tagMode == 'nothing' %}
-                                                    <i class="fa fa-fw fa-tag"></i>
-                                                {% endif %}
-                                                {% if tag.tagMode == 'balancingAct' %}
-                                                    <i class="fa fa-fw fa-refresh"></i>
-                                                {% endif %}
-                                                {% if tag.tagMode == 'advancePayment' %}
-                                                    <i class="fa fa-fw fa-sort-numeric-desc"></i>
-                                                {% endif %}
+                                                <i class="fa fa-fw fa-tag"></i>
                                                 {{ tag.tag }}</a>
                                         </h4>
                                     {% endfor %}

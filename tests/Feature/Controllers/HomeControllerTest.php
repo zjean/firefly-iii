@@ -59,7 +59,7 @@ class HomeControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\HomeController::dateRange
      * @covers \FireflyIII\Http\Controllers\HomeController::__construct
      */
-    public function testDateRange()
+    public function testDateRange(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
@@ -81,7 +81,7 @@ class HomeControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\HomeController::dateRange
      * @covers \FireflyIII\Http\Controllers\HomeController::__construct
      */
-    public function testDateRangeCustom()
+    public function testDateRangeCustom(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
@@ -101,34 +101,6 @@ class HomeControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\HomeController::displayError
-     */
-    public function testDisplayError()
-    {
-        // mock stuff
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('firstNull')->andReturn(new TransactionJournal);
-
-        $this->be($this->user());
-        $response = $this->get(route('error'));
-        $response->assertStatus(500);
-    }
-
-    /**
-     * @covers \FireflyIII\Http\Controllers\HomeController::flush
-     */
-    public function testFlush()
-    {
-        // mock stuff
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('firstNull')->andReturn(new TransactionJournal);
-
-        $this->be($this->user());
-        $response = $this->get(route('flush'));
-        $response->assertStatus(302);
-    }
-
-    /**
      * @covers       \FireflyIII\Http\Controllers\HomeController::index
      * @covers       \FireflyIII\Http\Controllers\HomeController::__construct
      * @covers       \FireflyIII\Http\Controllers\Controller::__construct
@@ -136,7 +108,7 @@ class HomeControllerTest extends TestCase
      *
      * @param $range
      */
-    public function testIndex(string $range)
+    public function testIndex(string $range): void
     {
         // mock stuff
         $account      = factory(Account::class)->make();
@@ -173,7 +145,7 @@ class HomeControllerTest extends TestCase
      *
      * @param $range
      */
-    public function testIndexEmpty(string $range)
+    public function testIndexEmpty(string $range): void
     {
         // mock stuff
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
@@ -187,31 +159,5 @@ class HomeControllerTest extends TestCase
         $response->assertStatus(302);
     }
 
-    /**
-     * @covers \FireflyIII\Http\Controllers\HomeController::routes()
-     */
-    public function testRoutes()
-    {
-        $this->be($this->user());
-        $response = $this->get(route('routes'));
-        $response->assertStatus(200);
-    }
 
-    /**
-     * @covers \FireflyIII\Http\Controllers\HomeController::testFlash
-     */
-    public function testTestFlash()
-    {
-        // mock stuff
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
-
-        $this->be($this->user());
-        $response = $this->get(route('test-flash'));
-        $response->assertStatus(302);
-        $response->assertSessionHas('success');
-        $response->assertSessionHas('info');
-        $response->assertSessionHas('warning');
-        $response->assertSessionHas('error');
-    }
 }

@@ -25,55 +25,69 @@ namespace FireflyIII\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use FireflyIII\Models\TransactionJournal;
-use FireflyIII\Models\TransactionCurrency;
-use FireflyIII\Models\Category;
-use FireflyIII\Models\Budget;
-use FireflyIII\Models\Account;
 
 /**
  * Class Transaction.
  *
- * @property int    $journal_id
- * @property Carbon $date
- * @property string $transaction_description
- * @property string $transaction_amount
- * @property string $transaction_foreign_amount
- * @property string $transaction_type_type
- * @property string $foreign_currency_symbol
- * @property int    $foreign_currency_dp
- * @property int    $account_id
- * @property string $account_name
- * @property string $account_iban
- * @property string $account_number
- * @property string $account_bic
- * @property string $account_currency_code
- * @property int    $opposing_account_id
- * @property string $opposing_account_name
- * @property string $opposing_account_iban
- * @property string $opposing_account_number
- * @property string $opposing_account_bic
- * @property string $opposing_currency_code
- * @property int    $transaction_budget_id
- * @property string $transaction_budget_name
- * @property int    $transaction_journal_budget_id
- * @property string $transaction_journal_budget_name
- * @property int    $transaction_category_id
- * @property string $transaction_category_name
- * @property int    $transaction_journal_category_id
- * @property string $transaction_journal_category_name
- * @property int    $bill_id
- * @property string $bill_name
- * @property string $notes
- * @property string $tags
- * @property string $transaction_currency_symbol
- * @property int    $transaction_currency_dp
- * @property string $transaction_currency_code
- * @property string $description
- * @property bool   $is_split
- * @property int    $attachmentCount
+ * @property int                 $journal_id
+ * @property Carbon              $date
+ * @property string              $transaction_description
+ * @property string              $transaction_amount
+ * @property string              $transaction_foreign_amount
+ * @property string              $transaction_type_type
+ * @property string              $foreign_currency_symbol
+ * @property int                 $foreign_currency_dp
+ * @property int                 $account_id
+ * @property string              $account_name
+ * @property string              $account_iban
+ * @property string              $account_number
+ * @property string              $account_bic
+ * @property string              $account_type
+ * @property string              $account_currency_code
+ * @property int                 $opposing_account_id
+ * @property string              $opposing_account_name
+ * @property string              $opposing_account_iban
+ * @property string              $opposing_account_number
+ * @property string              $opposing_account_bic
+ * @property string              $opposing_account_type
+ * @property string              $opposing_currency_code
+ * @property int                 $transaction_budget_id
+ * @property string              $transaction_budget_name
+ * @property int                 $transaction_journal_budget_id
+ * @property string              $transaction_journal_budget_name
+ * @property int                 $transaction_category_id
+ * @property string              $transaction_category_name
+ * @property int                 $transaction_journal_category_id
+ * @property string              $transaction_journal_category_name
+ * @property int                 $bill_id
+ * @property string              $bill_name
+ * @property string              $bill_name_encrypted
+ * @property string              $notes
+ * @property string              $tags
+ * @property string              $transaction_currency_symbol
+ * @property int                 $transaction_currency_dp
+ * @property string              $transaction_currency_code
+ * @property string              $description
+ * @property bool                $is_split
+ * @property int                 $attachmentCount
+ * @property int                 $transaction_currency_id
+ * @property int                 $foreign_currency_id
+ * @property string              $amount
+ * @property string              $foreign_amount
+ * @property TransactionJournal  $transactionJournal
+ * @property Account             $account
+ * @property int                 $identifier
+ * @property int                 $id
+ * @property TransactionCurrency $transactionCurrency
+ * @property int                 $transaction_journal_id
+ * @property TransactionCurrency $foreignCurrency
+ * @property string              $before      // used in audit reports.
+ * @property string              $after       // used in audit reports.
+ * @property int                 $opposing_id // ID of the opposing transaction, used in collector
+ * @property bool                $encrypted   // is the journal encrypted
  */
 class Transaction extends Model
 {
@@ -254,18 +268,18 @@ class Transaction extends Model
 
     /**
      * @codeCoverageIgnore
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function transactionCurrency()
+    public function transactionCurrency(): BelongsTo
     {
         return $this->belongsTo(TransactionCurrency::class);
     }
 
     /**
      * @codeCoverageIgnore
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function transactionJournal()
+    public function transactionJournal(): BelongsTo
     {
         return $this->belongsTo(TransactionJournal::class);
     }

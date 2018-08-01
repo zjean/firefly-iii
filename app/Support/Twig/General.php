@@ -24,12 +24,12 @@ namespace FireflyIII\Support\Twig;
 
 use Carbon\Carbon;
 use FireflyIII\Models\Account;
+use FireflyIII\Support\Twig\Extension\Account as AccountExtension;
 use League\CommonMark\CommonMarkConverter;
 use Route;
 use Twig_Extension;
 use Twig_SimpleFilter;
 use Twig_SimpleFunction;
-use FireflyIII\Support\Twig\Extension\Account as AccountExtension;
 
 /**
  * Class TwigSupport.
@@ -106,7 +106,7 @@ class General extends Twig_Extension
                 $what       = $args[2]; // name of the route.
                 $activeWhat = $context['what'] ?? false;
 
-                if ($what === $activeWhat && !(false === strpos(Route::getCurrentRoute()->getName(), $route))) {
+                if ($what === $activeWhat && !(false === stripos(Route::getCurrentRoute()->getName(), $route))) {
                     return 'active';
                 }
 

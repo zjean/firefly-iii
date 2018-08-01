@@ -27,6 +27,7 @@ use FireflyIII\Exceptions\FireflyException;
 use Log;
 
 /**
+ * @codeCoverageIgnore
  * Class StageNewHandler
  */
 class StageNewHandler
@@ -36,7 +37,7 @@ class StageNewHandler
      */
     public function run(): void
     {
-        for ($i = 0; $i < 2; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             Log::debug(sprintf('Am now in stage new hander, sleeping... (%d)', $i));
             sleep(1);
         }

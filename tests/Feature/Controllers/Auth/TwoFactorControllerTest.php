@@ -30,10 +30,6 @@ use Tests\TestCase;
 
 /**
  * Class TwoFactorControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class TwoFactorControllerTest extends TestCase
 {
@@ -47,9 +43,9 @@ class TwoFactorControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController::index
+     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController
      */
-    public function testIndex()
+    public function testIndex(): void
     {
         $this->be($this->user());
 
@@ -70,9 +66,9 @@ class TwoFactorControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController::index
+     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController
      */
-    public function testIndexNo2FA()
+    public function testIndexNo2FA(): void
     {
         $this->be($this->user());
 
@@ -92,10 +88,10 @@ class TwoFactorControllerTest extends TestCase
     }
 
     /**
-     * @covers                   \FireflyIII\Http\Controllers\Auth\TwoFactorController::index
+     * @covers                   \FireflyIII\Http\Controllers\Auth\TwoFactorController
      * @expectedExceptionMessage Your two factor authentication secret is empty
      */
-    public function testIndexNoSecret()
+    public function testIndexNoSecret(): void
     {
         $this->be($this->user());
 
@@ -116,9 +112,9 @@ class TwoFactorControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController::lostTwoFactor
+     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController
      */
-    public function testLostTwoFactor()
+    public function testLostTwoFactor(): void
     {
         $this->be($this->user());
 
@@ -139,9 +135,9 @@ class TwoFactorControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController::postIndex
+     * @covers \FireflyIII\Http\Controllers\Auth\TwoFactorController
      */
-    public function testPostIndex()
+    public function testPostIndex(): void
     {
         $data = ['code' => '123456'];
         Google2FA::shouldReceive('verifyKey')->andReturn(true)->once();

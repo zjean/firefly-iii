@@ -18,13 +18,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+/** @noinspection CallableParameterUseCaseInTypeContextInspection */
 declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers\Account;
 
 use Carbon\Carbon;
 use FireflyIII\Exceptions\FireflyException;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Http\Requests\ReconciliationStoreRequest;
 use FireflyIII\Http\Requests\ReconciliationUpdateRequest;
@@ -36,11 +36,7 @@ use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
-use FireflyIII\Services\Internal\Update\CurrencyUpdateService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Log;
-use Preferences;
 
 /**
  * Class ReconcileController.
@@ -49,9 +45,9 @@ use Preferences;
  */
 class ReconcileController extends Controller
 {
-    /** @var CurrencyUpdateService */
-    private $accountRepos;
     /** @var AccountRepositoryInterface */
+    private $accountRepos;
+    /** @var CurrencyRepositoryInterface */
     private $currencyRepos;
     /** @var JournalRepositoryInterface */
     private $repository;
@@ -67,7 +63,7 @@ class ReconcileController extends Controller
         $this->middleware(
             function ($request, $next) {
                 app('view')->share('mainTitleIcon', 'fa-credit-card');
-                app('view')->share('title', trans('firefly.accounts'));
+                app('view')->share('title', (string)trans('firefly.accounts'));
                 $this->repository    = app(JournalRepositoryInterface::class);
                 $this->accountRepos  = app(AccountRepositoryInterface::class);
                 $this->currencyRepos = app(CurrencyRepositoryInterface::class);
@@ -88,7 +84,7 @@ class ReconcileController extends Controller
             return redirect(route('transactions.edit', [$journal->id]));
         }
         // view related code
-        $subTitle = trans('breadcrumbs.edit_journal', ['description' => $journal->description]);
+        $subTitle = (string)trans('breadcrumbs.edit_journal', ['description' => $journal->description]);
 
         // journal related code
         $pTransaction = $this->repository->getFirstPosTransaction($journal);
@@ -114,68 +110,13 @@ class ReconcileController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param Account $account
-     * @param Carbon  $start
-     * @param Carbon  $end
-     *
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @throws FireflyException
-     * @throws \Throwable
-     */
-    public function overview(Request $request, Account $account, Carbon $start, Carbon $end)
-    {
-        if (AccountType::ASSET !== $account->accountType->type) {
-            throw new FireflyException(sprintf('Account %s is not an asset account.', $account->name));
-        }
-        $startBalance   = $request->get('startBalance');
-        $endBalance     = $request->get('endBalance');
-        $transactionIds = $request->get('transactions') ?? [];
-        $clearedIds     = $request->get('cleared') ?? [];
-        $amount         = '0';
-        $clearedAmount  = '0';
-        $route          = route('accounts.reconcile.submit', [$account->id, $start->format('Ymd'), $end->format('Ymd')]);
-        // get sum of transaction amounts:
-        $transactions = $this->repository->getTransactionsById($transactionIds);
-        $cleared      = $this->repository->getTransactionsById($clearedIds);
-        $countCleared = 0;
-
-        /** @var Transaction $transaction */
-        foreach ($transactions as $transaction) {
-            $amount = bcadd($amount, $transaction->amount);
-        }
-
-        /** @var Transaction $transaction */
-        foreach ($cleared as $transaction) {
-            if ($transaction->transactionJournal->date <= $end) {
-                $clearedAmount = bcadd($clearedAmount, $transaction->amount);
-                ++$countCleared;
-            }
-        }
-        $difference  = bcadd(bcadd(bcsub($startBalance, $endBalance), $clearedAmount), $amount);
-        $diffCompare = bccomp($difference, '0');
-        $return      = [
-            'post_uri' => $route,
-            'html'     => view(
-                'accounts.reconcile.overview', compact(
-                                                 'account', 'start', 'diffCompare', 'difference', 'end', 'clearedIds', 'transactionIds', 'clearedAmount',
-                                                 'startBalance', 'endBalance', 'amount',
-                                                 'route', 'countCleared'
-                                             )
-            )->render(),
-        ];
-
-        return response()->json($return);
-    }
-
-    /**
      * @param Account     $account
      * @param Carbon|null $start
      * @param Carbon|null $end
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
-     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @throws FireflyException
      */
     public function reconcile(Account $account, Carbon $start = null, Carbon $end = null)
@@ -184,7 +125,7 @@ class ReconcileController extends Controller
             return $this->redirectToOriginalAccount($account);
         }
         if (AccountType::ASSET !== $account->accountType->type) {
-            session()->flash('error', trans('firefly.must_be_asset_account'));
+            session()->flash('error', (string)trans('firefly.must_be_asset_account'));
 
             return redirect(route('accounts.index', [config('firefly.shortNamesByFullName.' . $account->accountType->type)]));
         }
@@ -195,7 +136,7 @@ class ReconcileController extends Controller
         }
 
         // no start or end:
-        $range = Preferences::get('viewRange', '1M')->data;
+        $range = app('preferences')->get('viewRange', '1M')->data;
 
         // get start and end
         if (null === $start && null === $end) {
@@ -211,7 +152,7 @@ class ReconcileController extends Controller
         $startBalance = round(app('steam')->balance($account, $startDate), $currency->decimal_places);
         $endBalance   = round(app('steam')->balance($account, $end), $currency->decimal_places);
         $subTitleIcon = config('firefly.subIconsByIdentifier.' . $account->accountType->type);
-        $subTitle     = trans('firefly.reconcile_account', ['account' => $account->name]);
+        $subTitle     = (string)trans('firefly.reconcile_account', ['account' => $account->name]);
 
         // various links
         $transactionsUri = route('accounts.reconcile.transactions', [$account->id, '%start%', '%end%']);
@@ -230,6 +171,7 @@ class ReconcileController extends Controller
      * @param TransactionJournal $journal
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
+     * @throws FireflyException
      */
     public function show(TransactionJournal $journal)
     {
@@ -237,32 +179,39 @@ class ReconcileController extends Controller
         if (TransactionType::RECONCILIATION !== $journal->transactionType->type) {
             return redirect(route('transactions.show', [$journal->id]));
         }
-        $subTitle = trans('firefly.reconciliation') . ' "' . $journal->description . '"';
+        $subTitle = (string)trans('firefly.reconciliation') . ' "' . $journal->description . '"';
 
         // get main transaction:
         $transaction = $this->repository->getAssetTransaction($journal);
-        $account     = $transaction->account;
+        if (null === $transaction) {
+            throw new FireflyException('The transaction data is incomplete. This is probably a bug. Apologies.');
+        }
+        $account = $transaction->account;
 
         return view('accounts.reconcile.show', compact('journal', 'subTitle', 'transaction', 'account'));
     }
 
+    /** @noinspection MoreThanThreeArgumentsInspection */
     /**
      * @param ReconciliationStoreRequest $request
-     * @param JournalRepositoryInterface $repository
      * @param Account                    $account
      * @param Carbon                     $start
      * @param Carbon                     $end
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @throws FireflyException
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
-    public function submit(ReconciliationStoreRequest $request, JournalRepositoryInterface $repository, Account $account, Carbon $start, Carbon $end)
+    public function submit(ReconciliationStoreRequest $request, Account $account, Carbon $start, Carbon $end)
     {
         Log::debug('In ReconcileController::submit()');
         $data = $request->getAll();
 
         /** @var Transaction $transaction */
         foreach ($data['transactions'] as $transactionId) {
-            $repository->reconcileById((int)$transactionId);
+            $this->repository->reconcileById((int)$transactionId);
         }
         Log::debug('Reconciled all transactions.');
 
@@ -270,16 +219,13 @@ class ReconcileController extends Controller
         if ('create' === $data['reconcile']) {
             // get "opposing" account.
             $reconciliation = $this->accountRepos->getReconciliation($account);
-
-
-            $difference  = $data['difference'];
-            $source      = $reconciliation;
-            $destination = $account;
-            if (bccomp($difference, '0') === 1) {
+            $difference     = $data['difference'];
+            $source         = $reconciliation;
+            $destination    = $account;
+            if (1 === bccomp($difference, '0')) {
                 // amount is positive. Add it to reconciliation?
                 $source      = $account;
                 $destination = $reconciliation;
-
             }
 
             // data for journal
@@ -321,69 +267,24 @@ class ReconcileController extends Controller
                 'notes'           => implode(', ', $data['transactions']),
             ];
 
-            $repository->store($journalData);
+            $this->repository->store($journalData);
         }
         Log::debug('End of routine.');
-
-        Preferences::mark();
-
-        session()->flash('success', trans('firefly.reconciliation_stored'));
+        app('preferences')->mark();
+        session()->flash('success', (string)trans('firefly.reconciliation_stored'));
 
         return redirect(route('accounts.show', [$account->id]));
     }
 
-    /**
-     * @param Account $account
-     * @param Carbon  $start
-     * @param Carbon  $end
-     *
-     * @return mixed
-     *
-     * @throws FireflyException
-     * @throws \Throwable
-     */
-    public function transactions(Account $account, Carbon $start, Carbon $end)
-    {
-        if (AccountType::INITIAL_BALANCE === $account->accountType->type) {
-            return $this->redirectToOriginalAccount($account);
-        }
-
-        $startDate = clone $start;
-        $startDate->subDays(1);
-
-        $currencyId = (int)$this->accountRepos->getMetaValue($account, 'currency_id');
-        $currency   = $this->currencyRepos->findNull($currencyId);
-        if (0 === $currency) {
-            $currency = app('amount')->getDefaultCurrency(); // @codeCoverageIgnore
-        }
-
-        $startBalance = round(app('steam')->balance($account, $startDate), $currency->decimal_places);
-        $endBalance   = round(app('steam')->balance($account, $end), $currency->decimal_places);
-
-        // get the transactions
-        $selectionStart = clone $start;
-        $selectionStart->subDays(3);
-        $selectionEnd = clone $end;
-        $selectionEnd->addDays(3);
-
-        // grab transactions:
-        /** @var JournalCollectorInterface $collector */
-        $collector = app(JournalCollectorInterface::class);
-        $collector->setAccounts(new Collection([$account]))
-                  ->setRange($selectionStart, $selectionEnd)->withBudgetInformation()->withOpposingAccount()->withCategoryInformation();
-        $transactions = $collector->getJournals();
-        $html         = view(
-            'accounts.reconcile.transactions', compact('account', 'transactions', 'currency', 'start', 'end', 'selectionStart', 'selectionEnd')
-        )->render();
-
-        return response()->json(['html' => $html, 'startBalance' => $startBalance, 'endBalance' => $endBalance]);
-    }
 
     /**
      * @param ReconciliationUpdateRequest $request
      * @param TransactionJournal          $journal
      *
      * @return $this|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function update(ReconciliationUpdateRequest $request, TransactionJournal $journal)
     {
@@ -391,7 +292,7 @@ class ReconcileController extends Controller
             return redirect(route('transactions.show', [$journal->id]));
         }
         if (0 === bccomp('0', $request->get('amount'))) {
-            session()->flash('error', trans('firefly.amount_cannot_be_zero'));
+            session()->flash('error', (string)trans('firefly.amount_cannot_be_zero'));
 
             return redirect(route('accounts.reconcile.edit', [$journal->id]))->withInput();
         }
@@ -401,7 +302,7 @@ class ReconcileController extends Controller
         // amount pos neg influences the accounts:
         $source      = $this->repository->getJournalSourceAccounts($journal)->first();
         $destination = $this->repository->getJournalDestinationAccounts($journal)->first();
-        if (bccomp($submitted['amount'], '0') === 1) {
+        if (1 === bccomp($submitted['amount'], '0')) {
             // amount is positive, switch accounts:
             [$source, $destination] = [$destination, $source];
 

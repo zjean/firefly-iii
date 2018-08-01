@@ -24,6 +24,7 @@ namespace Tests\Unit\TransactionRules\Triggers;
 
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Triggers\FromAccountStarts;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -32,16 +33,39 @@ use Tests\TestCase;
 class FromAccountStartsTest extends TestCase
 {
     /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::debug(sprintf('Now in %s.', \get_class($this)));
+    }
+
+    /**
      * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::triggered
      */
-    public function testTriggered()
+    public function testTriggered(): void
     {
-        $transaction = null;
+        Log::debug('In testTriggered()');
+        $loops = 0; // FINAL LOOP METHOD.
         do {
-            $journal     = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+            /** @var TransactionJournal $journal */
+            $journal     = $this->user()->transactionJournals()->inRandomOrder()->whereNull('deleted_at')->first();
             $transaction = $journal->transactions()->where('amount', '<', 0)->first();
-        } while (null === $transaction);
-        $account = $transaction->account;
+            $account     = $transaction->account;
+            $count       = $journal->transactions()->count();
+            $name        = $account->name ?? '';
+
+            Log::debug(sprintf('Loop: %d, transaction count: %d, account is null: %d, name = "%s"', $loops, $count, (int)null === $account, $name));
+
+            $loops++;
+
+            // do this while the following is untrue:
+            // 1) account is not null,
+            // 2) journal has two transactions
+            // 3) loops is less than 30
+            // 4) $name is longer than 3
+        } while (!(null !== $account && 2 === $count && $loops < 30 && \strlen($name) > 3));
 
         $trigger = FromAccountStarts::makeFromStrings(substr($account->name, 0, -3), false);
         $result  = $trigger->triggered($journal);
@@ -51,15 +75,28 @@ class FromAccountStartsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::triggered
      */
-    public function testTriggeredLonger()
+    public function testTriggeredLonger(): void
     {
-        $transaction = null;
+        Log::debug('In testTriggeredLonger()');
+        $loops = 0; // FINAL LOOP METHOD.
         do {
-            $journal     = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+            /** @var TransactionJournal $journal */
+            $journal     = $this->user()->transactionJournals()->inRandomOrder()->whereNull('deleted_at')->first();
             $transaction = $journal->transactions()->where('amount', '<', 0)->first();
-        } while (null === $transaction);
+            $account     = $transaction->account;
+            $count       = $journal->transactions()->count();
+            $name        = $account->name ?? '';
 
-        $account     = $transaction->account;
+            Log::debug(sprintf('Loop: %d, transaction count: %d, account is null: %d, name = "%s"', $loops, $count, (int)null === $account, $name));
+
+            $loops++;
+
+            // do this while the following is untrue:
+            // 1) account is not null,
+            // 2) journal has two transactions
+            // 3) loops is less than 30
+            // 4) $name is longer than 3
+        } while (!(null !== $account && 2 === $count && $loops < 30 && \strlen($name) > 3));
 
         $trigger = FromAccountStarts::makeFromStrings('bla-bla-bla' . $account->name, false);
         $result  = $trigger->triggered($journal);
@@ -69,7 +106,7 @@ class FromAccountStartsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::triggered
      */
-    public function testTriggeredNot()
+    public function testTriggeredNot(): void
     {
         $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
 
@@ -81,7 +118,7 @@ class FromAccountStartsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::willMatchEverything
      */
-    public function testWillMatchEverythingEmpty()
+    public function testWillMatchEverythingEmpty(): void
     {
         $value  = '';
         $result = FromAccountStarts::willMatchEverything($value);
@@ -91,7 +128,7 @@ class FromAccountStartsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::willMatchEverything
      */
-    public function testWillMatchEverythingNotNull()
+    public function testWillMatchEverythingNotNull(): void
     {
         $value  = 'x';
         $result = FromAccountStarts::willMatchEverything($value);
@@ -101,7 +138,7 @@ class FromAccountStartsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::willMatchEverything
      */
-    public function testWillMatchEverythingNull()
+    public function testWillMatchEverythingNull(): void
     {
         $value  = null;
         $result = FromAccountStarts::willMatchEverything($value);

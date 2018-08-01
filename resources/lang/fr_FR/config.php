@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * config.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -21,21 +20,32 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 return [
-    'html_language'    => 'fr',
-    'locale'           => 'fr, French, fr_FR, fr_FR.utf8, fr_FR.UTF-8',
-    'month'            => '%B %Y',
-    'month_and_day'    => '%e %B %Y',
-    'date_time'        => '%B %e %Y @ %T',
-    'specific_day'     => '%e %B %Y',
-    'week_in_year'     => 'Semaine %W %Y',
-    'year'             => '%Y',
-    'half_year'        => '%B %Y',
-    'month_js'         => 'MMMM YYYY',
-    'month_and_day_js' => 'MMMM Do, YYYY',
-    'date_time_js'     => 'MMMM Do, YYYY, @ HH:mm:ss',
-    'specific_day_js'  => 'D MMMM YYYY',
-    'week_in_year_js'  => '[Week] w, YYYY',
-    'year_js'          => 'YYYY',
-    'half_year_js'     => 'Q YYYY',
+    'html_language'         => 'fr',
+    'locale'                => 'fr, French, fr_FR, fr_FR.utf8, fr_FR.UTF-8',
+    'month'                 => '%B %Y',
+    'month_and_day'         => '%e %B %Y',
+    'month_and_date_day'    => '%A %e %B %Y',
+    'month_and_day_no_year' => '%e %B',
+    'date_time'             => '%B %e %Y @ %T',
+    'specific_day'          => '%e %B %Y',
+    'week_in_year'          => 'Semaine %W %Y',
+    'year'                  => '%Y',
+    'half_year'             => '%B %Y',
+    'month_js'              => 'MMMM YYYY',
+    'month_and_day_js'      => 'Do MMMM YYYY',
+    'date_time_js'          => 'Do MMMM YYYY, @ HH:mm:ss',
+    'specific_day_js'       => 'D MMMM YYYY',
+    'week_in_year_js'       => '[Week] w, YYYY',
+    'year_js'               => 'YYYY',
+    'half_year_js'          => 'Q YYYY',
+    'dow_1'                 => 'Lundi',
+    'dow_2'                 => 'Mardi',
+    'dow_3'                 => 'Mercredi',
+    'dow_4'                 => 'Jeudi',
+    'dow_5'                 => 'Vendredi',
+    'dow_6'                 => 'Samedi',
+    'dow_7'                 => 'Dimanche',
 ];

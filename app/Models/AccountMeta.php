@@ -24,10 +24,13 @@ namespace FireflyIII\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use FireflyIII\Models\Account;
 
 /**
  * Class AccountMeta.
+ *
+ * @property string $data
+ * @property string $name
+ * @property int    $account_id
  */
 class AccountMeta extends Model
 {

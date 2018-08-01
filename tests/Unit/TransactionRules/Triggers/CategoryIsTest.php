@@ -34,9 +34,13 @@ class CategoryIsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::triggered
      */
-    public function testTriggeredJournal()
+    public function testTriggeredJournal(): void
     {
-        $journal  = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+        do {
+            $journal      = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+            $transactions = $journal->transactions()->count();
+        } while ($transactions === 0);
+
         $category = $journal->user->categories()->first();
         $journal->categories()->detach();
         $journal->categories()->save($category);
@@ -50,9 +54,13 @@ class CategoryIsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::triggered
      */
-    public function testTriggeredNotJournal()
+    public function testTriggeredNotJournal(): void
     {
-        $journal       = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+        do {
+            $journal      = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+            $transactions = $journal->transactions()->count();
+        } while ($transactions === 0);
+
         $category      = $journal->user->categories()->first();
         $otherCategory = $journal->user->categories()->where('id', '!=', $category->id)->first();
         $journal->categories()->detach();
@@ -67,9 +75,13 @@ class CategoryIsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::triggered
      */
-    public function testTriggeredTransaction()
+    public function testTriggeredTransaction(): void
     {
-        $journal     = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+        do {
+            $journal      = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+            $transactions = $journal->transactions()->count();
+        } while ($transactions === 0);
+
         $transaction = $journal->transactions()->first();
         $category    = $journal->user->categories()->first();
 
@@ -87,7 +99,7 @@ class CategoryIsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::willMatchEverything
      */
-    public function testWillMatchEverythingNotNull()
+    public function testWillMatchEverythingNotNull(): void
     {
         $value  = 'x';
         $result = CategoryIs::willMatchEverything($value);
@@ -97,7 +109,7 @@ class CategoryIsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::willMatchEverything
      */
-    public function testWillMatchEverythingNull()
+    public function testWillMatchEverythingNull(): void
     {
         $value  = null;
         $result = CategoryIs::willMatchEverything($value);

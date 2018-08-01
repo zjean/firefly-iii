@@ -29,8 +29,8 @@ use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Log;
-use Preferences;
 
 /**
  * Class JavascriptController.
@@ -43,18 +43,20 @@ class JavascriptController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function accounts(AccountRepositoryInterface $repository, CurrencyRepositoryInterface $currencyRepository)
+    public function accounts(AccountRepositoryInterface $repository, CurrencyRepositoryInterface $currencyRepository): Response
     {
         $accounts   = $repository->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET]);
-        $preference = Preferences::get('currencyPreference', config('firefly.default_currency', 'EUR'));
-        $default    = $currencyRepository->findByCodeNull($preference->data);
+        $preference = app('preferences')->get('currencyPreference', config('firefly.default_currency', 'EUR'));
+        /** @noinspection NullPointerExceptionInspection */
+        $default = $currencyRepository->findByCodeNull($preference->data);
 
         $data = ['accounts' => []];
 
         /** @var Account $account */
         foreach ($accounts as $account) {
-            $accountId                    = $account->id;
-            $currency                     = (int)$repository->getMetaValue($account, 'currency_id');
+            $accountId = $account->id;
+            $currency  = (int)$repository->getMetaValue($account, 'currency_id');
+            /** @noinspection NullPointerExceptionInspection */
             $currency                     = 0 === $currency ? $default->id : $currency;
             $entry                        = ['preferredCurrency' => $currency, 'name' => $account->name];
             $data['accounts'][$accountId] = $entry;
@@ -68,9 +70,9 @@ class JavascriptController extends Controller
     /**
      * @param CurrencyRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
-    public function currencies(CurrencyRepositoryInterface $repository)
+    public function currencies(CurrencyRepositoryInterface $repository): Response
     {
         $currencies = $repository->get();
         $data       = ['currencies' => []];
@@ -93,7 +95,7 @@ class JavascriptController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function variables(Request $request, AccountRepositoryInterface $repository, CurrencyRepositoryInterface $currencyRepository)
+    public function variables(Request $request, AccountRepositoryInterface $repository, CurrencyRepositoryInterface $currencyRepository): Response
     {
         $account    = $repository->findNull((int)$request->get('account'));
         $currencyId = 0;
@@ -102,7 +104,8 @@ class JavascriptController extends Controller
         }
         /** @var TransactionCurrency $currency */
         $currency = $currencyRepository->findNull($currencyId);
-        if (0 === $currencyId) {
+        if (null === $currency) {
+            /** @var TransactionCurrency $currency */
             $currency = app('amount')->getDefaultCurrency();
         }
 
@@ -110,9 +113,10 @@ class JavascriptController extends Controller
         $accounting                = app('amount')->getJsConfig($localeconv);
         $localeconv                = localeconv();
         $localeconv['frac_digits'] = $currency->decimal_places;
-        $pref                      = Preferences::get('language', config('firefly.default_language', 'en_US'));
-        $lang                      = $pref->data;
-        $dateRange                 = $this->getDateRangeConfig();
+        $pref                      = app('preferences')->get('language', config('firefly.default_language', 'en_US'));
+        /** @noinspection NullPointerExceptionInspection */
+        $lang      = $pref->data;
+        $dateRange = $this->getDateRangeConfig();
 
         $data = [
             'currencyCode'    => $currency->code,
@@ -132,10 +136,11 @@ class JavascriptController extends Controller
 
     /**
      * @return array
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     private function getDateRangeConfig(): array
     {
-        $viewRange = Preferences::get('viewRange', '1M')->data;
+        $viewRange = app('preferences')->get('viewRange', '1M')->data;
         $start     = session('start');
         $end       = session('end');
         $first     = session('first');
@@ -171,8 +176,10 @@ class JavascriptController extends Controller
         $ranges[$index] = [$nextStart, $nextEnd];
 
         // today:
+        /** @var Carbon $todayStart */
         $todayStart = app('navigation')->startOfPeriod($today, $viewRange);
-        $todayEnd   = app('navigation')->endOfPeriod($todayStart, $viewRange);
+        /** @var Carbon $todayEnd */
+        $todayEnd = app('navigation')->endOfPeriod($todayStart, $viewRange);
         if ($todayStart->ne($start) || $todayEnd->ne($end)) {
             $ranges[ucfirst((string)trans('firefly.today'))] = [$todayStart, $todayEnd];
         }

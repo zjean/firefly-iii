@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * intro.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +19,8 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+declare(strict_types=1);
 
 return [
     // index
@@ -110,7 +111,7 @@ return [
     'bills_create_skip_holder'                                => 'Если счёт выставляется каждые 2 недели, в поле "пропустить" нужно поставить "1", чтобы пропускать все прочие недели.',
 
     // rules index
-    'rules_index_intro'                                       => 'Firefly III позволяет вам использовать правилами, которые автоматически применяются к любой транзакции, которую вы создаёте или редактируете.',
+    'rules_index_intro'                                       => 'Firefly III позволяет вам использовать правила, автоматически применяющиеся к любой транзакции, которую вы создаёте или редактируете.',
     'rules_index_new_rule_group'                              => 'Вы можете комбинировать правила в группы, чтобы упростить управление ими.',
     'rules_index_new_rule'                                    => 'Создайте столько правил, сколько захотите.',
     'rules_index_prio_buttons'                                => 'Упорядочивайте их так, как вы считаете нужным.',

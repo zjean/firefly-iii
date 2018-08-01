@@ -154,13 +154,15 @@ interface CurrencyRepositoryInterface
     public function getCurrencyByPreference(Preference $preference): TransactionCurrency;
 
     /**
+     * Get currency exchange rate.
+     *
      * @param TransactionCurrency $fromCurrency
      * @param TransactionCurrency $toCurrency
      * @param Carbon              $date
      *
-     * @return CurrencyExchangeRate
+     * @return CurrencyExchangeRate|null
      */
-    public function getExchangeRate(TransactionCurrency $fromCurrency, TransactionCurrency $toCurrency, Carbon $date): CurrencyExchangeRate;
+    public function getExchangeRate(TransactionCurrency $fromCurrency, TransactionCurrency $toCurrency, Carbon $date): ?CurrencyExchangeRate;
 
     /**
      * @param User $user
@@ -170,9 +172,9 @@ interface CurrencyRepositoryInterface
     /**
      * @param array $data
      *
-     * @return TransactionCurrency
+     * @return TransactionCurrency|null
      */
-    public function store(array $data): TransactionCurrency;
+    public function store(array $data): ?TransactionCurrency;
 
     /**
      * @param TransactionCurrency $currency

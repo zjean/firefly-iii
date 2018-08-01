@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+/** @noinspection PhpUndefinedMethodInspection */
+/** @noinspection PhpUndefinedMethodInspection */
 declare(strict_types=1);
 
 namespace FireflyIII\Generator\Report;
@@ -27,10 +29,14 @@ use Illuminate\Support\Collection;
 
 /**
  * Class Support.
+ * @method Collection getExpenses()
+ * @method Collection getIncome()
  */
 class Support
 {
     /**
+     * Get the top expenses.
+     *
      * @return Collection
      */
     public function getTopExpenses(): Collection
@@ -39,6 +45,8 @@ class Support
     }
 
     /**
+     * Get the top income.
+     *
      * @return Collection
      */
     public function getTopIncome(): Collection
@@ -47,6 +55,8 @@ class Support
     }
 
     /**
+     * Get averages from a collection.
+     *
      * @param Collection $collection
      * @param int        $sortFlag
      *
@@ -89,6 +99,8 @@ class Support
     }
 
     /**
+     * Summarize collection by earned and spent data.
+     *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) // it's exactly five.
      *
      * @param array $spent
@@ -117,7 +129,6 @@ class Support
             $return[$objectId]['spent'] = $entry;
             $return['sum']['spent']     = bcadd($return['sum']['spent'], $entry);
         }
-        unset($entry);
 
         /**
          * @var int
@@ -136,6 +147,8 @@ class Support
     }
 
     /**
+     * Summarize the data by account.
+     *
      * @param Collection $collection
      *
      * @return array

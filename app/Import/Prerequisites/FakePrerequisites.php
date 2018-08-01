@@ -23,7 +23,6 @@ declare(strict_types=1);
 namespace FireflyIII\Import\Prerequisites;
 
 use FireflyIII\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\MessageBag;
 
 /**
@@ -39,6 +38,7 @@ class FakePrerequisites implements PrerequisitesInterface
     /**
      * Returns view name that allows user to fill in prerequisites. Currently asks for the API key.
      *
+     * @codeCoverageIgnore
      * @return string
      */
     public function getView(): string
@@ -59,7 +59,7 @@ class FakePrerequisites implements PrerequisitesInterface
         }
         $oldKey = (string)\request()->old('api_key');
         if ($oldKey !== '') {
-            $apiKey = \request()->old('api_key');
+            $apiKey = \request()->old('api_key'); // @codeCoverageIgnore
         }
 
         return ['api_key' => $apiKey];
@@ -87,13 +87,13 @@ class FakePrerequisites implements PrerequisitesInterface
     }
 
     /**
-     * @param Request $request
+     * @param array $data
      *
      * @return MessageBag
      */
-    public function storePrerequisites(Request $request): MessageBag
+    public function storePrerequisites(array $data): MessageBag
     {
-        $apiKey     = (string)$request->get('api_key');
+        $apiKey     = $data['api_key'] ?? '';
         $messageBag = new MessageBag();
         if (32 !== \strlen($apiKey)) {
             $messageBag->add('api_key', 'API key must be 32 chars.');

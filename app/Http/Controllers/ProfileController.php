@@ -39,17 +39,18 @@ use FireflyIII\User;
 use Google2FA;
 use Hash;
 use Illuminate\Contracts\Auth\Guard;
+use Illuminate\Support\Collection;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Log;
 use phpseclib\Crypt\RSA;
-use Preferences;
-use View;
 
 /**
  * Class ProfileController.
  *
  * @method Guard guard()
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class ProfileController extends Controller
 {
@@ -62,7 +63,7 @@ class ProfileController extends Controller
 
         $this->middleware(
             function ($request, $next) {
-                app('view')->share('title', trans('firefly.profile'));
+                app('view')->share('title', (string)trans('firefly.profile'));
                 app('view')->share('mainTitleIcon', 'fa-user');
 
                 return $next($request);
@@ -73,7 +74,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function changeEmail()
     {
@@ -86,7 +87,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function changePassword()
     {
@@ -100,16 +101,17 @@ class ProfileController extends Controller
     /**
      * View that generates a 2FA code for the user.
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function code()
     {
         $domain = $this->getDomain();
         $secret = Google2FA::generateSecretKey();
         session()->flash('two-factor-secret', $secret);
+
         $image = Google2FA::getQRCodeInline($domain, auth()->user()->email, $secret, 200);
 
-        return view('profile.code', compact('image'));
+        return view('profile.code', compact('image', 'secret'));
     }
 
     /**
@@ -123,7 +125,8 @@ class ProfileController extends Controller
     public function confirmEmailChange(UserRepositoryInterface $repository, string $token)
     {
         // find preference with this token value.
-        $set  = Preferences::findByName('email_change_confirm_token');
+        /** @var Collection $set */
+        $set  = app('preferences')->findByName('email_change_confirm_token');
         $user = null;
         Log::debug(sprintf('Found %d preferences', $set->count()));
         /** @var Preference $preference */
@@ -148,7 +151,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function deleteAccount()
     {
@@ -164,8 +167,8 @@ class ProfileController extends Controller
      */
     public function deleteCode()
     {
-        Preferences::delete('twoFactorAuthEnabled');
-        Preferences::delete('twoFactorAuthSecret');
+        app('preferences')->delete('twoFactorAuthEnabled');
+        app('preferences')->delete('twoFactorAuthSecret');
         session()->flash('success', (string)trans('firefly.pref_two_factor_auth_disabled'));
         session()->flash('info', (string)trans('firefly.pref_two_factor_auth_remove_it'));
 
@@ -179,26 +182,28 @@ class ProfileController extends Controller
      */
     public function enable2FA(UserRepositoryInterface $repository)
     {
-        if ($repository->hasRole(auth()->user(), 'demo')) {
+        /** @var User $user */
+        $user = auth()->user();
+        if ($repository->hasRole($user, 'demo')) {
             return redirect(route('profile.index'));
         }
-        $hasTwoFactorAuthSecret = (null !== Preferences::get('twoFactorAuthSecret'));
+        $hasSecret = (null !== app('preferences')->get('twoFactorAuthSecret'));
 
         // if we don't have a valid secret yet, redirect to the code page to get one.
-        if (!$hasTwoFactorAuthSecret) {
+        if (!$hasSecret) {
             return redirect(route('profile.code'));
         }
 
         // If FF3 already has a secret, just set the two factor auth enabled to 1,
         // and let the user continue with the existing secret.
 
-        Preferences::set('twoFactorAuthEnabled', 1);
+        app('preferences')->set('twoFactorAuthEnabled', 1);
 
         return redirect(route('profile.index'));
     }
 
     /**
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
     {
@@ -209,20 +214,22 @@ class ProfileController extends Controller
 
         $this->createOAuthKeys();
 
-        if ($count === 0) {
+        if (0 === $count) {
             /** @var ClientRepository $repository */
             $repository = app(ClientRepository::class);
             $repository->createPersonalAccessClient(null, config('app.name') . ' Personal Access Client', 'http://localhost');
         }
         $subTitle   = auth()->user()->email;
         $userId     = auth()->user()->id;
-        $enabled2FA = (int)Preferences::get('twoFactorAuthEnabled', 0)->data === 1;
+        $enabled2FA = 1 === (int)app('preferences')->get('twoFactorAuthEnabled', 0)->data;
+        /** @var User $user */
+        $user = auth()->user();
 
         // get access token or create one.
-        $accessToken = Preferences::get('access_token', null);
+        $accessToken = app('preferences')->get('access_token', null);
         if (null === $accessToken) {
-            $token       = auth()->user()->generateAccessToken();
-            $accessToken = Preferences::set('access_token', $token);
+            $token       = $user->generateAccessToken();
+            $accessToken = app('preferences')->set('access_token', $token);
         }
 
         return view('profile.index', compact('subTitle', 'userId', 'accessToken', 'enabled2FA'));
@@ -282,35 +289,37 @@ class ProfileController extends Controller
         // the request has already validated both new passwords must be equal.
         $current = $request->get('current_password');
         $new     = $request->get('new_password');
-
+        /** @var User $user */
+        $user = auth()->user();
         try {
-            $this->validatePassword(auth()->user(), $current, $new);
+            $this->validatePassword($user, $current, $new);
         } catch (ValidationException $e) {
             session()->flash('error', $e->getMessage());
 
             return redirect(route('profile.change-password'));
         }
 
-        $repository->changePassword(auth()->user(), $request->get('new_password'));
+        $repository->changePassword($user, $request->get('new_password'));
         session()->flash('success', (string)trans('firefly.password_changed'));
 
         return redirect(route('profile.index'));
     }
 
+    /** @noinspection PhpUnusedParameterInspection */
     /**
      * @param TokenFormRequest $request
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) // it's unused but the class does some validation.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function postCode(TokenFormRequest $request)
     {
-        Preferences::set('twoFactorAuthEnabled', 1);
-        Preferences::set('twoFactorAuthSecret', session()->get('two-factor-secret'));
+        app('preferences')->set('twoFactorAuthEnabled', 1);
+        app('preferences')->set('twoFactorAuthSecret', session()->get('two-factor-secret'));
 
         session()->flash('success', (string)trans('firefly.saved_preferences'));
-        Preferences::mark();
-
+        app('preferences')->mark();
         return redirect(route('profile.index'));
     }
 
@@ -327,6 +336,7 @@ class ProfileController extends Controller
 
             return redirect(route('profile.delete-account'));
         }
+        /** @var User $user */
         $user = auth()->user();
         Log::info(sprintf('User #%d has opted to delete their account', auth()->user()->id));
         // make repository delete user:
@@ -342,8 +352,10 @@ class ProfileController extends Controller
      */
     public function regenerate()
     {
-        $token = auth()->user()->generateAccessToken();
-        Preferences::set('access_token', $token);
+        /** @var User $user */
+        $user  = auth()->user();
+        $token = $user->generateAccessToken();
+        app('preferences')->set('access_token', $token);
         session()->flash('success', (string)trans('firefly.token_regenerated'));
 
         return redirect(route('profile.index'));
@@ -357,11 +369,13 @@ class ProfileController extends Controller
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      *
      * @throws FireflyException
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function undoEmailChange(UserRepositoryInterface $repository, string $token, string $hash)
     {
         // find preference with this token value.
-        $set  = Preferences::findByName('email_change_undo_token');
+        $set  = app('preferences')->findByName('email_change_undo_token');
         $user = null;
         /** @var Preference $preference */
         foreach ($set as $preference) {
@@ -373,9 +387,8 @@ class ProfileController extends Controller
             throw new FireflyException('Invalid token.');
         }
 
-        // found user.
-        // which email address to return to?
-        $set = Preferences::beginsWith($user, 'previous_email_');
+        // found user.which email address to return to?
+        $set = app('preferences')->beginsWith($user, 'previous_email_');
         /** @var string $match */
         $match = null;
         foreach ($set as $entry) {
@@ -424,7 +437,7 @@ class ProfileController extends Controller
     /**
      *
      */
-    private function createOAuthKeys()
+    private function createOAuthKeys(): void
     {
         $rsa  = new RSA();
         $keys = $rsa->createKey(4096);
@@ -437,11 +450,13 @@ class ProfileController extends Controller
         if (file_exists($publicKey) || file_exists($privateKey)) {
             return;
         }
+        // @codeCoverageIgnoreStart
         Log::alert('NO OAuth keys were found. They have been created.');
 
         file_put_contents($publicKey, array_get($keys, 'publickey'));
         file_put_contents($privateKey, array_get($keys, 'privatekey'));
     }
+    // @codeCoverageIgnoreEnd
 
     /**
      * @return string

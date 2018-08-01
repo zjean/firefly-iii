@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers\Json;
 
-use FireflyIII\Support\Facades\Preferences;
+use Illuminate\Http\JsonResponse;
 use Log;
 
 /**
@@ -31,16 +31,15 @@ use Log;
 class IntroController
 {
     /**
-     * Get the intro steps. There are currently no specific routes with an outro step.
+     * @param string      $route
+     * @param string|null $specificPage
      *
-     * @param string $route
-     * @param string $specificPage
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getIntroSteps(string $route, string $specificPage = '')
+    public function getIntroSteps(string $route, string $specificPage = null): JsonResponse
     {
         Log::debug(sprintf('getIntroSteps for route "%s" and page "%s"', $route, $specificPage));
+        $specificPage  = $specificPage ?? '';
         $steps         = $this->getBasicSteps($route);
         $specificSteps = $this->getSpecificSteps($route, $specificPage);
         if (0 === \count($specificSteps)) {
@@ -90,38 +89,40 @@ class IntroController
     }
 
     /**
-     * @param string $route
-     * @param string $specialPage
+     * @param string      $route
+     * @param string|null $specialPage
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function postEnable(string $route, string $specialPage = '')
+    public function postEnable(string $route, string $specialPage = null): JsonResponse
     {
-        $route = str_replace('.', '_', $route);
-        $key   = 'shown_demo_' . $route;
+        $specialPage = $specialPage ?? '';
+        $route       = str_replace('.', '_', $route);
+        $key         = 'shown_demo_' . $route;
         if ('' !== $specialPage) {
             $key .= '_' . $specialPage;
         }
         Log::debug(sprintf('Going to mark the following route as NOT done: %s with special "%s" (%s)', $route, $specialPage, $key));
-        Preferences::set($key, false);
+        app('preferences')->set($key, false);
 
-        return response()->json(['message' => trans('firefly.intro_boxes_after_refresh')]);
+        return response()->json(['message' => (string)trans('firefly.intro_boxes_after_refresh')]);
     }
 
     /**
-     * @param string $route
-     * @param string $specialPage
+     * @param string      $route
+     * @param string|null $specialPage
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function postFinished(string $route, string $specialPage = '')
+    public function postFinished(string $route, string $specialPage = null): JsonResponse
     {
-        $key = 'shown_demo_' . $route;
+        $specialPage = $specialPage ?? '';
+        $key         = 'shown_demo_' . $route;
         if ('' !== $specialPage) {
             $key .= '_' . $specialPage;
         }
         Log::debug(sprintf('Going to mark the following route as done: %s with special "%s" (%s)', $route, $specialPage, $key));
-        Preferences::set($key, true);
+        app('preferences')->set($key, true);
 
         return response()->json(['result' => sprintf('Reported demo watched for route "%s".', $route)]);
     }
@@ -141,7 +142,7 @@ class IntroController
                 $currentStep = $options;
 
                 // get the text:
-                $currentStep['intro'] = trans('intro.' . $route . '_' . $key);
+                $currentStep['intro'] = (string)trans('intro.' . $route . '_' . $key);
 
                 // save in array:
                 $steps[] = $currentStep;
@@ -157,6 +158,7 @@ class IntroController
      * @param string $specificPage
      *
      * @return array
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function getSpecificSteps(string $route, string $specificPage): array
     {
@@ -172,7 +174,7 @@ class IntroController
                     $currentStep = $options;
 
                     // get the text:
-                    $currentStep['intro'] = trans('intro.' . $route . '_' . $specificPage . '_' . $key);
+                    $currentStep['intro'] = (string)trans('intro.' . $route . '_' . $specificPage . '_' . $key);
 
                     // save in array:
                     $steps[] = $currentStep;

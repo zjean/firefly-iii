@@ -33,6 +33,7 @@ use Illuminate\Support\Collection;
  */
 class AccountController extends Controller
 {
+
     /**
      * @param Collection $accounts
      * @param Carbon     $start
@@ -40,7 +41,7 @@ class AccountController extends Controller
      *
      * @return mixed|string
      *
-     * @throws \Throwable
+
      */
     public function general(Collection $accounts, Carbon $start, Carbon $end)
     {

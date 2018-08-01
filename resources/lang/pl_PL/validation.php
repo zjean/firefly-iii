@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * validation.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -21,9 +20,11 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 return [
     'iban'                           => 'To nie jest prawidłowy IBAN.',
-    'source_equals_destination'      => 'Konto źródłowe jest równe kontu docelowemu',
+    'source_equals_destination'      => 'The source account equals the destination account.',
     'unique_account_number_for_user' => 'Wygląda na to, że ten numer konta jest już w użyciu.',
     'unique_iban_for_user'           => 'Wygląda na to, że ten IBAN jest już w użyciu.',
     'deleted_user'                   => 'Ze względu na zabezpieczenia nie możesz się zarejestrować używając tego adresu e-mail.',
@@ -33,16 +34,22 @@ return [
     'file_attached'                  => 'Pomyślnie wgrano plik ":name".',
     'must_exist'                     => 'Identyfikator w polu :attribute nie istnieje w bazie danych.',
     'all_accounts_equal'             => 'Wszystkie konta w tym polu muszą być takie same.',
-    'invalid_selection'              => 'Twój wybór jest nieprawidłowy',
+    'invalid_selection'              => 'Twój wybór jest nieprawidłowy.',
     'belongs_user'                   => 'Ta wartość jest nieprawidłowa dla tego pola.',
     'at_least_one_transaction'       => 'Wymaga co najmniej jednej transakcji.',
+    'at_least_one_repetition'        => 'Wymaga co najmniej jednego powtórzenia.',
+    'require_repeat_until'           => 'Require either a number of repetitions, or an end date (repeat_until). Not both.',
     'require_currency_info'          => 'Treść tego pola jest nieprawidłowa bez informacji o walucie.',
     'equal_description'              => 'Opis transakcji nie powinien być równy globalnemu opisowi.',
     'file_invalid_mime'              => 'Plik ":name" jest typu ":mime", który nie jest akceptowany jako nowy plik do przekazania.',
     'file_too_large'                 => 'Plik ":name" jest zbyt duży.',
-    'belongs_to_user'                => 'Wartość :attribute jest nieznana',
+    'belongs_to_user'                => 'The value of :attribute is unknown.',
     'accepted'                       => ':attribute musi zostać zaakceptowany.',
     'bic'                            => 'To nie jest prawidłowy BIC.',
+    'at_least_one_trigger'           => 'Reguła powinna mieć co najmniej jeden wyzwalacz.',
+    'at_least_one_action'            => 'Reguła powinna mieć co najmniej jedną akcję.',
+    'base64'                         => 'To nie są prawidłowe dane zakodowane w base64.',
+    'model_id_invalid'               => 'The given ID seems invalid for this model.',
     'more'                           => ':attribute musi być większy od zera.',
     'active_url'                     => ':attribute nie jest prawidłowym adresem URL.',
     'after'                          => ':attribute musi być datą późniejszą od :date.',
@@ -52,8 +59,8 @@ return [
     'array'                          => ':attribute musi być tablicą.',
     'unique_for_user'                => 'Istnieje już wpis z tym :attribute.',
     'before'                         => ':attribute musi być wcześniejszą datą w stosunku do :date.',
-    'unique_object_for_user'         => 'Ta nazwa jest już w użyciu',
-    'unique_account_for_user'        => 'Ta nazwa konta jest już w użyciu',
+    'unique_object_for_user'         => 'Ta nazwa jest już w użyciu.',
+    'unique_account_for_user'        => 'Ta nazwa konta jest już w użyciu.',
     'between.numeric'                => ':attribute musi się mieścić w zakresie pomiędzy :min a :max.',
     'between.file'                   => ':attribute musi się mieścić w zakresie pomiędzy :min oraz :max kilobajtów.',
     'between.string'                 => ':attribute musi zawierać pomiędzy :min a :max znaków.',
@@ -84,6 +91,9 @@ return [
     'min.array'                      => ':attribute musi zawierać przynajmniej :min elementów.',
     'not_in'                         => 'Wybrany :attribute jest nieprawidłowy.',
     'numeric'                        => ':attribute musi byc liczbą.',
+    'numeric_native'                 => 'The native amount must be a number.',
+    'numeric_destination'            => 'Kwota docelowa musi być liczbą.',
+    'numeric_source'                 => 'Kwota źródłowa musi być liczbą.',
     'regex'                          => 'Format :attribute jest nieprawidłowy.',
     'required'                       => 'Pole :attribute jest wymagane.',
     'required_if'                    => 'Pole :attribute jest wymagane gdy :other jest :value.',
@@ -108,8 +118,12 @@ return [
     'file'                           => ':attribute musi być plikiem.',
     'in_array'                       => 'Pole :attribute nie istnieje w :other.',
     'present'                        => 'Pole :attribute musi być obecne.',
-    'amount_zero'                    => 'Całkowita kwota nie może być zerem',
-    'secure_password'                => 'To nie jest bezpieczne hasło. Proszę spróbować ponownie. Aby uzyskać więcej informacji odwiedź https://goo.gl/NCh2tN',
+    'amount_zero'                    => 'Całkowita kwota nie może wynosić zero.',
+    'unique_piggy_bank_for_user'     => 'Nazwa skarbonki musi być unikalna.',
+    'secure_password'                => 'To nie jest bezpieczne hasło. Proszę spróbować ponownie. Aby uzyskać więcej informacji odwiedź http://bit.ly/FF3-password-security.',
+    'valid_recurrence_rep_type'      => 'Invalid repetition type for recurring transactions.',
+    'valid_recurrence_rep_moment'    => 'Invalid repetition moment for this type of repetition.',
+    'invalid_account_info'           => 'Nieprawidłowe informacje o koncie.',
     'attributes'                     => [
         'email'                   => 'adres e-mail',
         'description'             => 'opis',

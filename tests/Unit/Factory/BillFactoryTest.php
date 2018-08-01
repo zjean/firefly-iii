@@ -39,10 +39,10 @@ class BillFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\BillFactory
      * @covers \FireflyIII\Services\Internal\Support\BillServiceTrait
      */
-    public function testCreateBasic()
+    public function testCreateBasic(): void
     {
         $data = [
-            'name'                    => 'Some new bill #' . random_int(1, 1000),
+            'name'                    => 'Some new bill #' . random_int(1, 10000),
             'amount_min'              => '5',
             'transaction_currency_id' => 1,
             'amount_max'              => '10',
@@ -73,10 +73,10 @@ class BillFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\BillFactory
      * @covers \FireflyIII\Services\Internal\Support\BillServiceTrait
      */
-    public function testCreateEmptyNotes()
+    public function testCreateEmptyNotes(): void
     {
         $data = [
-            'name'                    => 'Some new bill #' . random_int(1, 1000),
+            'name'                    => 'Some new bill #' . random_int(1, 10000),
             'amount_min'              => '5',
             'amount_max'              => '10',
             'date'                    => '2018-01-01',
@@ -106,7 +106,7 @@ class BillFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\BillFactory
      *
      */
-    public function testFindById()
+    public function testFindById(): void
     {
         $existing = $this->user()->piggyBanks()->first();
         /** @var BillFactory $factory */
@@ -122,7 +122,7 @@ class BillFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\BillFactory
      *
      */
-    public function testFindByName()
+    public function testFindByName(): void
     {
         $existing = $this->user()->bills()->first();
         /** @var BillFactory $factory */
@@ -139,12 +139,12 @@ class BillFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\BillFactory
      *
      */
-    public function testFindByUnknownName()
+    public function testFindByUnknownName(): void
     {
         /** @var BillFactory $factory */
         $factory = app(BillFactory::class);
         $factory->setUser($this->user());
-        $piggy = $factory->find(null, 'I dont exist' . random_int(1, 1000));
+        $piggy = $factory->find(null, 'I dont exist' . random_int(1, 10000));
 
         $this->assertNull($piggy);
     }
@@ -155,7 +155,7 @@ class BillFactoryTest extends TestCase
      * @covers \FireflyIII\Factory\BillFactory
      *
      */
-    public function testFindNull()
+    public function testFindNull(): void
     {
         /** @var BillFactory $factory */
         $factory = app(BillFactory::class);

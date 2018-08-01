@@ -24,6 +24,9 @@ namespace FireflyIII\Repositories\Attachment;
 
 use Carbon\Carbon;
 use Crypt;
+use Exception;
+use FireflyIII\Exceptions\FireflyException;
+use FireflyIII\Factory\AttachmentFactory;
 use FireflyIII\Helpers\Attachments\AttachmentHelperInterface;
 use FireflyIII\Models\Attachment;
 use FireflyIII\Models\Note;
@@ -52,7 +55,11 @@ class AttachmentRepository implements AttachmentRepositoryInterface
         $helper = app(AttachmentHelperInterface::class);
 
         $file = $helper->getAttachmentLocation($attachment);
-        unlink($file);
+        try {
+            unlink($file);
+        } catch (Exception $e) {
+            Log::error(sprintf('Could not delete file for attachment %d.', $attachment->id));
+        }
         $attachment->delete();
 
         return true;
@@ -174,9 +181,28 @@ class AttachmentRepository implements AttachmentRepositoryInterface
     /**
      * @param User $user
      */
-    public function setUser(User $user)
+    public function setUser(User $user): void
     {
         $this->user = $user;
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return Attachment
+     * @throws FireflyException
+     */
+    public function store(array $data): Attachment
+    {
+        /** @var AttachmentFactory $factory */
+        $factory = app(AttachmentFactory::class);
+        $factory->setUser($this->user);
+        $result = $factory->create($data);
+        if (null === $result) {
+            throw new FireflyException('Could not store attachment.');
+        }
+
+        return $result;
     }
 
     /**
@@ -188,8 +214,13 @@ class AttachmentRepository implements AttachmentRepositoryInterface
     public function update(Attachment $attachment, array $data): Attachment
     {
         $attachment->title = $data['title'];
+
+        // update filename, if present and different:
+        if (isset($data['filename']) && '' !== $data['filename'] && $data['filename'] !== $attachment->filename) {
+            $attachment->filename = $data['filename'];
+        }
         $attachment->save();
-        $this->updateNote($attachment, $data['notes']);
+        $this->updateNote($attachment, $data['notes'] ?? '');
 
         return $attachment;
     }
@@ -202,7 +233,7 @@ class AttachmentRepository implements AttachmentRepositoryInterface
      */
     public function updateNote(Attachment $attachment, string $note): bool
     {
-        if (0 === \strlen($note)) {
+        if ('' === $note) {
             $dbNote = $attachment->notes()->first();
             if (null !== $dbNote) {
                 $dbNote->delete();

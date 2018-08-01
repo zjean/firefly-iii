@@ -40,7 +40,7 @@ class AccountControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         Passport::actingAs($this->user());
@@ -50,9 +50,9 @@ class AccountControllerTest extends TestCase
     /**
      * Destroy account over API.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::delete
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
      */
-    public function testDelete()
+    public function testDelete(): void
     {
         // mock stuff:
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -72,11 +72,11 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::__construct
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::index
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::mapTypes
+     * Test the list of accounts.
+     *
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
      */
-    public function testIndex()
+    public function testIndex(): void
     {
         // create stuff
         $accounts = factory(Account::class, 10)->create();
@@ -110,12 +110,10 @@ class AccountControllerTest extends TestCase
     /**
      * Opening balance without date.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::store
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::authorize
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::getAll
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testInvalidBalance()
+    public function testInvalidBalance(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -152,12 +150,10 @@ class AccountControllerTest extends TestCase
     /**
      * CC type present when account is a credit card.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::store
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::authorize
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::getAll
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testNoCreditCardData()
+    public function testNoCreditCardData(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -194,12 +190,10 @@ class AccountControllerTest extends TestCase
     /**
      * No currency information
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::store
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::authorize
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::getAll
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testNoCurrencyInfo()
+    public function testNoCurrencyInfo(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -233,10 +227,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::show
+     * Show an account.
+     *
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
      */
 
-    public function testShow()
+    public function testShow(): void
     {
         // create stuff
         $account = $this->user()->accounts()->first();
@@ -268,12 +264,10 @@ class AccountControllerTest extends TestCase
     /**
      * Name already in use.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::store
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::authorize
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::getAll
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testStoreNotUnique()
+    public function testStoreNotUnique(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -300,7 +294,7 @@ class AccountControllerTest extends TestCase
             [
                 'message' => 'The given data was invalid.',
                 'errors'  => [
-                    'name' => ['This account name is already in use'],
+                    'name' => ['This account name is already in use.'],
                 ],
             ]
         );
@@ -310,12 +304,10 @@ class AccountControllerTest extends TestCase
     /**
      * Send correct data. Should call account repository store method.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::store
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::authorize
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::getAll
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testStoreValid()
+    public function testStoreValid(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -354,12 +346,10 @@ class AccountControllerTest extends TestCase
     /**
      * Send correct data. Should call account repository store method.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::store
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::authorize
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::getAll
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testStoreWithCurrencyCode()
+    public function testStoreWithCurrencyCode(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -402,10 +392,10 @@ class AccountControllerTest extends TestCase
     /**
      * Update first asset account we find. Name can be the same as it was.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::update
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testUpdate()
+    public function testUpdate(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);
@@ -445,10 +435,10 @@ class AccountControllerTest extends TestCase
     /**
      * Update first asset account we find. Name can be the same as it was.
      *
-     * @covers \FireflyIII\Api\V1\Controllers\AccountController::update
-     * @covers \FireflyIII\Api\V1\Requests\AccountRequest::rules
+     * @covers \FireflyIII\Api\V1\Controllers\AccountController
+     * @covers \FireflyIII\Api\V1\Requests\AccountRequest
      */
-    public function testUpdateCurrencyCode()
+    public function testUpdateCurrencyCode(): void
     {
         // mock repositories
         $repository    = $this->mock(AccountRepositoryInterface::class);

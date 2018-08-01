@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * components.php
@@ -21,11 +20,13 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 return [
     // profile
-    'personal_access_tokens' => 'Personal access tokens',
+    'personal_access_tokens' => 'Kişisel Erişim Anahtarı',
 
     // bills:
-    'not_expected_period'    => 'Not expected this period',
-    'not_or_not_yet'         => 'Not (yet)',
+    'not_expected_period'    => 'Bu periyotta beklenmiyor',
+    'not_or_not_yet'         => 'Henüz değil',
 ];

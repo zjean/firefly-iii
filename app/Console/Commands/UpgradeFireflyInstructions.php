@@ -1,8 +1,7 @@
 <?php
-declare(strict_types=1);
 /**
  * UpgradeFireflyInstructions.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -19,6 +18,8 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+declare(strict_types=1);
 
 namespace FireflyIII\Console\Commands;
 
@@ -45,7 +46,7 @@ class UpgradeFireflyInstructions extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         if ('update' === $this->argument('task')) {
             $this->updateInstructions();
@@ -60,7 +61,7 @@ class UpgradeFireflyInstructions extends Command
      *
      * @param string $text
      */
-    private function boxed(string $text)
+    private function boxed(string $text): void
     {
         $parts = explode("\n", wordwrap($text));
         foreach ($parts as $string) {
@@ -73,7 +74,7 @@ class UpgradeFireflyInstructions extends Command
      *
      * @param string $text
      */
-    private function boxedInfo(string $text)
+    private function boxedInfo(string $text): void
     {
         $parts = explode("\n", wordwrap($text));
         foreach ($parts as $string) {
@@ -84,7 +85,7 @@ class UpgradeFireflyInstructions extends Command
     /**
      * Render instructions.
      */
-    private function installInstructions()
+    private function installInstructions(): void
     {
         /** @var string $version */
         $version = config('firefly.version');
@@ -92,8 +93,7 @@ class UpgradeFireflyInstructions extends Command
         $text    = '';
         foreach (array_keys($config) as $compare) {
             // if string starts with:
-            $len = \strlen($compare);
-            if (substr($version, 0, $len) === $compare) {
+            if (0 === strpos($version, $compare)) {
                 $text = $config[$compare];
             }
         }
@@ -118,7 +118,7 @@ class UpgradeFireflyInstructions extends Command
     /**
      * Show a line.
      */
-    private function showLine()
+    private function showLine(): void
     {
         $line = '+';
         for ($i = 0; $i < 78; ++$i) {
@@ -131,7 +131,7 @@ class UpgradeFireflyInstructions extends Command
     /**
      * Render upgrade instructions.
      */
-    private function updateInstructions()
+    private function updateInstructions(): void
     {
         /** @var string $version */
         $version = config('firefly.version');
@@ -139,8 +139,7 @@ class UpgradeFireflyInstructions extends Command
         $text    = '';
         foreach (array_keys($config) as $compare) {
             // if string starts with:
-            $len = \strlen($compare);
-            if (substr($version, 0, $len) === $compare) {
+            if (0 === strpos($version, $compare)) {
                 $text = $config[$compare];
             }
         }

@@ -24,10 +24,14 @@ namespace FireflyIII\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use FireflyIII\Models\Account;
 
 /**
  * Class AccountType.
+ *
+ * @property string $type
+ * @method whereType(string $type)
+ * @property int    $id
+ *
  */
 class AccountType extends Model
 {

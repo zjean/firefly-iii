@@ -42,7 +42,7 @@ class CurrencyControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         Passport::actingAs($this->user());
@@ -102,7 +102,7 @@ class CurrencyControllerTest extends TestCase
                     'pagination' => [
                         'total'        => $collection->count(),
                         'count'        => $collection->count(),
-                        'per_page'     => 100,
+                        'per_page'     => true, // depends on user preference.
                         'current_page' => 1,
                         'total_pages'  => 1,
                     ],
@@ -142,6 +142,8 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
+     * Store new currency.
+     *
      * @covers \FireflyIII\Api\V1\Controllers\CurrencyController
      * @covers \FireflyIII\Api\V1\Requests\CurrencyRequest
      */
@@ -161,7 +163,7 @@ class CurrencyControllerTest extends TestCase
             'code'           => 'ABC',
             'symbol'         => 'A',
             'decimal_places' => 2,
-            'default'        => 'false',
+            'default'        => '0',
         ];
 
         // test API
@@ -173,6 +175,8 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
+     * Store new currency and make it default.
+     *
      * @covers \FireflyIII\Api\V1\Controllers\CurrencyController
      * @covers \FireflyIII\Api\V1\Requests\CurrencyRequest
      */
@@ -196,7 +200,7 @@ class CurrencyControllerTest extends TestCase
             'code'           => 'ABC',
             'symbol'         => 'A',
             'decimal_places' => 2,
-            'default'        => 'true',
+            'default'        => '1',
         ];
 
         // test API
@@ -208,6 +212,8 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
+     * Update currency.
+     *
      * @covers \FireflyIII\Api\V1\Controllers\CurrencyController
      * @covers \FireflyIII\Api\V1\Requests\CurrencyRequest
      */
@@ -226,7 +232,7 @@ class CurrencyControllerTest extends TestCase
             'code'           => 'ABC',
             'symbol'         => '$E',
             'decimal_places' => '2',
-            'default'        => 'false',
+            'default'        => '0',
         ];
 
         // test API
@@ -238,6 +244,8 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
+     * Update currency and make default.
+     *
      * @covers \FireflyIII\Api\V1\Controllers\CurrencyController
      * @covers \FireflyIII\Api\V1\Requests\CurrencyRequest
      */
@@ -262,7 +270,7 @@ class CurrencyControllerTest extends TestCase
             'code'           => 'ABC',
             'symbol'         => '$E',
             'decimal_places' => '2',
-            'default'        => 'true',
+            'default'        => '1',
         ];
 
         // test API

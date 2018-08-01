@@ -23,8 +23,8 @@ declare(strict_types=1);
 namespace FireflyIII\Http\Controllers;
 
 use FireflyIII\Helpers\Help\HelpInterface;
+use Illuminate\Http\JsonResponse;
 use Log;
-use Preferences;
 
 /**
  * Class HelpController.
@@ -53,11 +53,11 @@ class HelpController extends Controller
     /**
      * @param   $route
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function show(string $route)
+    public function show(string $route): JsonResponse
     {
-        $language = Preferences::get('language', config('firefly.default_language', 'en_US'))->data;
+        $language = app('preferences')->get('language', config('firefly.default_language', 'en_US'))->data;
         $html     = $this->getHelpText($route, $language);
 
         return response()->json(['html' => $html]);
@@ -68,6 +68,8 @@ class HelpController extends Controller
      * @param string $language
      *
      * @return string
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function getHelpText(string $route, string $language): string
     {
@@ -90,10 +92,10 @@ class HelpController extends Controller
         }
 
         // get help content from Github:
-        $content = $this->help->getFromGithub($route, $language);
+        $content = $this->help->getFromGitHub($route, $language);
 
         // content will have 0 length when Github failed. Try en_US when it does:
-        if (0 === \strlen($content)) {
+        if ('' === $content) {
             $language = 'en_US';
 
             // also check cache first:
@@ -104,11 +106,11 @@ class HelpController extends Controller
                 return $content;
             }
 
-            $content = $this->help->getFromGithub($route, $language);
+            $content = $this->help->getFromGitHub($route, $language);
         }
 
         // help still empty?
-        if (0 !== \strlen($content)) {
+        if ('' !== $content) {
             $this->help->putInCache($route, $language, $content);
 
             return $content;

@@ -37,7 +37,7 @@ class PiggyBankFactoryTest extends TestCase
      *
      * @covers \FireflyIII\Factory\PiggyBankFactory
      */
-    public function testFindById()
+    public function testFindById(): void
     {
         $existing = $this->user()->piggyBanks()->first();
         /** @var PiggyBankFactory $factory */
@@ -54,7 +54,7 @@ class PiggyBankFactoryTest extends TestCase
      *
      * @covers \FireflyIII\Factory\PiggyBankFactory
      */
-    public function testFindByName()
+    public function testFindByName(): void
     {
         $existing = $this->user()->piggyBanks()->first();
         /** @var PiggyBankFactory $factory */
@@ -71,7 +71,7 @@ class PiggyBankFactoryTest extends TestCase
      *
      * @covers \FireflyIII\Factory\PiggyBankFactory
      */
-    public function testFindNull()
+    public function testFindNull(): void
     {
         /** @var PiggyBankFactory $factory */
         $factory = app(PiggyBankFactory::class);
@@ -86,11 +86,11 @@ class PiggyBankFactoryTest extends TestCase
      *
      * @covers \FireflyIII\Factory\PiggyBankFactory
      */
-    public function testFindUnknown()
+    public function testFindUnknown(): void
     {
         /** @var PiggyBankFactory $factory */
         $factory = app(PiggyBankFactory::class);
         $factory->setUser($this->user());
-        $this->assertNull($factory->find(null, 'I dont exist.' . random_int(1, 1000)));
+        $this->assertNull($factory->find(null, 'I dont exist.' . random_int(1, 10000)));
     }
 }

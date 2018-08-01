@@ -24,6 +24,7 @@ namespace FireflyIII\Repositories\Journal;
 
 use Carbon\Carbon;
 use Exception;
+use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Factory\TransactionJournalFactory;
 use FireflyIII\Factory\TransactionJournalMetaFactory;
 use FireflyIII\Models\Account;
@@ -32,6 +33,7 @@ use FireflyIII\Models\Note;
 use FireflyIII\Models\PiggyBankEvent;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
+use FireflyIII\Models\TransactionJournalMeta;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Services\Internal\Destroy\JournalDestroyService;
 use FireflyIII\Services\Internal\Update\JournalUpdateService;
@@ -40,7 +42,6 @@ use FireflyIII\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Log;
-use Preferences;
 
 /**
  * Class JournalRepository.
@@ -63,10 +64,10 @@ class JournalRepository implements JournalRepositoryInterface
         if ($source->id === $destination->id || null === $source->id || null === $destination->id) {
             // default message bag that shows errors for everything.
             $messages = new MessageBag;
-            $messages->add('source_account_revenue', trans('firefly.invalid_convert_selection'));
-            $messages->add('destination_account_asset', trans('firefly.invalid_convert_selection'));
-            $messages->add('destination_account_expense', trans('firefly.invalid_convert_selection'));
-            $messages->add('source_account_asset', trans('firefly.invalid_convert_selection'));
+            $messages->add('source_account_revenue', (string)trans('firefly.invalid_convert_selection'));
+            $messages->add('destination_account_asset', (string)trans('firefly.invalid_convert_selection'));
+            $messages->add('destination_account_expense', (string)trans('firefly.invalid_convert_selection'));
+            $messages->add('source_account_asset', (string)trans('firefly.invalid_convert_selection'));
 
             return $messages;
         }
@@ -77,10 +78,10 @@ class JournalRepository implements JournalRepositoryInterface
             // default message bag that shows errors for everything.
 
             $messages = new MessageBag;
-            $messages->add('source_account_revenue', trans('firefly.source_or_dest_invalid'));
-            $messages->add('destination_account_asset', trans('firefly.source_or_dest_invalid'));
-            $messages->add('destination_account_expense', trans('firefly.source_or_dest_invalid'));
-            $messages->add('source_account_asset', trans('firefly.source_or_dest_invalid'));
+            $messages->add('source_account_revenue', (string)trans('firefly.source_or_dest_invalid'));
+            $messages->add('destination_account_asset', (string)trans('firefly.source_or_dest_invalid'));
+            $messages->add('destination_account_expense', (string)trans('firefly.source_or_dest_invalid'));
+            $messages->add('source_account_asset', (string)trans('firefly.source_or_dest_invalid'));
 
             return $messages;
         }
@@ -99,8 +100,13 @@ class JournalRepository implements JournalRepositoryInterface
                 $transaction->budgets()->detach();
             }
         }
+        // if journal is not a withdrawal, remove the bill ID.
+        if (TransactionType::WITHDRAWAL !== $type->type) {
+            $journal->bill_id = null;
+            $journal->save();
+        }
 
-        Preferences::mark();
+        app('preferences')->mark();
 
         return new MessageBag;
     }
@@ -145,6 +151,32 @@ class JournalRepository implements JournalRepositoryInterface
         }
 
         return $journal;
+    }
+
+    /**
+     * Find a journal by its hash.
+     *
+     * @param string $hash
+     *
+     * @return TransactionJournalMeta|null
+     */
+    public function findByHash(string $hash): ?TransactionJournalMeta
+    {
+        $jsonEncode = json_encode($hash);
+        $hashOfHash = hash('sha256', $jsonEncode);
+        Log::debug(sprintf('JSON encoded hash is: %s', $jsonEncode));
+        Log::debug(sprintf('Hash of hash is: %s', $hashOfHash));
+
+        $result = TransactionJournalMeta
+            ::leftJoin('transaction_journals', 'transaction_journals.id', '=', 'journal_meta.transaction_journal_id')
+            ->where('hash', $hashOfHash)
+            ->where('name', 'importHashV2')
+            ->first(['journal_meta.*']);
+        if (null === $result) {
+            Log::debug('Result is null');
+        }
+
+        return $result;
     }
 
     /**
@@ -711,8 +743,7 @@ class JournalRepository implements JournalRepositoryInterface
      *
      * @return TransactionJournal
      *
-     * @throws \FireflyIII\Exceptions\FireflyException
-     * @throws \FireflyIII\Exceptions\FireflyException
+     * @throws FireflyException
      */
     public function store(array $data): TransactionJournal
     {

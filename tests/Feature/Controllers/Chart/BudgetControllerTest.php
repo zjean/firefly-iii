@@ -40,10 +40,6 @@ use Tests\TestCase;
 
 /**
  * Class BudgetControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class BudgetControllerTest extends TestCase
 {
@@ -57,13 +53,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::budget
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::__construct
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testBudget(string $range)
+    public function testBudget(string $range): void
     {
         $repository = $this->mock(BudgetRepositoryInterface::class);
         $generator  = $this->mock(GeneratorInterface::class);
@@ -79,12 +74,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::budgetLimit
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testBudgetLimit(string $range)
+    public function testBudgetLimit(string $range): void
     {
         $repository = $this->mock(BudgetRepositoryInterface::class);
         $generator  = $this->mock(GeneratorInterface::class);
@@ -99,10 +94,10 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers                   \FireflyIII\Http\Controllers\Chart\BudgetController::budgetLimit
+     * @covers                   \FireflyIII\Http\Controllers\Chart\BudgetController
      * @expectedExceptionMessage This budget limit is not part of this budget.
      */
-    public function testBudgetLimitWrongLimit()
+    public function testBudgetLimitWrongLimit(): void
     {
         $repository = $this->mock(BudgetRepositoryInterface::class);
         $generator  = $this->mock(GeneratorInterface::class);
@@ -113,13 +108,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::expenseAsset
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::getAccountNames
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseAsset(string $range)
+    public function testExpenseAsset(string $range): void
     {
         $budgetRepository = $this->mock(BudgetRepositoryInterface::class);
         $generator        = $this->mock(GeneratorInterface::class);
@@ -142,13 +136,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::expenseCategory
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::getCategoryNames
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseCategory(string $range)
+    public function testExpenseCategory(string $range): void
     {
         $generator  = $this->mock(GeneratorInterface::class);
         $collector  = $this->mock(JournalCollectorInterface::class);
@@ -176,13 +169,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::expenseExpense
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::getAccountNames
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseExpense(string $range)
+    public function testExpenseExpense(string $range): void
     {
         $generator    = $this->mock(GeneratorInterface::class);
         $collector    = $this->mock(JournalCollectorInterface::class);
@@ -210,15 +202,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::frontpage
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::getExpensesForBudget
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::spentInPeriodWithout
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::spentInPeriodMulti
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testFrontpage(string $range)
+    public function testFrontpage(string $range): void
     {
         $repository             = $this->mock(BudgetRepositoryInterface::class);
         $generator              = $this->mock(GeneratorInterface::class);
@@ -247,15 +236,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::frontpage
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::getExpensesForBudget
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::spentInPeriodWithout
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::spentInPeriodMulti
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testFrontpageMultiLimit(string $range)
+    public function testFrontpageMultiLimit(string $range): void
     {
         $repository     = $this->mock(BudgetRepositoryInterface::class);
         $generator      = $this->mock(GeneratorInterface::class);
@@ -286,15 +272,12 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::frontpage
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::getExpensesForBudget
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::spentInPeriodWithout
-     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController::spentInPeriodMulti
+     * @covers       \FireflyIII\Http\Controllers\Chart\BudgetController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testFrontpageNoLimits(string $range)
+    public function testFrontpageNoLimits(string $range): void
     {
         $repository  = $this->mock(BudgetRepositoryInterface::class);
         $generator   = $this->mock(GeneratorInterface::class);
@@ -321,10 +304,9 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\BudgetController::period
-     * @covers \FireflyIII\Http\Controllers\Chart\BudgetController::getBudgetedInPeriod
+     * @covers \FireflyIII\Http\Controllers\Chart\BudgetController
      */
-    public function testPeriod()
+    public function testPeriod(): void
     {
         $repository             = $this->mock(BudgetRepositoryInterface::class);
         $generator              = $this->mock(GeneratorInterface::class);
@@ -342,9 +324,9 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\BudgetController::periodNoBudget
+     * @covers \FireflyIII\Http\Controllers\Chart\BudgetController
      */
-    public function testPeriodNoBudget()
+    public function testPeriodNoBudget(): void
     {
         $repository = $this->mock(BudgetRepositoryInterface::class);
         $generator  = $this->mock(GeneratorInterface::class);

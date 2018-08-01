@@ -1,8 +1,7 @@
 <?php
-declare(strict_types=1);
 /**
  * ExpandedProcessor.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +19,10 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @noinspection PhpDynamicAsStaticMethodCallInspection */
+
+declare(strict_types=1);
+
 namespace FireflyIII\Export;
 
 use Crypt;
@@ -34,12 +37,12 @@ use FireflyIII\Models\AccountMeta;
 use FireflyIII\Models\ExportJob;
 use FireflyIII\Models\Note;
 use FireflyIII\Models\Transaction;
+use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use Illuminate\Support\Collection;
 use Log;
 use Storage;
 use ZipArchive;
-use FireflyIII\Models\TransactionJournal;
 
 /**
  * Class ExpandedProcessor.
@@ -48,23 +51,23 @@ use FireflyIII\Models\TransactionJournal;
  */
 class ExpandedProcessor implements ProcessorInterface
 {
-    /** @var Collection */
+    /** @var Collection All accounts */
     public $accounts;
-    /** @var string */
+    /** @var string The export format*/
     public $exportFormat;
-    /** @var bool */
+    /** @var bool Should include attachments */
     public $includeAttachments;
-    /** @var bool */
+    /** @var bool Should include old uploads */
     public $includeOldUploads;
-    /** @var ExportJob */
+    /** @var ExportJob The export job itself */
     public $job;
-    /** @var array */
+    /** @var array The settings*/
     public $settings;
-    /** @var Collection */
+    /** @var Collection The entries to export. */
     private $exportEntries;
-    /** @var Collection */
+    /** @var Collection The files to export */
     private $files;
-    /** @var Collection */
+    /** @var Collection The journals. */
     private $journals;
 
     /**
@@ -78,6 +81,8 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
+     * Collect all attachments
+     *
      * @return bool
      */
     public function collectAttachments(): bool
@@ -141,6 +146,8 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
+     * Get old oploads.
+     *
      * @return bool
      */
     public function collectOldUploads(): bool
@@ -156,6 +163,8 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
+     * Convert journals to export objects.
+     *
      * @return bool
      */
     public function convertJournals(): bool
@@ -171,6 +180,8 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
+     * Create a ZIP file.
+     *
      * @return bool
      *
      * @throws FireflyException
@@ -202,6 +213,8 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
+     * Export the journals.
+     *
      * @return bool
      */
     public function exportJournals(): bool
@@ -217,6 +230,8 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
+     * Get files.
+     *
      * @return Collection
      */
     public function getFiles(): Collection
@@ -229,7 +244,7 @@ class ExpandedProcessor implements ProcessorInterface
      *
      * @param array $settings
      */
-    public function setSettings(array $settings)
+    public function setSettings(array $settings): void
     {
         // save settings
         $this->settings           = $settings;
@@ -241,9 +256,9 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
-     *
+     * Delete files.
      */
-    private function deleteFiles()
+    private function deleteFiles():void
     {
         $disk = Storage::disk('export');
         foreach ($this->getFiles() as $file) {
@@ -252,6 +267,8 @@ class ExpandedProcessor implements ProcessorInterface
     }
 
     /**
+     * Get currencies.
+     *
      * @param array $array
      *
      * @return array

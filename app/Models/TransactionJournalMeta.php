@@ -25,10 +25,15 @@ namespace FireflyIII\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use FireflyIII\Models\TransactionJournal;
 
 /**
  * Class TransactionJournalMeta.
+ *
+ * @property string             $name
+ * @property int                $transaction_journal_id
+ * @property TransactionJournal $transactionJournal
+ * @property string             $data
+ * @property int                $id
  */
 class TransactionJournalMeta extends Model
 {

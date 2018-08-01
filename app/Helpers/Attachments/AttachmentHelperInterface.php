@@ -33,6 +33,17 @@ use Illuminate\Support\MessageBag;
 interface AttachmentHelperInterface
 {
     /**
+     * Get content of an attachment.
+     *
+     * @param Attachment $attachment
+     *
+     * @return string
+     */
+    public function getAttachmentContent(Attachment $attachment): string;
+
+    /**
+     * Get the location of an attachment.
+     *
      * @param Attachment $attachment
      *
      * @return string
@@ -40,21 +51,39 @@ interface AttachmentHelperInterface
     public function getAttachmentLocation(Attachment $attachment): string;
 
     /**
+     * Get all attachments.
+     *
      * @return Collection
      */
     public function getAttachments(): Collection;
 
     /**
+     * Get all errors.
+     *
      * @return MessageBag
      */
     public function getErrors(): MessageBag;
 
     /**
+     * Get all messages/
+     *
      * @return MessageBag
      */
     public function getMessages(): MessageBag;
 
     /**
+     * Uploads a file as a string.
+     *
+     * @param Attachment $attachment
+     * @param string     $content
+     *
+     * @return bool
+     */
+    public function saveAttachmentFromApi(Attachment $attachment, string $content): bool;
+
+    /**
+     * Save attachments that got uploaded.
+     *
      * @param Model      $model
      * @param null|array $files
      *

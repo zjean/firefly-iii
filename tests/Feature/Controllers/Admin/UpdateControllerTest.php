@@ -34,10 +34,6 @@ use Tests\TestCase;
 
 /**
  * Class UpdateControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class UpdateControllerTest extends TestCase
 {
@@ -51,10 +47,9 @@ class UpdateControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController::index
-     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController::__construct
+     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController
      */
-    public function testIndex()
+    public function testIndex(): void
     {
         $this->be($this->user());
 
@@ -75,9 +70,9 @@ class UpdateControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController::post
+     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController
      */
-    public function testPost()
+    public function testPost(): void
     {
         $falseConfig       = new Configuration;
         $falseConfig->data = false;
@@ -93,9 +88,9 @@ class UpdateControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController::updateCheck
+     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController
      */
-    public function testUpdateCheck()
+    public function testUpdateCheck(): void
     {
         $falseConfig       = new Configuration;
         $falseConfig->data = false;
@@ -122,9 +117,9 @@ class UpdateControllerTest extends TestCase
 
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController::updateCheck
+     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController
      */
-    public function testUpdateCheckCurrent()
+    public function testUpdateCheckCurrent(): void
     {
         $falseConfig       = new Configuration;
         $falseConfig->data = false;
@@ -149,18 +144,17 @@ class UpdateControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController::updateCheck
+     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController
      */
-    public function testUpdateCheckError()
+    public function testUpdateCheckError(): void
     {
         $falseConfig       = new Configuration;
         $falseConfig->data = false;
         FireflyConfig::shouldReceive('get')->withArgs(['is_demo_site', false])->once()->andReturn($falseConfig);
+        FireflyConfig::shouldReceive('set')->withArgs(['last_update_check', Mockery::any()])->once()->andReturn(new Configuration);
 
         $version  = config('firefly.version') . '-alpha';
-        $releases = [
-            new Release(['id' => 'x', 'title' => $version, 'content' => '', 'updated' => new Carbon]),
-        ];
+        $releases = [];
         $updater  = $this->mock(UpdateRequest::class);
         $updater->shouldReceive('call')->andThrow(FireflyException::class, 'Something broke.');
         $updater->shouldReceive('getReleases')->andReturn($releases);
@@ -172,9 +166,9 @@ class UpdateControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController::updateCheck
+     * @covers \FireflyIII\Http\Controllers\Admin\UpdateController
      */
-    public function testUpdateCheckNewer()
+    public function testUpdateCheckNewer(): void
     {
         $falseConfig       = new Configuration;
         $falseConfig->data = false;

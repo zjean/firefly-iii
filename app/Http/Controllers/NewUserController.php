@@ -27,7 +27,6 @@ use FireflyIII\Http\Requests\NewUserFormRequest;
 use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
-use Preferences;
 use View;
 
 /**
@@ -59,7 +58,7 @@ class NewUserController extends Controller
      */
     public function index()
     {
-        app('view')->share('title', trans('firefly.welcome'));
+        app('view')->share('title', (string)trans('firefly.welcome'));
         app('view')->share('mainTitleIcon', 'fa-fire');
 
         $types = config('firefly.accountTypesByIdentifier.asset');
@@ -89,7 +88,7 @@ class NewUserController extends Controller
         }
 
         // set language preference:
-        Preferences::set('language', $language);
+        app('preferences')->set('language', $language);
         // Store currency preference from input:
         $currency = $currencyRepository->findNull((int)$request->input('amount_currency_id_bank_balance'));
 
@@ -98,35 +97,21 @@ class NewUserController extends Controller
             $currency = $currencyRepository->findByCodeNull('EUR');
         }
 
-        // create normal asset account:
-        $this->createAssetAccount($request, $currency);
-
-        // create savings account
-        $this->createSavingsAccount($request, $currency, $language);
-
-        // create cash wallet account
-        $this->createCashWalletAccount($currency, $language);
+        $this->createAssetAccount($request, $currency); // create normal asset account
+        $this->createSavingsAccount($request, $currency, $language); // create savings account
+        $this->createCashWalletAccount($currency, $language); // create cash wallet account
 
         // store currency preference:
-        Preferences::set('currencyPreference', $currency->code);
-        Preferences::mark();
+        app('preferences')->set('currencyPreference', $currency->code);
+        app('preferences')->mark();
 
         // set default optional fields:
-        $visibleFields = [
-            'interest_date'      => true,
-            'book_date'          => false,
-            'process_date'       => false,
-            'due_date'           => false,
-            'payment_date'       => false,
-            'invoice_date'       => false,
-            'internal_reference' => false,
-            'notes'              => true,
-            'attachments'        => true,
-        ];
-        Preferences::set('transaction_journal_optional_fields', $visibleFields);
+        $visibleFields = ['interest_date' => true, 'book_date' => false, 'process_date' => false, 'due_date' => false, 'payment_date' => false,
+                          'invoice_date'  => false, 'internal_reference' => false, 'notes' => true, 'attachments' => true,];
+        app('preferences')->set('transaction_journal_optional_fields', $visibleFields);
 
         session()->flash('success', (string)trans('firefly.stored_new_accounts_new_user'));
-        Preferences::mark();
+        app('preferences')->mark();
 
         return redirect(route('index'));
     }

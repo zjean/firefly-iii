@@ -35,10 +35,6 @@ use Tests\TestCase;
 
 /**
  * Class CategoryControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CategoryControllerTest extends TestCase
 {
@@ -52,13 +48,12 @@ class CategoryControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController::all
-     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController::__construct
+     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testAll(string $range)
+    public function testAll(string $range): void
     {
 
         $repository   = $this->mock(CategoryRepositoryInterface::class);
@@ -80,12 +75,12 @@ class CategoryControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController::frontpage
+     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testFrontpage(string $range)
+    public function testFrontpage(string $range): void
     {
         $repository   = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
@@ -106,9 +101,9 @@ class CategoryControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryController::reportPeriod
+     * @covers \FireflyIII\Http\Controllers\Chart\CategoryController
      */
-    public function testReportPeriod()
+    public function testReportPeriod(): void
     {
         $repository = $this->mock(CategoryRepositoryInterface::class);
         $generator  = $this->mock(GeneratorInterface::class);
@@ -123,9 +118,9 @@ class CategoryControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryController::reportPeriodNoCategory
+     * @covers \FireflyIII\Http\Controllers\Chart\CategoryController
      */
-    public function testReportPeriodNoCategory()
+    public function testReportPeriodNoCategory(): void
     {
         $repository = $this->mock(CategoryRepositoryInterface::class);
         $generator  = $this->mock(GeneratorInterface::class);
@@ -140,13 +135,12 @@ class CategoryControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController::specificPeriod
-     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController::makePeriodChart
+     * @covers       \FireflyIII\Http\Controllers\Chart\CategoryController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testSpecificPeriod(string $range)
+    public function testSpecificPeriod(string $range): void
     {
         $repository   = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);

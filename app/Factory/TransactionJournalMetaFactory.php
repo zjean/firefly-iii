@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * TransactionJournalMetaFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -19,7 +18,9 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+/** @noinspection MultipleReturnStatementsInspection */
 
+declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
@@ -37,6 +38,8 @@ class TransactionJournalMetaFactory
      * @param array $data
      *
      * @return TransactionJournalMeta|null
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function updateOrCreate(array $data): ?TransactionJournalMeta
     {
@@ -56,7 +59,7 @@ class TransactionJournalMetaFactory
         if ($data['data'] instanceof Carbon) {
             $value = $data['data']->toW3cString();
         }
-        if ((string)$value === '') {
+        if ('' === (string)$value) {
             // don't store blank strings.
             if (null !== $entry) {
                 try {
@@ -70,6 +73,7 @@ class TransactionJournalMetaFactory
         }
 
         if (null === $entry) {
+            Log::debug(sprintf('Going to create new meta-data entry to store "%s".', $data['name']));
             $entry = new TransactionJournalMeta();
             $entry->transactionJournal()->associate($data['journal']);
             $entry->name = $data['name'];

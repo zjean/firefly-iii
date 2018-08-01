@@ -1,8 +1,7 @@
 <?php
-declare(strict_types=1);
 /**
  * DecryptAttachment.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -19,6 +18,10 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+/** @noinspection MultipleReturnStatementsInspection */
+
+declare(strict_types=1);
 
 namespace FireflyIII\Console\Commands;
 
@@ -49,11 +52,12 @@ class DecryptAttachment extends Command
 
     /**
      * Execute the console command.
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity) // it's five its fine.
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     *
+     * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         /** @var AttachmentRepositoryInterface $repository */
         $repository     = app(AttachmentRepositoryInterface::class);
@@ -65,28 +69,28 @@ class DecryptAttachment extends Command
             $this->error(sprintf('No attachment with id #%d', $attachmentId));
             Log::error(sprintf('DecryptAttachment: No attachment with id #%d', $attachmentId));
 
-            return;
+            return 1;
         }
 
         if ($attachmentName !== $attachment->filename) {
             $this->error('File name does not match.');
             Log::error('DecryptAttachment: File name does not match.');
 
-            return;
+            return 1;
         }
 
         if (!is_dir($storagePath)) {
             $this->error(sprintf('Path "%s" is not a directory.', $storagePath));
             Log::error(sprintf('DecryptAttachment: Path "%s" is not a directory.', $storagePath));
 
-            return;
+            return 1;
         }
 
         if (!is_writable($storagePath)) {
             $this->error(sprintf('Path "%s" is not writable.', $storagePath));
             Log::error(sprintf('DecryptAttachment: Path "%s" is not writable.', $storagePath));
 
-            return;
+            return 1;
         }
 
         $fullPath = $storagePath . DIRECTORY_SEPARATOR . $attachment->filename;
@@ -96,9 +100,10 @@ class DecryptAttachment extends Command
         if (false === $result) {
             $this->error('Could not write to file.');
 
-            return;
+            return 1;
         }
         $this->info(sprintf('%d bytes written. Exiting now..', $result));
 
+        return 0;
     }
 }

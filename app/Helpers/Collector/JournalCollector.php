@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+/** @noinspection PhpDynamicAsStaticMethodCallInspection */
+/** @noinspection PropertyCanBeStaticInspection */
 declare(strict_types=1);
 
 namespace FireflyIII\Helpers\Collector;
@@ -32,6 +34,7 @@ use FireflyIII\Helpers\Filter\NegativeAmountFilter;
 use FireflyIII\Helpers\Filter\OpposingAccountFilter;
 use FireflyIII\Helpers\Filter\PositiveAmountFilter;
 use FireflyIII\Helpers\Filter\SplitIndicatorFilter;
+use FireflyIII\Helpers\Filter\TransactionViewFilter;
 use FireflyIII\Helpers\Filter\TransferFilter;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Budget;
@@ -46,24 +49,25 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Log;
-use Steam;
 
 /**
+ * TODO rename references to journals to transactions
  * Maybe this is a good idea after all...
  *
  * Class JournalCollector
- *
- *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ *
  */
 class JournalCollector implements JournalCollectorInterface
 {
+
     /** @var array */
     private $accountIds = [];
     /** @var int */
     private $count = 0;
+
     /** @var array */
     private $fields
         = [
@@ -106,7 +110,8 @@ class JournalCollector implements JournalCollectorInterface
         ];
     /** @var array */
     private $filters = [InternalTransferFilter::class];
-
+    /** @var bool */
+    private $ignoreCache = false;
     /** @var bool */
     private $joinedBudget = false;
     /** @var bool */
@@ -136,7 +141,7 @@ class JournalCollector implements JournalCollectorInterface
     public function addFilter(string $filter): JournalCollectorInterface
     {
         $interfaces = class_implements($filter);
-        if (\in_array(FilterInterface::class, $interfaces) && !\in_array($filter, $this->filters)) {
+        if (\in_array(FilterInterface::class, $interfaces, true) && !\in_array($filter, $this->filters, true)) {
             Log::debug(sprintf('Enabled filter %s', $filter));
             $this->filters[] = $filter;
         }
@@ -242,8 +247,11 @@ class JournalCollector implements JournalCollectorInterface
         return $this->count;
     }
 
+    /** @noinspection MultipleReturnStatementsInspection */
     /**
      * @return Collection
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getJournals(): Collection
     {
@@ -257,12 +265,12 @@ class JournalCollector implements JournalCollectorInterface
         foreach ($this->filters as $filter) {
             $cache->addProperty((string)$filter);
         }
-        if ($cache->has()) {
+        if (false === $this->ignoreCache && $cache->has()) {
             Log::debug(sprintf('Return cache of query with ID "%s".', $key));
 
             return $cache->get(); // @codeCoverageIgnore
-        }
 
+        }
         /** @var Collection $set */
         $set = $this->query->get(array_values($this->fields));
 
@@ -273,10 +281,10 @@ class JournalCollector implements JournalCollectorInterface
         $set->each(
             function (Transaction $transaction) {
                 $transaction->date        = new Carbon($transaction->date);
-                $transaction->description = Steam::decrypt((int)$transaction->encrypted, $transaction->description);
+                $transaction->description = app('steam')->decrypt((int)$transaction->encrypted, $transaction->description);
 
                 if (null !== $transaction->bill_name) {
-                    $transaction->bill_name = Steam::decrypt((int)$transaction->bill_name_encrypted, $transaction->bill_name);
+                    $transaction->bill_name = app('steam')->decrypt((int)$transaction->bill_name_encrypted, $transaction->bill_name);
                 }
                 $transaction->account_name          = app('steam')->tryDecrypt($transaction->account_name);
                 $transaction->opposing_account_name = app('steam')->tryDecrypt($transaction->opposing_account_name);
@@ -313,6 +321,24 @@ class JournalCollector implements JournalCollectorInterface
         $journals = new LengthAwarePaginator($set, $this->count, $this->limit, $this->page);
 
         return $journals;
+    }
+
+    /**
+     * @return EloquentBuilder
+     */
+    public function getQuery(): EloquentBuilder
+    {
+        return $this->query;
+    }
+
+    /**
+     * @return JournalCollectorInterface
+     */
+    public function ignoreCache(): JournalCollectorInterface
+    {
+        $this->ignoreCache = true;
+
+        return $this;
     }
 
     /**
@@ -444,18 +470,17 @@ class JournalCollector implements JournalCollectorInterface
     public function setBudgets(Collection $budgets): JournalCollectorInterface
     {
         $budgetIds = $budgets->pluck('id')->toArray();
-        if (0 === \count($budgetIds)) {
-            return $this;
-        }
-        $this->joinBudgetTables();
-        Log::debug('Journal collector will filter for budgets', $budgetIds);
+        if (0 !== \count($budgetIds)) {
+            $this->joinBudgetTables();
+            Log::debug('Journal collector will filter for budgets', $budgetIds);
 
-        $this->query->where(
-            function (EloquentBuilder $q) use ($budgetIds) {
-                $q->whereIn('budget_transaction.budget_id', $budgetIds);
-                $q->orWhereIn('budget_transaction_journal.budget_id', $budgetIds);
-            }
-        );
+            $this->query->where(
+                function (EloquentBuilder $q) use ($budgetIds) {
+                    $q->whereIn('budget_transaction.budget_id', $budgetIds);
+                    $q->orWhereIn('budget_transaction_journal.budget_id', $budgetIds);
+                }
+            );
+        }
 
         return $this;
     }
@@ -468,17 +493,16 @@ class JournalCollector implements JournalCollectorInterface
     public function setCategories(Collection $categories): JournalCollectorInterface
     {
         $categoryIds = $categories->pluck('id')->toArray();
-        if (0 === \count($categoryIds)) {
-            return $this;
-        }
-        $this->joinCategoryTables();
+        if (0 !== \count($categoryIds)) {
+            $this->joinCategoryTables();
 
-        $this->query->where(
-            function (EloquentBuilder $q) use ($categoryIds) {
-                $q->whereIn('category_transaction.category_id', $categoryIds);
-                $q->orWhereIn('category_transaction_journal.category_id', $categoryIds);
-            }
-        );
+            $this->query->where(
+                function (EloquentBuilder $q) use ($categoryIds) {
+                    $q->whereIn('category_transaction.category_id', $categoryIds);
+                    $q->orWhereIn('category_transaction_journal.category_id', $categoryIds);
+                }
+            );
+        }
 
         return $this;
     }
@@ -582,10 +606,7 @@ class JournalCollector implements JournalCollectorInterface
             $this->offset = $offset;
             $this->query->skip($offset);
             Log::debug(sprintf('Changed offset to %d', $offset));
-
-            return $this;
         }
-        Log::debug('The limit is zero, cannot set the page.');
 
         return $this;
     }
@@ -664,7 +685,7 @@ class JournalCollector implements JournalCollectorInterface
     /**
      *
      */
-    public function startQuery()
+    public function startQuery(): void
     {
         Log::debug('journalCollector::startQuery');
         /** @var EloquentBuilder $query */
@@ -768,11 +789,13 @@ class JournalCollector implements JournalCollectorInterface
             NegativeAmountFilter::class   => new NegativeAmountFilter,
             SplitIndicatorFilter::class   => new SplitIndicatorFilter,
             CountAttachmentsFilter::class => new CountAttachmentsFilter,
+            TransactionViewFilter::class  => new TransactionViewFilter,
         ];
         Log::debug(sprintf('Will run %d filters on the set.', \count($this->filters)));
         foreach ($this->filters as $enabled) {
             if (isset($filters[$enabled])) {
                 Log::debug(sprintf('Before filter %s: %d', $enabled, $set->count()));
+                /** @var Collection $set */
                 $set = $filters[$enabled]->filter($set);
                 Log::debug(sprintf('After filter %s: %d', $enabled, $set->count()));
             }
@@ -784,7 +807,7 @@ class JournalCollector implements JournalCollectorInterface
     /**
      *
      */
-    private function joinBudgetTables()
+    private function joinBudgetTables(): void
     {
         if (!$this->joinedBudget) {
             // join some extra tables:
@@ -809,7 +832,7 @@ class JournalCollector implements JournalCollectorInterface
     /**
      *
      */
-    private function joinCategoryTables()
+    private function joinCategoryTables(): void
     {
         if (!$this->joinedCategory) {
             // join some extra tables:
@@ -839,7 +862,7 @@ class JournalCollector implements JournalCollectorInterface
     /**
      *
      */
-    private function joinOpposingTables()
+    private function joinOpposingTables(): void
     {
         if (!$this->joinedOpposing) {
             Log::debug('joinedOpposing is false');
@@ -871,7 +894,7 @@ class JournalCollector implements JournalCollectorInterface
     /**
      *
      */
-    private function joinTagTables()
+    private function joinTagTables(): void
     {
         if (!$this->joinedTag) {
             // join some extra tables:

@@ -24,13 +24,13 @@ declare(strict_types=1);
 
 namespace FireflyIII\Api\V1\Controllers;
 
-use FireflyIII\Api\V1\Requests\BillRequest;
 use FireflyIII\Api\V1\Requests\CurrencyRequest;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
 use FireflyIII\Transformers\CurrencyTransformer;
+use FireflyIII\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -39,32 +39,34 @@ use League\Fractal\Pagination\IlluminatePaginatorAdapter;
 use League\Fractal\Resource\Collection as FractalCollection;
 use League\Fractal\Resource\Item;
 use League\Fractal\Serializer\JsonApiSerializer;
-use Preferences;
 
 /**
- * Class CurrencyController
+ * Class CurrencyController.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CurrencyController extends Controller
 {
-    /** @var CurrencyRepositoryInterface */
+    /** @var CurrencyRepositoryInterface The currency repository */
     private $repository;
-    /** @var UserRepositoryInterface */
+    /** @var UserRepositoryInterface The user repository */
     private $userRepository;
 
     /**
      * CurrencyRepository constructor.
-     *
-     * @throws FireflyException
      */
     public function __construct()
     {
         parent::__construct();
         $this->middleware(
             function ($request, $next) {
+                /** @var User $admin */
+                $admin = auth()->user();
+
                 /** @var CurrencyRepositoryInterface repository */
                 $this->repository     = app(CurrencyRepositoryInterface::class);
                 $this->userRepository = app(UserRepositoryInterface::class);
-                $this->repository->setUser(auth()->user());
+                $this->repository->setUser($admin);
 
                 return $next($request);
             }
@@ -81,7 +83,10 @@ class CurrencyController extends Controller
      */
     public function delete(TransactionCurrency $currency): JsonResponse
     {
-        if (!$this->userRepository->hasRole(auth()->user(), 'owner')) {
+        /** @var User $admin */
+        $admin = auth()->user();
+
+        if (!$this->userRepository->hasRole($admin, 'owner')) {
             // access denied:
             throw new FireflyException('No access to method, user is not owner.'); // @codeCoverageIgnore
         }
@@ -102,7 +107,7 @@ class CurrencyController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $pageSize   = (int)Preferences::getForUser(auth()->user(), 'listPageSize', 50)->data;
+        $pageSize   = (int)app('preferences')->getForUser(auth()->user(), 'listPageSize', 50)->data;
         $collection = $this->repository->get();
         $count      = $collection->count();
         // slice them:
@@ -125,6 +130,8 @@ class CurrencyController extends Controller
 
 
     /**
+     * Show a currency.
+     *
      * @param Request             $request
      * @param TransactionCurrency $currency
      *
@@ -148,6 +155,8 @@ class CurrencyController extends Controller
     }
 
     /**
+     * Store new currency.
+     *
      * @param CurrencyRequest $request
      *
      * @return JsonResponse
@@ -157,11 +166,11 @@ class CurrencyController extends Controller
     {
         $currency = $this->repository->store($request->getAll());
 
-        if ($request->boolean('default') === true) {
-            Preferences::set('currencyPreference', $currency->code);
-            Preferences::mark();
-        }
         if (null !== $currency) {
+            if (true === $request->boolean('default')) {
+                app('preferences')->set('currencyPreference', $currency->code);
+                app('preferences')->mark();
+            }
             $manager = new Manager();
             $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
             $manager->setSerializer(new JsonApiSerializer($baseUrl));
@@ -178,7 +187,9 @@ class CurrencyController extends Controller
 
 
     /**
-     * @param CurrencyRequest         $request
+     * Update a currency.
+     *
+     * @param CurrencyRequest     $request
      * @param TransactionCurrency $currency
      *
      * @return JsonResponse
@@ -188,9 +199,9 @@ class CurrencyController extends Controller
         $data     = $request->getAll();
         $currency = $this->repository->update($currency, $data);
 
-        if ($request->boolean('default') === true) {
-            Preferences::set('currencyPreference', $currency->code);
-            Preferences::mark();
+        if (true === $request->boolean('default')) {
+            app('preferences')->set('currencyPreference', $currency->code);
+            app('preferences')->mark();
         }
 
         $manager = new Manager();

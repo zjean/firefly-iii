@@ -43,10 +43,6 @@ use Tests\TestCase;
 
 /**
  * Class AccountControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class AccountControllerTest extends TestCase
 {
@@ -60,13 +56,13 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::expenseAccounts
-     * @covers       \FireflyIII\Generator\Chart\Basic\GeneratorInterface::singleSet
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
+     * @covers       \FireflyIII\Generator\Chart\Basic\GeneratorInterface
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseAccounts(string $range)
+    public function testExpenseAccounts(string $range): void
     {
         $account       = factory(Account::class)->make();
         $generator     = $this->mock(GeneratorInterface::class);
@@ -84,13 +80,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::expenseBudget
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::getBudgetNames
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseBudget(string $range)
+    public function testExpenseBudget(string $range): void
     {
         $generator   = $this->mock(GeneratorInterface::class);
         $collector   = $this->mock(JournalCollectorInterface::class);
@@ -112,13 +107,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::expenseBudgetAll
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::getBudgetNames
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseBudgetAll(string $range)
+    public function testExpenseBudgetAll(string $range): void
     {
         $generator    = $this->mock(GeneratorInterface::class);
         $collector    = $this->mock(JournalCollectorInterface::class);
@@ -142,13 +136,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::expenseCategory
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::getCategoryNames
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseCategory(string $range)
+    public function testExpenseCategory(string $range): void
     {
         $transaction   = factory(Transaction::class)->make();
         $category      = factory(Category::class)->make();
@@ -171,13 +164,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::expenseCategoryAll
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::getCategoryNames
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testExpenseCategoryAll(string $range)
+    public function testExpenseCategoryAll(string $range): void
     {
         $transaction   = factory(Transaction::class)->make();
         $category      = factory(Category::class)->make();
@@ -202,15 +194,13 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::frontpage
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::__construct
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::accountBalanceChart
-     * @covers       \FireflyIII\Generator\Chart\Basic\GeneratorInterface::multiSet
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
+     * @covers       \FireflyIII\Generator\Chart\Basic\GeneratorInterface
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testFrontpage(string $range)
+    public function testFrontpage(string $range): void
     {
         $generator     = $this->mock(GeneratorInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
@@ -232,12 +222,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::incomeCategory
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testIncomeCategory(string $range)
+    public function testIncomeCategory(string $range): void
     {
         $transaction   = factory(Transaction::class)->make();
         $account       = factory(Account::class)->make();
@@ -260,12 +250,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::incomeCategoryAll
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testIncomeCategoryAll(string $range)
+    public function testIncomeCategoryAll(string $range): void
     {
         $transaction   = factory(Transaction::class)->make();
         $account       = factory(Account::class)->make();
@@ -290,12 +280,12 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::period
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testPeriod(string $range)
+    public function testPeriod(string $range): void
     {
         $generator    = $this->mock(GeneratorInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
@@ -311,29 +301,28 @@ class AccountControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\AccountController::report
-     * @covers \FireflyIII\Http\Controllers\Chart\AccountController::accountBalanceChart
+     * @covers \FireflyIII\Http\Controllers\Chart\AccountController
      */
-    public function testReport()
+    public function testReport(): void
     {
         $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
-        $currencyRepos->shouldReceive('findNull')->andReturn(TransactionCurrency::find(1));
+        $currencyRepos->shouldReceive('findNull')->andReturn(TransactionCurrency::find(1), null);
         $generator = $this->mock(GeneratorInterface::class);
         $generator->shouldReceive('multiSet')->andReturn([]);
         Steam::shouldReceive('balanceInRange')->andReturn(['2012-01-01' => '0']);
 
         $this->be($this->user());
-        $response = $this->get(route('chart.account.report', ['1', '20120101', '20120131']));
+        $response = $this->get(route('chart.account.report', ['1,2', '20120101', '20120131']));
         $response->assertStatus(200);
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController::revenueAccounts
+     * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
-    public function testRevenueAccounts(string $range)
+    public function testRevenueAccounts(string $range): void
     {
         $account      = factory(Account::class)->make();
         $generator    = $this->mock(GeneratorInterface::class);

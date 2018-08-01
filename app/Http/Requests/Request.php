@@ -27,6 +27,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Class Request.
+ *
+ * @SuppressWarnings(PHPMD.NumberOfChildren)
  */
 class Request extends FormRequest
 {
@@ -37,14 +39,24 @@ class Request extends FormRequest
      */
     public function boolean(string $field): bool
     {
-        if ((string)$this->input($field) === 'true') {
+        if ('true' === (string)$this->input($field)) {
             return true;
         }
-        if ((string)$this->input($field) === 'false') {
+        if ('false' === (string)$this->input($field)) {
             return false;
         }
 
         return 1 === (int)$this->input($field);
+    }
+
+    /**
+     * @param string $field
+     *
+     * @return float
+     */
+    public function float(string $field): float
+    {
+        return (float)$this->get($field);
     }
 
     /**
@@ -61,6 +73,8 @@ class Request extends FormRequest
      * @param string $field
      *
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function string(string $field): string
     {
@@ -123,7 +137,7 @@ class Request extends FormRequest
      *
      * @return Carbon|null
      */
-    protected function date(string $field)
+    protected function date(string $field): ?Carbon
     {
         return $this->get($field) ? new Carbon($this->get($field)) : null;
     }

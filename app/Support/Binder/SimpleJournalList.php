@@ -28,7 +28,6 @@ use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
-use Session;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -58,7 +57,7 @@ class SimpleJournalList implements BinderInterface
 
             // prep some vars
             $messages = [];
-            $final      = new Collection;
+            $final    = new Collection;
             /** @var JournalRepositoryInterface $repository */
             $repository = app(JournalRepositoryInterface::class);
 
@@ -75,22 +74,22 @@ class SimpleJournalList implements BinderInterface
                 $sources      = $repository->getJournalSourceAccounts($journal);
                 $destinations = $repository->getJournalDestinationAccounts($journal);
                 if ($sources->count() > 1) {
-                    $messages[] = trans('firefly.cannot_edit_multiple_source', ['description' => $journal->description, 'id' => $journal->id]);
+                    $messages[] = (string)trans('firefly.cannot_edit_multiple_source', ['description' => $journal->description, 'id' => $journal->id]);
                     continue;
                 }
 
                 if ($destinations->count() > 1) {
-                    $messages[] = trans('firefly.cannot_edit_multiple_dest', ['description' => $journal->description, 'id' => $journal->id]);
+                    $messages[] = (string)trans('firefly.cannot_edit_multiple_dest', ['description' => $journal->description, 'id' => $journal->id]);
                     continue;
                 }
                 if (TransactionType::OPENING_BALANCE === $repository->getTransactionType($journal)) {
-                    $messages[] = trans('firefly.cannot_edit_opening_balance');
+                    $messages[] = (string)trans('firefly.cannot_edit_opening_balance');
                     continue;
                 }
 
                 // cannot edit reconciled transactions / journals:
                 if ($repository->isJournalReconciled($journal)) {
-                    $messages[] = trans('firefly.cannot_edit_reconciled', ['description' => $journal->description, 'id' => $journal->id]);
+                    $messages[] = (string)trans('firefly.cannot_edit_reconciled', ['description' => $journal->description, 'id' => $journal->id]);
                     continue;
                 }
 

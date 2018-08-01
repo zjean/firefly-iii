@@ -33,10 +33,6 @@ use Tests\TestCase;
 
 /**
  * Class ExpenseReportControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ExpenseReportControllerTest extends TestCase
 {
@@ -51,14 +47,9 @@ class ExpenseReportControllerTest extends TestCase
 
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\ExpenseReportController::__construct
-     * @covers \FireflyIII\Http\Controllers\Chart\ExpenseReportController::groupByName
-     * @covers \FireflyIII\Http\Controllers\Chart\ExpenseReportController::mainChart()
-     * @covers \FireflyIII\Http\Controllers\Chart\ExpenseReportController::getExpenses
-     * @covers \FireflyIII\Http\Controllers\Chart\ExpenseReportController::getIncome
-     * @covers \FireflyIII\Http\Controllers\Chart\ExpenseReportController::combineAccounts
+     * @covers \FireflyIII\Http\Controllers\Chart\ExpenseReportController
      */
-    public function testMainChart()
+    public function testMainChart(): void
     {
         $expense           = $this->user()->accounts()->where('account_type_id', 4)->first();
         $generator         = $this->mock(GeneratorInterface::class);

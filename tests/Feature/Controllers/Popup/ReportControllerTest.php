@@ -58,7 +58,7 @@ class ReportControllerTest extends TestCase
      * @covers                   \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @expectedExceptionMessage Could not parse end date
      */
-    public function testBadEndDate()
+    public function testBadEndDate(): void
     {
         $this->be($this->user());
         $arguments = [
@@ -82,7 +82,7 @@ class ReportControllerTest extends TestCase
      * @covers                   \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @expectedExceptionMessage Could not parse start date
      */
-    public function testBadStartDate()
+    public function testBadStartDate(): void
     {
         $this->be($this->user());
         $arguments = [
@@ -98,7 +98,7 @@ class ReportControllerTest extends TestCase
         ];
         $uri       = route('popup.general') . '?' . http_build_query($arguments);
         $response  = $this->get($uri);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
     }
 
     /**
@@ -106,7 +106,7 @@ class ReportControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::balanceAmount
      */
-    public function testBalanceAmountDefaultNoBudget()
+    public function testBalanceAmountDefaultNoBudget(): void
     {
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
@@ -114,10 +114,10 @@ class ReportControllerTest extends TestCase
         $popupHelper   = $this->mock(PopupReportInterface::class);
         $account       = factory(Account::class)->make();
 
-        $popupHelper->shouldReceive('balanceForNoBudget')->once()->andReturn(new Collection);
+        $popupHelper->shouldReceive('balanceForNoBudget')->andReturn(new Collection);
         $budgetRepos->shouldReceive('findNull')->andReturn(new Budget)->once()->withArgs([0]);
         $accountRepos->shouldReceive('findNull')->andReturn($account)->once()->withArgs([1]);
-
+        $popupHelper->shouldReceive('balanceForBudget')->once()->andReturn(new Collection);
 
         $this->be($this->user());
         $arguments = [
@@ -142,7 +142,7 @@ class ReportControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::balanceAmount
      */
-    public function testBalanceAmountDefaultRole()
+    public function testBalanceAmountDefaultRole(): void
     {
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
@@ -174,49 +174,12 @@ class ReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Popup\ReportController::general
-     * @covers \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
-     * @covers \FireflyIII\Http\Controllers\Popup\ReportController::balanceAmount
-     */
-    public function testBalanceAmountDiffRole()
-    {
-        $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
-        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
-        $budgetRepos   = $this->mock(BudgetRepositoryInterface::class);
-        $popupHelper   = $this->mock(PopupReportInterface::class);
-
-        $budget  = factory(Budget::class)->make();
-        $account = factory(Account::class)->make();
-
-        $budgetRepos->shouldReceive('findNull')->andReturn($budget)->once()->withArgs([1]);
-        $accountRepos->shouldReceive('findNull')->andReturn($account)->once()->withArgs([1]);
-        $popupHelper->shouldReceive('balanceDifference')->once()->andReturn(new Collection);
-
-        $this->be($this->user());
-        $arguments = [
-            'attributes' => [
-                'location'   => 'balance-amount',
-                'startDate'  => Carbon::now()->startOfMonth()->format('Ymd'),
-                'endDate'    => Carbon::now()->endOfMonth()->format('Ymd'),
-                'accounts'   => 1,
-                'accountId'  => 1,
-                'categoryId' => 1,
-                'budgetId'   => 1,
-                'role'       => 3, // diff role, is complicated.
-            ],
-        ];
-        $uri       = route('popup.general') . '?' . http_build_query($arguments);
-        $response  = $this->get($uri);
-        $response->assertStatus(200);
-    }
-
-    /**
      * @covers                   \FireflyIII\Http\Controllers\Popup\ReportController::general
      * @covers                   \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @covers                   \FireflyIII\Http\Controllers\Popup\ReportController::balanceAmount
      * @expectedExceptionMessage Firefly cannot handle this type of info-button
      */
-    public function testBalanceAmountTagRole()
+    public function testBalanceAmountTagRole(): void
     {
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
@@ -243,7 +206,7 @@ class ReportControllerTest extends TestCase
 
         $uri      = route('popup.general') . '?' . http_build_query($arguments);
         $response = $this->get($uri);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
     }
 
     /**
@@ -251,7 +214,7 @@ class ReportControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::budgetSpentAmount()
      */
-    public function testBudgetSpentAmount()
+    public function testBudgetSpentAmount(): void
     {
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
@@ -284,7 +247,7 @@ class ReportControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::categoryEntry()
      */
-    public function testCategoryEntry()
+    public function testCategoryEntry(): void
     {
         $budgetRepos   = $this->mock(BudgetRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
@@ -317,7 +280,7 @@ class ReportControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::expenseEntry()
      */
-    public function testExpenseEntry()
+    public function testExpenseEntry(): void
     {
         $budgetRepos   = $this->mock(BudgetRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
@@ -351,7 +314,7 @@ class ReportControllerTest extends TestCase
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @covers \FireflyIII\Http\Controllers\Popup\ReportController::incomeEntry()
      */
-    public function testIncomeEntry()
+    public function testIncomeEntry(): void
     {
         $budgetRepos   = $this->mock(BudgetRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
@@ -385,7 +348,7 @@ class ReportControllerTest extends TestCase
      * @covers                   \FireflyIII\Http\Controllers\Popup\ReportController::parseAttributes
      * @expectedExceptionMessage Firefly cannot handle
      */
-    public function testWrongLocation()
+    public function testWrongLocation(): void
     {
         $this->be($this->user());
         $arguments = [
@@ -401,6 +364,6 @@ class ReportControllerTest extends TestCase
         ];
         $uri       = route('popup.general') . '?' . http_build_query($arguments);
         $response  = $this->get($uri);
-        $response->assertStatus(500);
+        $response->assertStatus(200);
     }
 }

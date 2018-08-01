@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * firefly.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +19,8 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+declare(strict_types=1);
 
 return [
     // general stuff:
@@ -179,6 +180,7 @@ return [
     'authorization_request_intro'                => '<strong>:client</strong> is requesting permission to access your financial administration. Would you like to authorize <strong>:client</strong> to access these records?',
     'scopes_will_be_able'                        => 'This application will be able to:',
     'button_authorize'                           => 'Authorize',
+    'none_in_select_list'                        => '(none)',
 
     // check for updates:
     'update_check_title'                         => 'Check for updates',
@@ -463,6 +465,7 @@ return [
     'pref_two_factor_auth_code_help'          => 'Scan the QR code with an application on your phone such as Authy or Google Authenticator and enter the generated code.',
     'pref_two_factor_auth_reset_code'         => 'Setel ulang kode verifikasi',
     'pref_two_factor_auth_disable_2fa'        => 'Disable 2FA',
+    '2fa_use_secret_instead'                  => 'If you cannot scan the QR code, feel free to use the secret instead: :secret.',
     'pref_save_settings'                      => 'Simpan Pengaturan',
     'saved_preferences'                       => 'Preferensi disimpan!',
     'preferences_general'                     => 'Umum',
@@ -604,6 +607,7 @@ return [
     'cannot_delete_currency'                  => 'Tidak dapat menghapus :name karena masih digunakan.',
     'deleted_currency'                        => 'Mata uang :name dihapus',
     'created_currency'                        => 'Mata uang :name dibuat',
+    'could_not_store_currency'                => 'Could not store the new currency.',
     'updated_currency'                        => 'Mata uang :name diperbarui',
     'ask_site_owner'                          => 'Harap bertanya :owner untuk menambahkan, menghapus atau mengedit mata uang.',
     'currencies_intro'                        => 'Firefly III mendukung berbagai mata uang yang dapat Anda atur dan aktifkan di sini.',
@@ -666,6 +670,7 @@ return [
     'bill_will_automatch'                     => 'Tagihan akan secara otomatis terhubung ke transaksi yang sesuai',
     'skips_over'                              => 'melompati',
     'bill_store_error'                        => 'An unexpected error occurred while storing your new bill. Please check the log files',
+    'list_inactive_rule'                      => 'inactive rule',
 
     // accounts:
     'details_for_asset'                       => 'Rincian akun aset ":name"',
@@ -801,6 +806,7 @@ return [
     'opt_group_savingAsset'                   => 'Menyimpan akun',
     'opt_group_sharedAsset'                   => 'Akun aset bersama',
     'opt_group_ccAsset'                       => 'Kartu kredit',
+    'opt_group_cashWalletAsset'               => 'Cash wallets',
     'notes'                                   => 'Notes',
     'unknown_journal_error'                   => 'Could not store the transaction. Please check the log files.',
 
@@ -816,6 +822,7 @@ return [
     'language'                                => 'Language',
     'new_savings_account'                     => ':bank_name savings account',
     'cash_wallet'                             => 'Cash wallet',
+    'currency_not_present'                    => 'If the currency you normally use is not listed do not worry. You can create your own currencies under Options > Currencies.',
 
     // home page:
     'yourAccounts'                            => 'Akun anda',
@@ -895,7 +902,6 @@ return [
     'balanceEnd'                              => 'Saldo akhir periode',
     'splitByAccount'                          => 'Dibagi oleh akun',
     'coveredWithTags'                         => 'Ditutupi dengan tag',
-    'leftUnbalanced'                          => 'Meninggalkan tidak seimbang',
     'leftInBudget'                            => 'Yang tersisa di anggaran',
     'sumOfSums'                               => 'Jumlah dari jumlah',
     'noCategory'                              => '(Tidak ada kategori)',
@@ -1013,6 +1019,7 @@ return [
     'remove_money_from_piggy_title'           => 'Hapus uang dari celengan ":name"',
     'add'                                     => 'Menambahkan',
     'no_money_for_piggy'                      => 'Anda tidak punya uang untuk dimasukkan ke dalam celengan ini.',
+    'suggested_savings_per_month'             => 'Suggested per month',
 
     'remove'                    => 'Menghapus',
     'max_amount_add'            => 'Jumlah maksimum yang bisa Anda tambahkan adalah',
@@ -1056,7 +1063,7 @@ return [
     'instance_configuration'                => 'Konfigurasi',
     'firefly_instance_configuration'        => 'Pilihan konfigurasi untuk Firefly III',
     'setting_single_user_mode'              => 'Mode pengguna tunggal',
-    'setting_single_user_mode_explain'      => 'Secara default, Firefly III hanya menerima satu (1) registrasi: anda. Ini adalah tindakan pengamanan, mencegah orang lain menggunakan contoh Anda kecuali jika Anda mengizinkannya melakukannya. Pendaftaran di masa depan diblokir Bila Anda tidak mencentang kotak ini, orang lain dapat menggunakan contoh Anda dengan baik, dengan asumsi mereka dapat mencapainya (bila terhubung ke internet).',
+    'setting_single_user_mode_explain'      => 'By default, Firefly III only accepts one (1) registration: you. This is a security measure, preventing others from using your instance unless you allow them to. Future registrations are blocked. When you uncheck this box, others can use your instance as well, assuming they can reach it (when it is connected to the internet).',
     'store_configuration'                   => 'Konfigurasi toko',
     'single_user_administration'            => 'Administrasi pengguna untuk :email',
     'edit_user'                             => 'Edit pengguna :email',
@@ -1128,6 +1135,8 @@ return [
     'is (partially) refunded by_inward'     => '(sebagian) dikembalikan oleh',
     'is (partially) paid for by_inward'     => 'adalah (sebagian) dibayar oleh',
     'is (partially) reimbursed by_inward'   => '(sebagian) diganti oleh',
+    'inward_transaction'                    => 'Inward transaction',
+    'outward_transaction'                   => 'Outward transaction',
     'relates to_outward'                    => 'berhubungan dengan',
     '(partially) refunds_outward'           => '(sebagian) pengembalian uang',
     '(partially) pays for_outward'          => '(sebagian) membayar',
@@ -1148,27 +1157,10 @@ return [
     'no_edit_multiple_left'                 => 'Anda tidak memilih transaksi yang sah untuk diedit.',
     'cannot_convert_split_journal'          => 'Tidak dapat mengonversi transaksi split',
 
-    // import bread crumbs and titles:
-    'import'                                => 'Impor',
+    // Import page (general strings only)
+    'import_index_title'                    => 'Import transactions into Firefly III',
     'import_data'                           => 'Impor data',
-    'import_general_index_file'             => 'Impor file',
-    'import_from_bunq'                      => 'Impor dari bunq',
-    'import_using_spectre'                  => 'Impor menggunakan momok',
-    'import_using_plaid'                    => 'Impor menggunakan Plaid',
-    'import_config_bread_crumb'             => 'Siapkan impor Anda',
-
-    // import index page:
-    'import_index_title'                    => 'Impor data ke Firefly III',
-    'import_index_sub_title'                => 'Indeks',
-    'import_general_index_intro'            => 'Welcome to Firefly III\'s import routine. There are a few ways of importing data into Firefly III, displayed here as buttons.',
-    'upload_error'                          => 'The file you have uploaded could not be processed. Possibly it is of an invalid file type or encoding. The log files will have more information.',
-    'reset_import_settings_title'           => 'Reset import configuration',
-    'reset_import_settings_text'            => 'You can use these links to reset your import settings for specific providers. This is useful when bad settings stop you from importing data.',
-    'reset_settings_bunq'                   => 'Remove bunq API key, local external IP address and bunq related RSA keys.',
-    'reset_settings_spectre'                => 'Remove Spectre secrets and ID\'s. This will also remove your Spectre keypair. Remember to update the new one.',
-    'settings_reset_for_bunq'               => 'Bunq settings reset.',
-    'settings_reset_for_spectre'            => 'Spectre settings reset.',
-
+    'import_transactions'                   => 'Import transactions',
 
     // sandstorm.io errors and messages:
     'sandstorm_not_available'               => 'Fungsi ini tidak tersedia saat Anda menggunakan Firefly III di dalam lingkungan Sandstorm.io.',
@@ -1218,4 +1210,68 @@ return [
     'no_bills_intro_default'                => 'Anda belum memiliki tagihan. Anda bisa membuat tagihan untuk mencatat pengeluaran rutin, seperti sewa atau asuransi Anda.',
     'no_bills_imperative_default'           => 'Apakah Anda memiliki tagihan reguler seperti itu? Buat tagihan dan lacak pembayaran Anda:',
     'no_bills_create_default'               => 'Buat tagihan',
+
+    // recurring transactions
+    'recurrences'                           => 'Recurring transactions',
+    'no_recurring_title_default'            => 'Let\'s create a recurring transaction!',
+    'no_recurring_intro_default'            => 'You have no recurring transactions yet. You can use these to make Firefly III automatically create transactions for you.',
+    'no_recurring_imperative_default'       => 'This is a pretty advanced feature but it can be extremely useful. Make sure you read the documentation (?)-icon in the top right corner) before you continue.',
+    'no_recurring_create_default'           => 'Create a recurring transaction',
+    'make_new_recurring'                    => 'Create a recurring transaction',
+    'recurring_daily'                       => 'Every day',
+    'recurring_weekly'                      => 'Every week on :weekday',
+    'recurring_monthly'                     => 'Every month on the :dayOfMonth(st/nd/rd/th) day',
+    'recurring_ndom'                        => 'Every month on the :dayOfMonth(st/nd/rd/th) :weekday',
+    'recurring_yearly'                      => 'Every year on :date',
+    'overview_for_recurrence'               => 'Overview for recurring transaction ":title"',
+    'warning_duplicates_repetitions'        => 'In rare instances, dates appear twice in this list. This can happen when multiple repetitions collide. Firefly III will always generate one transaction per day.',
+    'created_transactions'                  => 'Related transactions',
+    'expected_Withdrawals'                  => 'Expected withdrawals',
+    'expected_Deposits'                     => 'Expected deposits',
+    'expected_Transfers'                    => 'Expected transfers',
+    'created_Withdrawals'                   => 'Created withdrawals',
+    'created_Deposits'                      => 'Created deposits',
+    'created_Transfers'                     => 'Created transfers',
+    'created_from_recurrence'               => 'Created from recurring transaction ":title" (#:id)',
+
+    'recurring_meta_field_tags'          => 'Tags',
+    'recurring_meta_field_notes'         => 'Notes',
+    'recurring_meta_field_bill_id'       => 'Bill',
+    'recurring_meta_field_piggy_bank_id' => 'Piggy bank',
+    'create_new_recurrence'              => 'Create new recurring transaction',
+    'help_first_date'                    => 'Indicate the first expected recurrence. This must be in the future.',
+    'help_first_date_no_past'            => 'Indicate the first expected recurrence. Firefly III will not create transactions in the past.',
+    'no_currency'                        => '(no currency)',
+    'mandatory_for_recurring'            => 'Mandatory recurrence information',
+    'mandatory_for_transaction'          => 'Mandatory transaction information',
+    'optional_for_recurring'             => 'Optional recurrence information',
+    'optional_for_transaction'           => 'Optional transaction information',
+    'change_date_other_options'          => 'Change the "first date" to see more options.',
+    'mandatory_fields_for_tranaction'    => 'The values here will end up in the transaction(s) being created',
+    'click_for_calendar'                 => 'Click here for a calendar that shows you when the transaction would repeat.',
+    'repeat_forever'                     => 'Repeat forever',
+    'repeat_until_date'                  => 'Repeat until date',
+    'repeat_times'                       => 'Repeat a number of times',
+    'recurring_skips_one'                => 'Every other',
+    'recurring_skips_more'               => 'Skips :count occurrences',
+    'store_new_recurrence'               => 'Store recurring transaction',
+    'stored_new_recurrence'              => 'Recurring transaction ":title" stored successfully.',
+    'edit_recurrence'                    => 'Edit recurring transaction ":title"',
+    'recurring_repeats_until'            => 'Repeats until :date',
+    'recurring_repeats_forever'          => 'Repeats forever',
+    'recurring_repeats_x_times'          => 'Repeats :count time(s)',
+    'update_recurrence'                  => 'Update recurring transaction',
+    'updated_recurrence'                 => 'Updated recurring transaction ":title"',
+    'recurrence_is_inactive'             => 'This recurring transaction is not active and will not generate new transactions.',
+    'delete_recurring'                   => 'Delete recurring transaction ":title"',
+    'new_recurring_transaction'          => 'New recurring transaction',
+    'help_weekend'                       => 'What should Firefly III do when the recurring transaction falls on a Saturday or Sunday?',
+    'do_nothing'                         => 'Just create the transaction',
+    'skip_transaction'                   => 'Skip the occurence',
+    'jump_to_friday'                     => 'Create the transaction on the previous Friday instead',
+    'jump_to_monday'                     => 'Create the transaction on the next Monday instead',
+    'will_jump_friday'                   => 'Will be created on Friday instead of the weekends.',
+    'will_jump_monday'                   => 'Will be created on Monday instead of the weekends.',
+    'except_weekends'                    => 'Except weekends',
+    'recurrence_deleted'                 => 'Recurring transaction ":title" deleted',
 ];

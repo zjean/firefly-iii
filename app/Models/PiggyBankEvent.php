@@ -23,13 +23,15 @@ declare(strict_types=1);
 namespace FireflyIII\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use FireflyIII\Models\TransactionJournal;
-use FireflyIII\Models\PiggyBank;
 
 /**
  * Class PiggyBankEvent.
  *
- * @property $piggyBank
+ * @property PiggyBank $piggyBank
+ * @property int       $transaction_journal_id
+ * @property int       $piggy_bank_id
+ * @property int       $id
+ * @property mixed     date
  */
 class PiggyBankEvent extends Model
 {

@@ -23,7 +23,6 @@ declare(strict_types=1);
 namespace FireflyIII\Import\Prerequisites;
 
 use FireflyIII\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\MessageBag;
 
 /**
@@ -64,9 +63,9 @@ interface PrerequisitesInterface
      *
      * Errors must be returned in the message bag under the field name they are requested by.
      *
-     * @param Request $request
+     * @param array $data
      *
      * @return MessageBag
      */
-    public function storePrerequisites(Request $request): MessageBag;
+    public function storePrerequisites(array $data): MessageBag;
 }

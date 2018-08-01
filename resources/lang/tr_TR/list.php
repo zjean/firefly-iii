@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * list.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -21,6 +20,8 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 return [
     'buttons'                 => 'Tuşlar',
     'icon'                    => 'Simge',
@@ -33,7 +34,8 @@ return [
     'name'                    => 'İsim',
     'role'                    => 'Rol',
     'currentBalance'          => 'Cari bakiye',
-    'linked_to_rules'         => 'Relevant rules',
+    'linked_to_rules'         => '
+İlgili kurallar',
     'active'                  => 'Aktif mi?',
     'lastActivity'            => 'Son Etkinlik',
     'balanceDiff'             => 'Bakiye farkı',
@@ -91,7 +93,7 @@ return [
     'budget_count'            => 'Bütçelerin sayısı',
     'rule_and_groups_count'   => 'Kuralların ve kural gruplarının sayısı',
     'tags_count'              => 'Etiket sayısı',
-    'tags'                    => 'Tags',
+    'tags'                    => 'Etiketler',
     'inward'                  => 'Dahili açıklama',
     'outward'                 => 'Dışa açıklama',
     'number_of_transactions'  => 'İşlem sayısı',
@@ -102,8 +104,8 @@ return [
     'sum_deposits'            => 'Toplam para yatırma',
     'sum_transfers'           => 'Transferlerin toplamı',
     'reconcile'               => 'Onaylanmış',
-    'account_on_spectre'      => 'Account (Spectre)',
-    'do_import'               => 'Import from this account',
+    'account_on_spectre'      => '(Spectre) Hesabı',
+    'do_import'               => 'Bu hesaptan içeri aktar',
     'sepa-ct-id'              => 'SEPA End to End Identifier',
     'sepa-ct-op'              => 'SEPA Opposing Account Identifier',
     'sepa-db'                 => 'SEPA Mandate Identifier',
@@ -111,10 +113,20 @@ return [
     'sepa-cc'                 => 'SEPA Clearing Code',
     'sepa-ep'                 => 'SEPA External Purpose',
     'sepa-ci'                 => 'SEPA Creditor Identifier',
+    'external_id'             => 'External ID',
     'account_at_bunq'         => 'Account with bunq',
-    'file_name'               => 'File name',
-    'file_size'               => 'File size',
-    'file_type'               => 'File type',
-    'attached_to'             => 'Attached to',
-    'file_exists'             => 'File exists',
+    'file_name'               => 'Dosya adı',
+    'file_size'               => 'Dosya boyutu',
+    'file_type'               => 'Dosya tipi',
+    'attached_to'             => 'Şuraya Bağlı',
+    'file_exists'             => 'Dosya var',
+    'spectre_bank'            => 'Banka',
+    'spectre_last_use'        => 'Son giriş',
+    'spectre_status'          => 'Durum',
+    'bunq_payment_id'         => 'bunq ödeme kimliği',
+    'repetitions'             => 'Tekrarlar',
+    'title'                   => 'Başlık',
+    'transaction_s'           => 'İşlemler',
+    'field'                   => 'Alan',
+    'value'                   => 'Değer',
 ];

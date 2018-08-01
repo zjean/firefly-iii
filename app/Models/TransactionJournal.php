@@ -32,25 +32,28 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Log;
-use Preferences;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use FireflyIII\Models\Transaction;
-use FireflyIII\Models\TransactionType;
-use FireflyIII\Models\TransactionJournalMeta;
-use FireflyIII\Models\TransactionCurrency;
-use FireflyIII\Models\Tag;
-use FireflyIII\Models\PiggyBankEvent;
-use FireflyIII\Models\Note;
-use FireflyIII\Models\Category;
-use FireflyIII\Models\Budget;
-use FireflyIII\Models\Bill;
-use FireflyIII\Models\Attachment;
 
 /**
  * Class TransactionJournal.
  *
- * @property User $user
+ * @property User                $user
+ * @property int                 $bill_id
+ * @property Collection          $categories
+ * @property bool                $completed
+ * @property string              $description
+ * @property int                 $transaction_type_id
+ * @property int                 transaction_currency_id
+ * @property TransactionCurrency $transactionCurrency
+ * @property Collection          $tags
+ * @property mixed               user_id
+ * @property mixed               transactions
+ * @property int                 transaction_count
+ * @property Carbon              interest_date
+ * @property Carbon              book_date
+ * @property Carbon              process_date
  */
 class TransactionJournal extends Model
 {
@@ -392,7 +395,7 @@ class TransactionJournal extends Model
         }
         $entry->data = $value;
         $entry->save();
-        Preferences::mark();
+        app('preferences')->mark();
 
         return $entry;
     }

@@ -1,8 +1,8 @@
 <?php
-declare(strict_types=1);
+
 /**
  * Kernel.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,32 +20,28 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace FireflyIII\Console;
 
+use Carbon\Carbon;
+use FireflyIII\Jobs\CreateRecurringTransactions;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 /**
- * File to make sure commnds work.
+ * File to make sure commands work.
  */
 class Kernel extends ConsoleKernel
 {
     /**
-     * The Artisan commands provided by your application.
-     *
-     * @var array
-     */
-    protected $commands
-        = [
-        ];
-
-    /**
      * Register the commands for the application.
      */
-    protected function commands()
+    protected function commands(): void
     {
         $this->load(__DIR__ . '/Commands');
 
+        /** @noinspection PhpIncludeInspection */
         require base_path('routes/console.php');
     }
 
@@ -53,10 +49,9 @@ class Kernel extends ConsoleKernel
      * Define the application's command schedule.
      *
      * @param \Illuminate\Console\Scheduling\Schedule $schedule
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule(Schedule $schedule): void
     {
+        $schedule->job(new CreateRecurringTransactions(new Carbon))->daily();
     }
 }

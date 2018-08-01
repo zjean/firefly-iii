@@ -36,10 +36,6 @@ use Tests\TestCase;
 
 /**
  * Class CategoryReportControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CategoryReportControllerTest extends TestCase
 {
@@ -53,10 +49,9 @@ class CategoryReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::accountExpense
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::__construct
+     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController
      */
-    public function testAccountExpense()
+    public function testAccountExpense(): void
     {
         $generator = $this->mock(GeneratorInterface::class);
         $pieChart  = $this->mock(MetaPieChartInterface::class);
@@ -75,9 +70,9 @@ class CategoryReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::accountIncome
+     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController
      */
-    public function testAccountIncome()
+    public function testAccountIncome(): void
     {
         $generator = $this->mock(GeneratorInterface::class);
         $pieChart  = $this->mock(MetaPieChartInterface::class);
@@ -96,9 +91,9 @@ class CategoryReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::categoryExpense
+     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController
      */
-    public function testCategoryExpense()
+    public function testCategoryExpense(): void
     {
         $generator = $this->mock(GeneratorInterface::class);
         $pieChart  = $this->mock(MetaPieChartInterface::class);
@@ -117,9 +112,9 @@ class CategoryReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::categoryIncome
+     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController
      */
-    public function testCategoryIncome()
+    public function testCategoryIncome(): void
     {
         $generator = $this->mock(GeneratorInterface::class);
         $pieChart  = $this->mock(MetaPieChartInterface::class);
@@ -138,12 +133,9 @@ class CategoryReportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::mainChart
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::groupByCategory
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::getExpenses
-     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController::getIncome
+     * @covers \FireflyIII\Http\Controllers\Chart\CategoryReportController
      */
-    public function testMainChart()
+    public function testMainChart(): void
     {
         $generator    = $this->mock(GeneratorInterface::class);
         $collector    = $this->mock(JournalCollectorInterface::class);

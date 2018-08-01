@@ -35,7 +35,7 @@ class TagFactoryTest extends TestCase
     /**
      * @covers \FireflyIII\Factory\TagFactory
      */
-    public function testFindOrCreateExisting()
+    public function testFindOrCreateExisting(): void
     {
         $tag = $this->user()->tags()->first();
         /** @var TagFactory $factory */
@@ -49,9 +49,9 @@ class TagFactoryTest extends TestCase
     /**
      * @covers \FireflyIII\Factory\TagFactory
      */
-    public function testFindOrCreateNew()
+    public function testFindOrCreateNew(): void
     {
-        $tag = 'Some new tag#' . random_int(1, 1000);
+        $tag = 'Some new tag#' . random_int(1, 10000);
         /** @var TagFactory $factory */
         $factory = app(TagFactory::class);
         $factory->setUser($this->user());

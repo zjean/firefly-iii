@@ -1,8 +1,8 @@
 <?php
-declare(strict_types=1);
+
 /**
  * CsvExporter.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +20,8 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace FireflyIII\Export\Exporter;
 
 use FireflyIII\Export\Entry\Entry;
@@ -31,10 +33,12 @@ use Storage;
  */
 class CsvExporter extends BasicExporter implements ExporterInterface
 {
-    /** @var string */
+    /** @var string Filename */
     private $fileName;
 
     /**
+     * Get file name.
+     *
      * @return string
      */
     public function getFileName(): string
@@ -43,6 +47,8 @@ class CsvExporter extends BasicExporter implements ExporterInterface
     }
 
     /**
+     * Run collector.
+     *
      * @return bool
      *
      */
@@ -81,6 +87,9 @@ class CsvExporter extends BasicExporter implements ExporterInterface
         return true;
     }
 
+    /**
+     * Make a temp file.
+     */
     private function tempFile()
     {
         $this->fileName = $this->job->key . '-records.csv';

@@ -59,11 +59,9 @@ trait FindAccountsTrait
      * @param string $number
      * @param array  $types
      *
-     *
-     * @deprecated
-     * @return Account
+     * @return Account|null
      */
-    public function findByAccountNumber(string $number, array $types): Account
+    public function findByAccountNumber(string $number, array $types): ?Account
     {
         $query = $this->user->accounts()
                             ->leftJoin('account_meta', 'account_meta.account_id', '=', 'accounts.id')
@@ -81,7 +79,7 @@ trait FindAccountsTrait
             return $accounts->first();
         }
 
-        return new Account;
+        return null;
     }
 
     /**
@@ -160,9 +158,11 @@ trait FindAccountsTrait
                 Log::debug(sprintf('Found #%d (%s) with type id %d', $account->id, $account->name, $account->account_type_id));
 
                 return $account;
+            } else {
+                Log::debug(sprintf('"%s" does not equal "%s"', $account->name, $name));
             }
         }
-        Log::debug(sprintf('There is no account with name "%s" or types', $name), $types);
+        Log::debug(sprintf('There is no account with name "%s" of types', $name), $types);
 
         return null;
     }

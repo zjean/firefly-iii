@@ -28,7 +28,6 @@ use FireflyIII\Http\Requests\LinkTypeFormRequest;
 use FireflyIII\Models\LinkType;
 use FireflyIII\Repositories\LinkType\LinkTypeRepositoryInterface;
 use Illuminate\Http\Request;
-use Preferences;
 use View;
 
 /**
@@ -59,7 +58,7 @@ class LinkController extends Controller
      */
     public function create()
     {
-        $subTitle     = trans('firefly.create_new_link_type');
+        $subTitle     = (string)trans('firefly.create_new_link_type');
         $subTitleIcon = 'fa-link';
 
         // put previous url in session if not redirect from store (not "create another").
@@ -85,11 +84,11 @@ class LinkController extends Controller
             return redirect(route('admin.links.index'));
         }
 
-        $subTitle   = trans('firefly.delete_link_type', ['name' => $linkType->name]);
+        $subTitle   = (string)trans('firefly.delete_link_type', ['name' => $linkType->name]);
         $otherTypes = $repository->get();
         $count      = $repository->countJournals($linkType);
         $moveTo     = [];
-        $moveTo[0]  = trans('firefly.do_not_save_connection');
+        $moveTo[0]  = (string)trans('firefly.do_not_save_connection');
         /** @var LinkType $otherType */
         foreach ($otherTypes as $otherType) {
             if ($otherType->id !== $linkType->id) {
@@ -112,11 +111,11 @@ class LinkController extends Controller
     public function destroy(Request $request, LinkTypeRepositoryInterface $repository, LinkType $linkType)
     {
         $name   = $linkType->name;
-        $moveTo = $repository->find((int)$request->get('move_link_type_before_delete'));
+        $moveTo = $repository->findNull((int)$request->get('move_link_type_before_delete'));
         $repository->destroy($linkType, $moveTo);
 
         $request->session()->flash('success', (string)trans('firefly.deleted_link_type', ['name' => $name]));
-        Preferences::mark();
+        app('preferences')->mark();
 
         return redirect($this->getPreviousUri('link_types.delete.uri'));
     }
@@ -134,7 +133,7 @@ class LinkController extends Controller
 
             return redirect(route('admin.links.index'));
         }
-        $subTitle     = trans('firefly.edit_link_type', ['name' => $linkType->name]);
+        $subTitle     = (string)trans('firefly.edit_link_type', ['name' => $linkType->name]);
         $subTitleIcon = 'fa-link';
 
         // put previous url in session if not redirect from store (not "return_to_edit").
@@ -153,7 +152,7 @@ class LinkController extends Controller
      */
     public function index(LinkTypeRepositoryInterface $repository)
     {
-        $subTitle     = trans('firefly.journal_link_configuration');
+        $subTitle     = (string)trans('firefly.journal_link_configuration');
         $subTitleIcon = 'fa-link';
         $linkTypes    = $repository->get();
         $linkTypes->each(
@@ -172,7 +171,7 @@ class LinkController extends Controller
      */
     public function show(LinkType $linkType)
     {
-        $subTitle     = trans('firefly.overview_for_link', ['name' => $linkType->name]);
+        $subTitle     = (string)trans('firefly.overview_for_link', ['name' => $linkType->name]);
         $subTitleIcon = 'fa-link';
         $links        = $linkType->transactionJournalLinks()->get();
 
@@ -194,16 +193,16 @@ class LinkController extends Controller
         ];
         $linkType = $repository->store($data);
         $request->session()->flash('success', (string)trans('firefly.stored_new_link_type', ['name' => $linkType->name]));
-
+        $redirect = redirect($this->getPreviousUri('link_types.create.uri'));
         if (1 === (int)$request->get('create_another')) {
             // set value so create routine will not overwrite URL:
             $request->session()->put('link_types.create.fromStore', true);
 
-            return redirect(route('admin.links.create'))->withInput();
+            $redirect = redirect(route('admin.links.create'))->withInput();
         }
 
         // redirect to previous URL.
-        return redirect($this->getPreviousUri('link_types.create.uri'));
+        return $redirect;
     }
 
     /**
@@ -229,16 +228,16 @@ class LinkController extends Controller
         $repository->update($linkType, $data);
 
         $request->session()->flash('success', (string)trans('firefly.updated_link_type', ['name' => $linkType->name]));
-        Preferences::mark();
-
+        app('preferences')->mark();
+        $redirect = redirect($this->getPreviousUri('link_types.edit.uri'));
         if (1 === (int)$request->get('return_to_edit')) {
             // set value so edit routine will not overwrite URL:
             $request->session()->put('link_types.edit.fromUpdate', true);
 
-            return redirect(route('admin.links.edit', [$linkType->id]))->withInput(['return_to_edit' => 1]);
+            $redirect = redirect(route('admin.links.edit', [$linkType->id]))->withInput(['return_to_edit' => 1]);
         }
 
         // redirect to previous URL.
-        return redirect($this->getPreviousUri('link_types.edit.uri'));
+        return $redirect;
     }
 }

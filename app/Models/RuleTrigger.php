@@ -22,11 +22,20 @@ declare(strict_types=1);
 
 namespace FireflyIII\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use FireflyIII\Models\Rule;
 
 /**
  * Class RuleTrigger.
+ *
+ * @property string $trigger_value
+ * @property string $trigger_type
+ * @property int    $id
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property int    $order
+ * @property bool   $active
+ * @property bool   $stop_processing
  */
 class RuleTrigger extends Model
 {

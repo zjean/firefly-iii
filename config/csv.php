@@ -1,15 +1,8 @@
 <?php
-declare(strict_types=1);
-
-use FireflyIII\Import\Specifics\AbnAmroDescription;
-use FireflyIII\Import\Specifics\IngDescription;
-use FireflyIII\Import\Specifics\PresidentsChoice;
-use FireflyIII\Import\Specifics\RabobankDescription;
-use FireflyIII\Import\Specifics\SnsDescription;
 
 /**
  * csv.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -27,6 +20,12 @@ use FireflyIII\Import\Specifics\SnsDescription;
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
+use FireflyIII\Import\Specifics\AbnAmroDescription;
+use FireflyIII\Import\Specifics\IngDescription;
+use FireflyIII\Import\Specifics\PresidentsChoice;
+use FireflyIII\Import\Specifics\SnsDescription;
 
 return [
 
@@ -34,11 +33,10 @@ return [
      * Configuration for the CSV specifics.
      */
     'import_specifics' => [
-        'IngDescription'      => IngDescription::class,
-        'RabobankDescription' => RabobankDescription::class,
-        'AbnAmroDescription'  => AbnAmroDescription::class,
-        'SnsDescription'      => SnsDescription::class,
-        'PresidentsChoice'    => PresidentsChoice::class,
+        'IngDescription'     => IngDescription::class,
+        'AbnAmroDescription' => AbnAmroDescription::class,
+        'SnsDescription'     => SnsDescription::class,
+        'PresidentsChoice'   => PresidentsChoice::class,
     ],
 
     /*
@@ -283,6 +281,12 @@ return [
             'converter'       => 'AssetAccountNumber',
             'mapper'          => 'AssetAccounts',
         ],
+        'account-bic'        => [
+            'mappable'        => false,
+            'pre-process-map' => false,
+            'field'           => 'asset-account-bic',
+            'converter'       => 'AccountBic',
+        ],
         'opposing-id'        => [
             'mappable'        => true,
             'pre-process-map' => false,
@@ -390,6 +394,13 @@ return [
             'pre-process-map' => false,
             'converter'       => 'Description',
             'field'           => 'sepa_ci',
+        ],
+        // SEPA Batch ID
+        'sepa-batch-id'      => [
+            'mappable'        => false,
+            'pre-process-map' => false,
+            'converter'       => 'Description',
+            'field'           => 'sepa_batch',
         ],
         // Internal reference
         'internal-reference' => [

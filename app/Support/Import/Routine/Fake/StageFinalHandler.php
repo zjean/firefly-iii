@@ -1,27 +1,41 @@
 <?php
 
+/**
+ * StageFinalHandler.php
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
+ *
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+declare(strict_types=1);
+
 namespace FireflyIII\Support\Import\Routine\Fake;
 
 use Carbon\Carbon;
+use FireflyIII\Models\ImportJob;
 
 /**
+ * @codeCoverageIgnore
  * Class StageFinalHandler
  *
- * @package FireflyIII\Support\Import\Routine\Fake
  */
 class StageFinalHandler
 {
-
-    private $job;
-
-    /**
-     * @param mixed $job
-     */
-    public function setJob($job): void
-    {
-        $this->job = $job;
-    }
-
+    /** @var ImportJob */
+    private $importJob;
 
     /**
      * @return array
@@ -35,7 +49,7 @@ class StageFinalHandler
                 'type'               => 'withdrawal',
                 'date'               => Carbon::create()->format('Y-m-d'),
                 'tags'               => '',
-                'user'               => $this->job->user_id,
+                'user'               => $this->importJob->user_id,
 
                 // all custom fields:
                 'internal_reference' => null,
@@ -80,7 +94,7 @@ class StageFinalHandler
             'type'               => 'transfer',
             'date'               => '2017-02-28',
             'tags'               => '',
-            'user'               => $this->job->user_id,
+            'user'               => $this->importJob->user_id,
 
             // all custom fields:
             'internal_reference' => null,
@@ -120,6 +134,14 @@ class StageFinalHandler
 
         return $transactions;
 
+    }
+
+    /**
+     * @param ImportJob $importJob
+     */
+    public function setImportJob(ImportJob $importJob): void
+    {
+        $this->importJob = $importJob;
     }
 
 }

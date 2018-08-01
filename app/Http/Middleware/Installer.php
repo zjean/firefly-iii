@@ -1,4 +1,25 @@
 <?php
+
+/**
+ * Installer.php
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
+ *
+ * This file is part of Firefly III.
+ *
+ * Firefly III is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Firefly III is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 declare(strict_types=1);
 
 namespace FireflyIII\Http\Middleware;
@@ -24,15 +45,18 @@ class Installer
      * @param  \Closure                 $next
      *
      * @return mixed
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function handle($request, Closure $next)
     {
-        if (env('APP_ENV') === 'testing') {
+        if ('testing' === env('APP_ENV')) {
             return $next($request);
         }
         $url    = $request->url();
         $strpos = stripos($url, '/install');
-        if (!($strpos === false)) {
+        if (!(false === $strpos)) {
             Log::debug(sprintf('URL is %s, will NOT run installer middleware', $url));
 
             return $next($request);
@@ -81,7 +105,7 @@ class Installer
      */
     protected function isAccessDenied(string $message): bool
     {
-        return !(stripos($message, 'Access denied') === false);
+        return !(false === stripos($message, 'Access denied'));
     }
 
     /**
@@ -91,6 +115,6 @@ class Installer
      */
     protected function noTablesExist(string $message): bool
     {
-        return !(stripos($message, 'Base table or view not found') === false);
+        return !(false === stripos($message, 'Base table or view not found'));
     }
 }

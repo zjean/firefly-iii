@@ -33,12 +33,12 @@ $(document).ready(function () {
 
     $.getJSON('json/expense-accounts').done(function (data) {
         destAccounts = data;
-        $('input[name$="destination_account_name]"]').typeahead({source: destAccounts, autoSelect: false});
+        $('input[name$="destination_name]"]').typeahead({source: destAccounts, autoSelect: false});
     });
 
     $.getJSON('json/revenue-accounts').done(function (data) {
         srcAccounts = data;
-        $('input[name$="source_account_name]"]').typeahead({source: srcAccounts, autoSelect: false});
+        $('input[name$="source_name]"]').typeahead({source: srcAccounts, autoSelect: false});
     });
 
     $.getJSON('json/categories').done(function (data) {
@@ -100,6 +100,12 @@ function removeDivRow(e) {
     }
     var row = $(e.target);
     var index = row.data('split');
+    if (typeof index === 'undefined') {
+        var parent = row.parent();
+        index = parent.data('split');
+        console.log('Parent. ' + parent.className);
+    }
+    console.log('Split index is "' + index + '"');
     $('div.split_row[data-split="' + index + '"]').remove();
 
 
@@ -123,11 +129,11 @@ function cloneDivRow() {
     source.find('input[name$="][amount]"]').val("").on('change', calculateBothSums);
     source.find('input[name$="][foreign_amount]"]').val("").on('change', calculateBothSums);
     if (destAccounts.length > 0) {
-        source.find('input[name$="destination_account_name]"]').typeahead({source: destAccounts, autoSelect: false});
+        source.find('input[name$="destination_name]"]').typeahead({source: destAccounts, autoSelect: false});
     }
 
     if (srcAccounts.length > 0) {
-        source.find('input[name$="source_account_name]"]').typeahead({source: srcAccounts, autoSelect: false});
+        source.find('input[name$="source_name]"]').typeahead({source: srcAccounts, autoSelect: false});
     }
     if (categories.length > 0) {
         source.find('input[name$="category_name]"]').typeahead({source: categories, autoSelect: false});
@@ -185,15 +191,15 @@ function resetDivSplits() {
         var input = $(v);
         input.attr('name', 'transactions[' + i + '][transaction_description]');
     });
-    // ends with ][destination_account_name]
-    $.each($('input[name$="][destination_account_name]"]'), function (i, v) {
+    // ends with ][destination_name]
+    $.each($('input[name$="][destination_name]"]'), function (i, v) {
         var input = $(v);
-        input.attr('name', 'transactions[' + i + '][destination_account_name]');
+        input.attr('name', 'transactions[' + i + '][destination_name]');
     });
-    // ends with ][source_account_name]
-    $.each($('input[name$="][source_account_name]"]'), function (i, v) {
+    // ends with ][source_name]
+    $.each($('input[name$="][source_name]"]'), function (i, v) {
         var input = $(v);
-        input.attr('name', 'transactions[' + i + '][source_account_name]');
+        input.attr('name', 'transactions[' + i + '][source_name]');
     });
     // ends with ][amount]
     $.each($('input[name$="][amount]"]'), function (i, v) {

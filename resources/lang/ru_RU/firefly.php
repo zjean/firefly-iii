@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * firefly.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +19,8 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+declare(strict_types=1);
 
 return [
     // general stuff:
@@ -179,6 +180,7 @@ return [
     'authorization_request_intro'                => '<strong>:client</strong> запрашивает доступ к управлению вашими финансами. Вы хотите разрешить <strong>:client</strong> доступ к этой информации?',
     'scopes_will_be_able'                        => 'Это приложение будет иметь возможность:',
     'button_authorize'                           => 'Авторизация',
+    'none_in_select_list'                        => '(нет)',
 
     // check for updates:
     'update_check_title'                         => 'Проверить обновления',
@@ -463,6 +465,7 @@ return [
     'pref_two_factor_auth_code_help'          => 'Отсканируйте QR-код с помощью приложения на телефоне, например Authy или Google Authenticator, и введите сгенерированный код.',
     'pref_two_factor_auth_reset_code'         => 'Сбросить код верификации',
     'pref_two_factor_auth_disable_2fa'        => 'Выключить 2FA',
+    '2fa_use_secret_instead'                  => 'If you cannot scan the QR code, feel free to use the secret instead: :secret.',
     'pref_save_settings'                      => 'Сохранить настройки',
     'saved_preferences'                       => 'Настройки сохранены!',
     'preferences_general'                     => 'Основные',
@@ -604,6 +607,7 @@ return [
     'cannot_delete_currency'                  => 'Невозможно удалить валюту :name, поскольку она используется.',
     'deleted_currency'                        => 'Валюта :name удалена',
     'created_currency'                        => 'Валюта :name создана',
+    'could_not_store_currency'                => 'Could not store the new currency.',
     'updated_currency'                        => 'Валюта :name обновлена',
     'ask_site_owner'                          => 'Пожалуйста, обратитесь к :owner для добавления, удаления или изменения валюты.',
     'currencies_intro'                        => 'Firefly III может работать с несколькими валютами. Вы можете управлять ими здесь.',
@@ -666,6 +670,7 @@ return [
     'bill_will_automatch'                     => 'Счёт будет автоматически связан с подходящими транзакциями',
     'skips_over'                              => 'пропустить',
     'bill_store_error'                        => 'При создании вашего нового счёта на оплату произошла неожиданная ошибка. Пожалуйста, проверьте log-файлы',
+    'list_inactive_rule'                      => 'неактивное правило',
 
     // accounts:
     'details_for_asset'                       => 'Детали по основному счёту ":name"',
@@ -801,6 +806,7 @@ return [
     'opt_group_savingAsset'                   => 'Сберегательные счета',
     'opt_group_sharedAsset'                   => 'Общие основные счета',
     'opt_group_ccAsset'                       => 'Кредитные карты',
+    'opt_group_cashWalletAsset'               => 'Кошельки с наличными',
     'notes'                                   => 'Заметки',
     'unknown_journal_error'                   => 'Не удалось сохранить транзакцию. Пожалуйста, проверьте log-файлы.',
 
@@ -816,6 +822,7 @@ return [
     'language'                                => 'Язык',
     'new_savings_account'                     => 'сберегательный счёт в :bank_name',
     'cash_wallet'                             => 'Кошелёк с наличными',
+    'currency_not_present'                    => 'Если ваша основная валюта ещё не указана, не волнуйтесь. Вы можете создать собственные валюты в разделе Параметры > Валюты.',
 
     // home page:
     'yourAccounts'                            => 'Ваши счета',
@@ -895,7 +902,6 @@ return [
     'balanceEnd'                              => 'Остаток на конец периода',
     'splitByAccount'                          => 'Разделить по разным счетам',
     'coveredWithTags'                         => 'Присвоены метки',
-    'leftUnbalanced'                          => 'Осталось вне баланса',
     'leftInBudget'                            => 'Осталось в бюджете',
     'sumOfSums'                               => 'Сумма сумм',
     'noCategory'                              => '(без категории)',
@@ -1013,6 +1019,7 @@ return [
     'remove_money_from_piggy_title'           => 'Удалить деньги из копилки ":name"',
     'add'                                     => 'Добавить',
     'no_money_for_piggy'                      => 'У вас нет денег, чтобы положить в этот копилку.',
+    'suggested_savings_per_month'             => 'Suggested per month',
 
     'remove'                    => 'Удалить',
     'max_amount_add'            => 'Максимальная сумма, которую вы можете добавить:',
@@ -1128,6 +1135,8 @@ return [
     'is (partially) refunded by_inward'     => '(частично) возвращён',
     'is (partially) paid for by_inward'     => '(частично) оплачен',
     'is (partially) reimbursed by_inward'   => '(частично) возмещён',
+    'inward_transaction'                    => 'Inward transaction',
+    'outward_transaction'                   => 'Outward transaction',
     'relates to_outward'                    => 'относится к',
     '(partially) refunds_outward'           => '(частично) возвращены',
     '(partially) pays for_outward'          => '(частично) оплачены',
@@ -1148,27 +1157,10 @@ return [
     'no_edit_multiple_left'                 => 'Вы выбрали для редактирования некорректную транзакцию.',
     'cannot_convert_split_journal'          => 'Невозможно преобразовать раздельную транзакцию',
 
-    // import bread crumbs and titles:
-    'import'                                => 'Импорт',
+    // Import page (general strings only)
+    'import_index_title'                    => 'Импорт транзакций в Firefly III',
     'import_data'                           => 'Импорт данных',
-    'import_general_index_file'             => 'Импортировать файл',
-    'import_from_bunq'                      => 'Импорт из bunq',
-    'import_using_spectre'                  => 'Импорт с использованием Spectre',
-    'import_using_plaid'                    => 'Импорт с использованием Plaid',
-    'import_config_bread_crumb'             => 'Настройте свой импорт',
-
-    // import index page:
-    'import_index_title'                    => 'Импорт данных в Firefly III',
-    'import_index_sub_title'                => 'Главная страница',
-    'import_general_index_intro'            => 'Добро пожаловать в инструмент импорта Firefly III. Существует несколько способов импорта данных в Firefly III, отображаемых здесь в виде кнопок.',
-    'upload_error'                          => 'Невозможно обработать загруженный вами файл. Возможно, это неправильный тип файла или кодировка. Дополнительная информация содержится в log-файлах.',
-    'reset_import_settings_title'           => 'Сбросить настройки импорта',
-    'reset_import_settings_text'            => 'Вы можете использовать эти ссылки для сброса настроек импорта для определенных поставщиков. Это полезно, когда плохие настройки не позволяют вам импортировать данные.',
-    'reset_settings_bunq'                   => 'Удалите ключ API bunq, локальный внешний IP-адрес и ключи RSA, связанные с bunq.',
-    'reset_settings_spectre'                => 'Удалить ID клиента Spectre и секретные ключи. Также будет удалён ваш Spectre keypair. Не забудьте обновить его.',
-    'settings_reset_for_bunq'               => 'Сброс настроек Bunq.',
-    'settings_reset_for_spectre'            => 'Сброс настроек Spectre.',
-
+    'import_transactions'                   => 'Импорт транзакций',
 
     // sandstorm.io errors and messages:
     'sandstorm_not_available'               => 'Эта функция недоступна, если вы используете Firefly III в среде Sandstorm.io.',
@@ -1218,4 +1210,68 @@ return [
     'no_bills_intro_default'                => 'У вас пока нет счетов на оплату. Вы можете создавать счета для отслеживания регулярных расходов, таких как арендная плата или страхование.',
     'no_bills_imperative_default'           => 'У вас есть такие регулярные платежи? Создайте счёт на оплату и отслеживайте свои платежи:',
     'no_bills_create_default'               => 'Создать счет к оплате',
+
+    // recurring transactions
+    'recurrences'                           => 'Повторяющиеся транзакции',
+    'no_recurring_title_default'            => 'Давайте создадим повторяющуюся транзакцию!',
+    'no_recurring_intro_default'            => 'You have no recurring transactions yet. You can use these to make Firefly III automatically create transactions for you.',
+    'no_recurring_imperative_default'       => 'This is a pretty advanced feature but it can be extremely useful. Make sure you read the documentation (?)-icon in the top right corner) before you continue.',
+    'no_recurring_create_default'           => 'Создать повторяющуюся транзакцию',
+    'make_new_recurring'                    => 'Создать повторяющуюся транзакцию',
+    'recurring_daily'                       => 'Каждый день',
+    'recurring_weekly'                      => 'Каждую неделю в :weekday',
+    'recurring_monthly'                     => 'Каждый месяц в :dayOfMonth(st/nd/rd/th) день',
+    'recurring_ndom'                        => 'Каждый месяц в :dayOfMonth(st/nd/rd/th) :weekday',
+    'recurring_yearly'                      => 'Каждый год на :date',
+    'overview_for_recurrence'               => 'Обзор повторяющейся транзакции ":title"',
+    'warning_duplicates_repetitions'        => 'In rare instances, dates appear twice in this list. This can happen when multiple repetitions collide. Firefly III will always generate one transaction per day.',
+    'created_transactions'                  => 'Связанные транзакции',
+    'expected_Withdrawals'                  => 'Просроченные расходы',
+    'expected_Deposits'                     => 'Просроченные доходы',
+    'expected_Transfers'                    => 'Просроченные переводы',
+    'created_Withdrawals'                   => 'Расходы созданы',
+    'created_Deposits'                      => 'Доходы созданы',
+    'created_Transfers'                     => 'Переводы созданы',
+    'created_from_recurrence'               => 'Создано из повторяющейся транзакции ":title" (#:id)',
+
+    'recurring_meta_field_tags'          => 'Метки',
+    'recurring_meta_field_notes'         => 'Примечания',
+    'recurring_meta_field_bill_id'       => 'Счёт к оплате',
+    'recurring_meta_field_piggy_bank_id' => 'Копилка',
+    'create_new_recurrence'              => 'Создать новую повторяющуюся транзакцию',
+    'help_first_date'                    => 'Укажите первое ожидаемое повторение. Оно должно быть в будущем.',
+    'help_first_date_no_past'            => 'Укажите первое ожидаемое повторение. Firefly III не будет создавать транзакции ранее этой даты.',
+    'no_currency'                        => '(нет валюты)',
+    'mandatory_for_recurring'            => 'Обязательные сведения о повторении',
+    'mandatory_for_transaction'          => 'Обязательные сведения о транзакции',
+    'optional_for_recurring'             => 'Опциональные сведения о повторении',
+    'optional_for_transaction'           => 'Опциональные сведения о транзакции',
+    'change_date_other_options'          => 'Измените "первую дату", чтобы увидеть больше опций.',
+    'mandatory_fields_for_tranaction'    => 'The values here will end up in the transaction(s) being created',
+    'click_for_calendar'                 => 'Щёлкните здесь, чтобы открыт календарь и указать, когда транзакция будет повторяться.',
+    'repeat_forever'                     => 'Повторять всегда',
+    'repeat_until_date'                  => 'Повторять до указанной даты',
+    'repeat_times'                       => 'Повторять указанное число раз',
+    'recurring_skips_one'                => 'Другой период',
+    'recurring_skips_more'               => 'Пропустить :count повторов',
+    'store_new_recurrence'               => 'Сохранить повторяющуюся транзакцию',
+    'stored_new_recurrence'              => 'Повторяющаяся транзакция ":title" успешно сохранена.',
+    'edit_recurrence'                    => 'Изменить повторяющуюся транзакцию ":title"',
+    'recurring_repeats_until'            => 'Повторять до :date',
+    'recurring_repeats_forever'          => 'Повторять всегда',
+    'recurring_repeats_x_times'          => 'Повторить :count раз(а)',
+    'update_recurrence'                  => 'Обновить повторяющуюся транзакцию',
+    'updated_recurrence'                 => 'Повторяющаяся транзакция ":title" обновлена',
+    'recurrence_is_inactive'             => 'Эта повторяющаяся транзакция не активна и не создаёт новые транзакции.',
+    'delete_recurring'                   => 'Delete recurring transaction ":title"',
+    'new_recurring_transaction'          => 'New recurring transaction',
+    'help_weekend'                       => 'What should Firefly III do when the recurring transaction falls on a Saturday or Sunday?',
+    'do_nothing'                         => 'Just create the transaction',
+    'skip_transaction'                   => 'Skip the occurence',
+    'jump_to_friday'                     => 'Create the transaction on the previous Friday instead',
+    'jump_to_monday'                     => 'Create the transaction on the next Monday instead',
+    'will_jump_friday'                   => 'Will be created on Friday instead of the weekends.',
+    'will_jump_monday'                   => 'Will be created on Monday instead of the weekends.',
+    'except_weekends'                    => 'Except weekends',
+    'recurrence_deleted'                 => 'Recurring transaction ":title" deleted',
 ];

@@ -27,12 +27,14 @@ use FireflyIII\Models\RuleAction;
 use FireflyIII\Models\RuleGroup;
 use FireflyIII\Models\RuleTrigger;
 use FireflyIII\User;
+use Illuminate\Support\Collection;
 
 /**
  * Interface RuleRepositoryInterface.
  */
 interface RuleRepositoryInterface
 {
+
     /**
      * @return int
      */
@@ -53,9 +55,23 @@ interface RuleRepositoryInterface
     public function find(int $ruleId): Rule;
 
     /**
+     * Get all the users rules.
+     *
+     * @return Collection
+     */
+    public function getAll(): Collection;
+
+    /**
      * @return RuleGroup
      */
     public function getFirstRuleGroup(): RuleGroup;
+
+    /**
+     * Get the rules for a user tailored to the import process.
+     *
+     * @return Collection
+     */
+    public function getForImport(): Collection;
 
     /**
      * @param RuleGroup $ruleGroup

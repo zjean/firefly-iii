@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+
 /**
  * TransactionFactory.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -20,16 +20,20 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
 
 namespace FireflyIII\Factory;
 
 
+use FireflyIII\Exceptions\FireflyException;
+use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Services\Internal\Support\TransactionServiceTrait;
 use FireflyIII\User;
 use Illuminate\Support\Collection;
+use Log;
 
 /**
  * Class TransactionFactory
@@ -45,10 +49,23 @@ class TransactionFactory
      * @param array $data
      *
      * @return Transaction
+     * @throws FireflyException
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    public function create(array $data): Transaction
+    public function create(array $data): ?Transaction
     {
-        $currencyId = isset($data['currency']) ? $data['currency']->id : $data['currency_id'];
+        Log::debug('Start of TransactionFactory::create()');
+        $currencyId = $data['currency_id'] ?? null;
+        $currencyId = isset($data['currency']) ? $data['currency']->id : $currencyId;
+        if ('' === $data['amount']) {
+            Log::error('Empty string in data.', $data);
+            throw new FireflyException('Amount is an empty string, which Firefly III cannot handle. Apologies.'); // @codeCoverageIgnore
+        }
+        if (null === $currencyId) {
+            throw new FireflyException('Cannot store transaction without currency information.'); // @codeCoverageIgnore
+        }
+        $data['foreign_amount'] = '' === (string)$data['foreign_amount'] ? null : $data['foreign_amount'];
+        Log::debug(sprintf('Create transaction for account #%d ("%s") with amount %s', $data['account']->id, $data['account']->name, $data['amount']));
 
         return Transaction::create(
             [
@@ -72,21 +89,42 @@ class TransactionFactory
      * @param array              $data
      *
      * @return Collection
+     * @throws FireflyException
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function createPair(TransactionJournal $journal, array $data): Collection
     {
+        Log::debug('Start of TransactionFactory::createPair()', $data);
         // all this data is the same for both transactions:
         $currency    = $this->findCurrency($data['currency_id'], $data['currency_code']);
         $description = $journal->description === $data['description'] ? null : $data['description'];
 
-        // type of source account depends on journal type:
-        $sourceType    = $this->accountType($journal, 'source');
-        $sourceAccount = $this->findAccount($sourceType, $data['source_id'], $data['source_name']);
+        // type of source account and destination account depends on journal type:
+        $sourceType      = $this->accountType($journal, 'source');
+        $destinationType = $this->accountType($journal, 'destination');
 
-        // same for destination account:
-        $destinationType    = $this->accountType($journal, 'destination');
+        Log::debug(sprintf('Expect source account to be of type "%s"', $sourceType));
+        Log::debug(sprintf('Expect source destination to be of type "%s"', $destinationType));
+
+        // find source and destination account:
+        $sourceAccount      = $this->findAccount($sourceType, $data['source_id'], $data['source_name']);
         $destinationAccount = $this->findAccount($destinationType, $data['destination_id'], $data['destination_name']);
-        // first make a "negative" (source) transaction based on the data in the array.
+
+        if (null === $sourceAccount || null === $destinationAccount) {
+            throw new FireflyException('Could not determine source or destination account.');
+        }
+
+        Log::debug(sprintf('Source type is "%s", destination type is "%s"', $sourceAccount->accountType->type, $destinationAccount->accountType->type));
+        // throw big fat error when source type === dest type and it's not a transfer or reconciliation.
+        if ($sourceAccount->accountType->type === $destinationAccount->accountType->type && $journal->transactionType->type !== TransactionType::TRANSFER) {
+            throw new FireflyException(sprintf('Source and destination account cannot be both of the type "%s"', $destinationAccount->accountType->type));
+        }
+        if ($sourceAccount->accountType->type !== AccountType::ASSET && $destinationAccount->accountType->type !== AccountType::ASSET) {
+            throw new FireflyException('At least one of the accounts must be an asset account.');
+        }
+
         $source = $this->create(
             [
                 'description'         => $description,
@@ -99,8 +137,7 @@ class TransactionFactory
                 'identifier'          => $data['identifier'],
             ]
         );
-        // then make a "positive" transaction based on the data in the array.
-        $dest = $this->create(
+        $dest   = $this->create(
             [
                 'description'         => $description,
                 'amount'              => app('steam')->positive((string)$data['amount']),
@@ -112,6 +149,9 @@ class TransactionFactory
                 'identifier'          => $data['identifier'],
             ]
         );
+        if (null === $source || null === $dest) {
+            throw new FireflyException('Could not create transactions.');
+        }
 
         // set foreign currency
         $foreign = $this->findCurrency($data['foreign_currency_id'], $data['foreign_currency_code']);
@@ -125,7 +165,7 @@ class TransactionFactory
         }
 
         // set budget:
-        if ($journal->transactionType->type === TransactionType::TRANSFER) {
+        if ($journal->transactionType->type !== TransactionType::WITHDRAWAL) {
             $data['budget_id']   = null;
             $data['budget_name'] = null;
         }
@@ -145,7 +185,7 @@ class TransactionFactory
     /**
      * @param User $user
      */
-    public function setUser(User $user)
+    public function setUser(User $user): void
     {
         $this->user = $user;
     }

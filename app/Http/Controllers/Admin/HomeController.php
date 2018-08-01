@@ -26,6 +26,7 @@ use FireflyIII\Events\AdminRequestedTestMessage;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Http\Middleware\IsDemoUser;
 use FireflyIII\Http\Middleware\IsSandStormUser;
+use FireflyIII\User;
 use Illuminate\Http\Request;
 use Log;
 
@@ -51,8 +52,9 @@ class HomeController extends Controller
     {
         $title         = (string)trans('firefly.administration');
         $mainTitleIcon = 'fa-hand-spock-o';
+        $sandstorm     = 1 === (int)getenv('SANDSTORM');
 
-        return view('admin.index', compact('title', 'mainTitleIcon'));
+        return view('admin.index', compact('title', 'mainTitleIcon', 'sandstorm'));
     }
 
     /**
@@ -62,9 +64,11 @@ class HomeController extends Controller
      */
     public function testMessage(Request $request)
     {
+        /** @var User $user */
+        $user      = auth()->user();
         $ipAddress = $request->ip();
         Log::debug(sprintf('Now in testMessage() controller. IP is %s', $ipAddress));
-        event(new AdminRequestedTestMessage(auth()->user(), $ipAddress));
+        event(new AdminRequestedTestMessage($user, $ipAddress));
         session()->flash('info', (string)trans('firefly.send_test_triggered'));
 
         return redirect(route('admin.index'));

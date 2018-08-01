@@ -35,9 +35,13 @@ use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class AutoCompleteController.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class AutoCompleteController extends Controller
 {
@@ -47,9 +51,9 @@ class AutoCompleteController extends Controller
      *
      * @param AccountRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function allAccounts(AccountRepositoryInterface $repository)
+    public function allAccounts(AccountRepositoryInterface $repository): JsonResponse
     {
         $return = array_unique(
             $repository->getAccountsByType(
@@ -64,9 +68,9 @@ class AutoCompleteController extends Controller
     /**
      * @param JournalCollectorInterface $collector
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function allTransactionJournals(JournalCollectorInterface $collector)
+    public function allTransactionJournals(JournalCollectorInterface $collector): JsonResponse
     {
         $collector->setLimit(250)->setPage(1);
         $return = array_unique($collector->getJournals()->pluck('description')->toArray());
@@ -80,9 +84,9 @@ class AutoCompleteController extends Controller
      *
      * @param BillRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function bills(BillRepositoryInterface $repository)
+    public function bills(BillRepositoryInterface $repository): JsonResponse
     {
         $return = array_unique(
             $repository->getActiveBills()->pluck('name')->toArray()
@@ -95,9 +99,9 @@ class AutoCompleteController extends Controller
     /**
      * @param BudgetRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function budgets(BudgetRepositoryInterface $repository)
+    public function budgets(BudgetRepositoryInterface $repository): JsonResponse
     {
         $return = array_unique($repository->getBudgets()->pluck('name')->toArray());
         sort($return);
@@ -110,9 +114,9 @@ class AutoCompleteController extends Controller
      *
      * @param CategoryRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function categories(CategoryRepositoryInterface $repository)
+    public function categories(CategoryRepositoryInterface $repository): JsonResponse
     {
         $return = array_unique($repository->getCategories()->pluck('name')->toArray());
         sort($return);
@@ -123,9 +127,9 @@ class AutoCompleteController extends Controller
     /**
      * @param CurrencyRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function currencyNames(CurrencyRepositoryInterface $repository)
+    public function currencyNames(CurrencyRepositoryInterface $repository): JsonResponse
     {
         $return = $repository->get()->pluck('name')->toArray();
         sort($return);
@@ -138,14 +142,14 @@ class AutoCompleteController extends Controller
      *
      * @param AccountRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function expenseAccounts(AccountRepositoryInterface $repository)
+    public function expenseAccounts(AccountRepositoryInterface $repository): JsonResponse
     {
         $set      = $repository->getAccountsByType([AccountType::EXPENSE, AccountType::BENEFICIARY]);
         $filtered = $set->filter(
             function (Account $account) {
-                if ($account->active === true) {
+                if (true === $account->active) {
                     return $account;
                 }
 
@@ -159,11 +163,12 @@ class AutoCompleteController extends Controller
         return response()->json($return);
     }
 
+
     /**
      * @param JournalCollectorInterface $collector
      * @param TransactionJournal        $except
      *
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return JsonResponse|mixed
      */
     public function journalsWithId(JournalCollectorInterface $collector, TransactionJournal $except)
     {
@@ -195,14 +200,14 @@ class AutoCompleteController extends Controller
     /**
      * @param AccountRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function revenueAccounts(AccountRepositoryInterface $repository)
+    public function revenueAccounts(AccountRepositoryInterface $repository): JsonResponse
     {
         $set      = $repository->getAccountsByType([AccountType::REVENUE]);
         $filtered = $set->filter(
             function (Account $account) {
-                if ($account->active === true) {
+                if (true === $account->active) {
                     return $account;
                 }
 
@@ -220,9 +225,9 @@ class AutoCompleteController extends Controller
      *
      * @param TagRepositoryInterface $tagRepository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function tags(TagRepositoryInterface $tagRepository)
+    public function tags(TagRepositoryInterface $tagRepository): JsonResponse
     {
         $return = array_unique($tagRepository->get()->pluck('tag')->toArray());
         sort($return);
@@ -234,9 +239,9 @@ class AutoCompleteController extends Controller
      * @param JournalCollectorInterface $collector
      * @param string                    $what
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function transactionJournals(JournalCollectorInterface $collector, string $what)
+    public function transactionJournals(JournalCollectorInterface $collector, string $what): JsonResponse
     {
         $type  = config('firefly.transactionTypesByWhat.' . $what);
         $types = [$type];
@@ -251,9 +256,9 @@ class AutoCompleteController extends Controller
     /**
      * @param JournalRepositoryInterface $repository
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function transactionTypes(JournalRepositoryInterface $repository)
+    public function transactionTypes(JournalRepositoryInterface $repository): JsonResponse
     {
         $return = array_unique($repository->getTransactionTypes()->pluck('type')->toArray());
         sort($return);

@@ -24,6 +24,7 @@ namespace Tests\Unit\TransactionRules\Triggers;
 
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Triggers\ToAccountEnds;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -34,16 +35,29 @@ class ToAccountEndsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\ToAccountEnds::triggered
      */
-    public function testTriggered()
+    public function testTriggered(): void
     {
-        $count = 0;
-        while ($count === 0) {
-            $journal     = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $count       = $journal->transactions()->where('amount', '>', 0)->count();
+        $loops = 0; // FINAL LOOP METHOD.
+        do {
+            /** @var TransactionJournal $journal */
+            $journal     = $this->user()->transactionJournals()->inRandomOrder()->whereNull('deleted_at')->first();
             $transaction = $journal->transactions()->where('amount', '>', 0)->first();
-        }
+            $account     = $transaction->account;
+            $count       = $journal->transactions()->count();
+            $name        = $account->name ?? '';
 
-        $account = $transaction->account;
+            Log::debug(sprintf('Loop: %d, transaction count: %d, account is null: %d, name = "%s"', $loops, $count, (int)null === $account, $name));
+
+            $loops++;
+
+            // do this while the following is untrue:
+            // 1) account is not null,
+            // 2) journal has two transactions
+            // 3) loops is less than 30
+            // 4) $name is longer than 3
+        } while (!(null !== $account && 2 === $count && $loops < 30 && \strlen($name) > 3));
+
+
         $trigger = ToAccountEnds::makeFromStrings(substr($account->name, -3), false);
         $result  = $trigger->triggered($journal);
         $this->assertTrue($result);
@@ -52,15 +66,27 @@ class ToAccountEndsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\ToAccountEnds::triggered
      */
-    public function testTriggeredLonger()
+    public function testTriggeredLonger(): void
     {
-        $count = 0;
-        while ($count === 0) {
-            $journal     = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $count       = $journal->transactions()->where('amount', '>', 0)->count();
+        $loops = 0; // FINAL LOOP METHOD.
+        do {
+            /** @var TransactionJournal $journal */
+            $journal     = $this->user()->transactionJournals()->inRandomOrder()->whereNull('deleted_at')->first();
             $transaction = $journal->transactions()->where('amount', '>', 0)->first();
-        }
-        $account     = $transaction->account;
+            $account     = $transaction->account;
+            $count       = $journal->transactions()->count();
+            $name        = $account->name ?? '';
+
+            Log::debug(sprintf('Loop: %d, transaction count: %d, account is null: %d, name = "%s"', $loops, $count, (int)null === $account, $name));
+
+            $loops++;
+
+            // do this while the following is untrue:
+            // 1) account is not null,
+            // 2) journal has two transactions
+            // 3) loops is less than 30
+            // 4) $name is longer than 3
+        } while (!(null !== $account && 2 === $count && $loops < 30 && \strlen($name) > 3));
 
         $trigger = ToAccountEnds::makeFromStrings('bla-bla-bla' . $account->name, false);
         $result  = $trigger->triggered($journal);
@@ -70,13 +96,27 @@ class ToAccountEndsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\ToAccountEnds::triggered
      */
-    public function testTriggeredNot()
+    public function testTriggeredNot(): void
     {
-        $count = 0;
-        while ($count === 0) {
-            $journal     = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $count       = $journal->transactions()->where('amount', '>', 0)->count();
-        }
+        $loops = 0; // FINAL LOOP METHOD.
+        do {
+            /** @var TransactionJournal $journal */
+            $journal     = $this->user()->transactionJournals()->inRandomOrder()->whereNull('deleted_at')->first();
+            $transaction = $journal->transactions()->where('amount', '>', 0)->first();
+            $account     = $transaction->account;
+            $count       = $journal->transactions()->count();
+            $name        = $account->name ?? '';
+
+            Log::debug(sprintf('Loop: %d, transaction count: %d, account is null: %d, name = "%s"', $loops, $count, (int)null === $account, $name));
+
+            $loops++;
+
+            // do this while the following is untrue:
+            // 1) account is not null,
+            // 2) journal has two transactions
+            // 3) loops is less than 30
+            // 4) $name is longer than 3
+        } while (!(null !== $account && 2 === $count && $loops < 30 && \strlen($name) > 3));
 
         $trigger = ToAccountEnds::makeFromStrings((string)random_int(1, 1234), false);
         $result  = $trigger->triggered($journal);
@@ -86,7 +126,7 @@ class ToAccountEndsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\ToAccountEnds::willMatchEverything
      */
-    public function testWillMatchEverythingEmpty()
+    public function testWillMatchEverythingEmpty(): void
     {
         $value  = '';
         $result = ToAccountEnds::willMatchEverything($value);
@@ -96,7 +136,7 @@ class ToAccountEndsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\ToAccountEnds::willMatchEverything
      */
-    public function testWillMatchEverythingNotNull()
+    public function testWillMatchEverythingNotNull(): void
     {
         $value  = 'x';
         $result = ToAccountEnds::willMatchEverything($value);
@@ -106,7 +146,7 @@ class ToAccountEndsTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Triggers\ToAccountEnds::willMatchEverything
      */
-    public function testWillMatchEverythingNull()
+    public function testWillMatchEverythingNull(): void
     {
         $value  = null;
         $result = ToAccountEnds::willMatchEverything($value);

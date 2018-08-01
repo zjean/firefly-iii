@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * firefly.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +19,8 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+declare(strict_types=1);
 
 return [
     // general stuff:
@@ -84,7 +85,7 @@ return [
     'two_factor_lost_intro'                      => 'Malheureusement, ce n’est pas quelque chose que vous pouvez réinitialiser depuis l’interface web. Vous avez deux choix.',
     'two_factor_lost_fix_self'                   => 'Si vous exécutez votre propre instance de Firefly III, vérifiez les logs dans <code>storage/logs</code> pour obtenir des instructions.',
     'two_factor_lost_fix_owner'                  => 'Dans le cas contraire, contactez le propriétaire du site par courriel <a href="mailto::site_owner">:site_owner</a> et demandez-lui de réinitialiser votre authentification à deux facteurs.',
-    'warning_much_data'                          => ':days de données peuvent prendre un certain temps à charger.',
+    'warning_much_data'                          => ':days jours de données peuvent prendre un certain temps à charger.',
     'registered'                                 => 'Vous avez été enregistré avec succès !',
     'Default asset account'                      => 'Compte d’actif par défaut',
     'no_budget_pointer'                          => 'Vous semblez n’avoir encore aucun budget. Vous devez en créer un sur la page des <a href="/budgets">budgets</a>. Les budgets peuvent vous aider à garder une trace des dépenses.',
@@ -179,6 +180,7 @@ return [
     'authorization_request_intro'                => '<strong>:client</strong> demande l\'autorisation d\'accéder à votre administration financière. Souhaitez-vous autoriser <strong>:client</strong> à accéder à ces enregistrements?',
     'scopes_will_be_able'                        => 'Cette application pourra :',
     'button_authorize'                           => 'Autoriser',
+    'none_in_select_list'                        => '(aucun)',
 
     // check for updates:
     'update_check_title'                         => 'Vérifier les mises à jour',
@@ -267,10 +269,10 @@ return [
     'move_rule_group_down'                       => 'Descendre le groupe de règles',
     'save_rules_by_moving'                       => 'Enregistrer ces règles en les déplaçant vers un autre groupe de règles :',
     'make_new_rule'                              => 'Créer une nouvelle règle dans le groupe de règles ":title"',
-    'rule_is_strict'                             => 'strict rule',
-    'rule_is_not_strict'                         => 'non-strict rule',
+    'rule_is_strict'                             => 'règle stricte',
+    'rule_is_not_strict'                         => 'règle non stricte',
     'rule_help_stop_processing'                  => 'Lorsque vous cochez cette case, les règles suivantes de ce groupe ne seront pas exécutées.',
-    'rule_help_strict'                           => 'In strict rules ALL triggers must fire for the action(s) to be executed. In non-strict rules, ANY trigger is enough for the action(s) to be executed.',
+    'rule_help_strict'                           => 'Dans les règles strictes, TOUS les déclencheurs doivent être activés pour les actions à exécuter. Dans les règles non strictes, N\'IMPORTE QUEL déclencheur est suffisant pour que l\'action soit exécutée.',
     'rule_help_active'                           => 'Les règles inactives ne se déclencheront jamais.',
     'stored_new_rule'                            => 'Nouvelle règle créée avec le titre ":title"',
     'deleted_rule'                               => 'Règle supprimée avec le titre ":title"',
@@ -463,6 +465,7 @@ return [
     'pref_two_factor_auth_code_help'          => 'Scanner le code QR avec une application sur votre téléphone comme Authy ou Google Authenticator et entrez le code généré.',
     'pref_two_factor_auth_reset_code'         => 'Réinitialiser le code de vérification',
     'pref_two_factor_auth_disable_2fa'        => 'Désactiver l\'authentification en deux étapes',
+    '2fa_use_secret_instead'                  => 'Si vous ne pouvez pas scanner le code QR, vous pouvez utiliser le secret : :secret.',
     'pref_save_settings'                      => 'Enregistrer les paramètres',
     'saved_preferences'                       => 'Préférences enregistrées!',
     'preferences_general'                     => 'Général',
@@ -541,7 +544,7 @@ return [
     'attachment_deleted'                      => 'Pièce jointe ":name" supprimée',
     'attachment_updated'                      => 'Pièce jointe ":name" mise à jour',
     'upload_max_file_size'                    => 'Taille maximum du fichier : :size',
-    'list_all_attachments'                    => 'List of all attachments',
+    'list_all_attachments'                    => 'Liste de toutes les pièces jointes',
 
     // transaction index
     'title_expenses'                          => 'Dépenses',
@@ -584,7 +587,7 @@ return [
     'converted_to_Deposit'                    => 'La transaction a été convertie en dépôt',
     'converted_to_Transfer'                   => 'La transaction a été convertie en transfert',
     'invalid_convert_selection'               => 'Le compte que vous avez sélectionné est déjà utilisé dans cette transaction ou n\'existe pas.',
-    'source_or_dest_invalid'                  => 'Cannot find the correct transaction details. Conversion is not possible.',
+    'source_or_dest_invalid'                  => 'Impossible de trouver les détails de transaction corrects. La conversion n\'est pas possible.',
 
     // create new stuff:
     'create_new_withdrawal'                   => 'Créer une nouvelle dépense',
@@ -604,6 +607,7 @@ return [
     'cannot_delete_currency'                  => 'Impossible de supprimer :name car il est encore utilisé.',
     'deleted_currency'                        => 'Devise ":name" supprimée',
     'created_currency'                        => 'Devise ":name" créée',
+    'could_not_store_currency'                => 'Could not store the new currency.',
     'updated_currency'                        => 'Devise ":name" mise à jour',
     'ask_site_owner'                          => 'Merci de demander à :owner pour ajouter, modifier ou supprimer des devises.',
     'currencies_intro'                        => 'Firefly III prend en charge diverses devises que vous pouvez configurer et activer ici.',
@@ -641,8 +645,8 @@ return [
     'over_budget_warn'                        => '<i class="fa fa-money"></i> Normalement vous budgétez :amount par jour. Là c\'est :over_amount par jour.',
 
     // bills:
-    'match_between_amounts'                   => 'Bill matches transactions between :low and :high.',
-    'bill_related_rules'                      => 'Rules related to this bill',
+    'match_between_amounts'                   => 'Factures correspondes à des transactions entre :low et :high.',
+    'bill_related_rules'                      => 'Règles reliées à cette facture',
     'repeats'                                 => 'Répétitions',
     'connected_journals'                      => 'Opérations liées',
     'auto_match_on'                           => 'Automatiquement mis en correspondance par Firefly III',
@@ -652,13 +656,13 @@ return [
     'deleted_bill'                            => 'Facture ":name" supprimée',
     'edit_bill'                               => 'Modifier la facture : ":name"',
     'more'                                    => 'Plus',
-    'rescan_old'                              => 'Run rules again, on all transactions',
+    'rescan_old'                              => 'Exécuter les règles à nouveau, sur toutes les transactions',
     'update_bill'                             => 'Mettre à jour la facture',
     'updated_bill'                            => 'Facture ":name" mise à jour',
     'store_new_bill'                          => 'Créer une nouvelle facture',
     'stored_new_bill'                         => 'Nouvelle facture ":name" créée',
     'cannot_scan_inactive_bill'               => 'Les factures inactives ne peuvent pas être analysées.',
-    'rescanned_bill'                          => 'Rescanned everything, and linked :total transaction(s) to the bill.',
+    'rescanned_bill'                          => 'Tout a été redéfini et lié aux :total transaction(s) de la facture.',
     'average_bill_amount_year'                => 'Montant moyen des factures ( :year)',
     'average_bill_amount_overall'             => 'Montant moyen de la facture (global)',
     'bill_is_active'                          => 'Facture en cours',
@@ -666,6 +670,7 @@ return [
     'bill_will_automatch'                     => 'La facture sera automatiquement liée aux transactions correspondantes',
     'skips_over'                              => 'saute',
     'bill_store_error'                        => 'Une erreur inattendue s\'est produite lors du stockage de votre nouvelle facture. Veuillez vérifier les fichiers journaux',
+    'list_inactive_rule'                      => 'règle inactive',
 
     // accounts:
     'details_for_asset'                       => 'Détails pour le compte d’actif ":name"',
@@ -699,7 +704,7 @@ return [
     'delete_reconciliation'                   => 'Supprimer le rapprochement',
     'update_reconciliation'                   => 'Mettre à jour le rapprochement',
     'amount_cannot_be_zero'                   => 'Le montant ne peut pas être zéro',
-    'end_of_reconcile_period'                 => 'Fin de la période de rapptrochement : :period',
+    'end_of_reconcile_period'                 => 'Fin de la période de rapprochement: :period',
     'start_of_reconcile_period'               => 'Début de la période de rapprochement : :period',
     'start_balance'                           => 'Solde initial',
     'end_balance'                             => 'Solde de clotûre',
@@ -801,6 +806,7 @@ return [
     'opt_group_savingAsset'                   => 'Comptes d\'épargne',
     'opt_group_sharedAsset'                   => 'Comptes d\'actifs partagés',
     'opt_group_ccAsset'                       => 'Cartes de crédit',
+    'opt_group_cashWalletAsset'               => 'Portefeuilles d\'argent',
     'notes'                                   => 'Notes',
     'unknown_journal_error'                   => 'Impossible de stocker la transaction. Veuillez vérifier les fichiers journaux.',
 
@@ -812,10 +818,11 @@ return [
     'savings_balance_text'                    => 'Firefly III créera automatiquement un compte d\'épargne pour vous. Par défaut, il n\'y aura pas d\'argent dans votre compte d\'épargne, mais si vous le dites à Firefly III, le solde sera stocké en tant que tel.',
     'finish_up_new_user'                      => 'C\'est tout ! Vous pouvez continuer en appuyant sur <strong>Envoyer</strong>. Vous passerez à l\'index de Firefly III.',
     'stored_new_accounts_new_user'            => 'Super ! Vos nouveaux comptes ont été créés.',
-    'set_preferred_language'                  => 'If you prefer to use Firefly III in another language, please indicate so here.',
-    'language'                                => 'Language',
-    'new_savings_account'                     => ':bank_name savings account',
-    'cash_wallet'                             => 'Cash wallet',
+    'set_preferred_language'                  => 'Si vous préférez utiliser Firefly III dans une autre langue, veuillez l\'indiquer ici.',
+    'language'                                => 'Langage',
+    'new_savings_account'                     => ':bank_name compte d\'épargne',
+    'cash_wallet'                             => 'Porte-monnaie',
+    'currency_not_present'                    => 'Si la devise que vous utilisez habituellement n\'est pas répertoriée, ne vous inquiétez pas. Vous pouvez créer vos propres devises dans Options > Devises.',
 
     // home page:
     'yourAccounts'                            => 'Vos comptes',
@@ -895,7 +902,6 @@ return [
     'balanceEnd'                              => 'Solde à la fin de la période',
     'splitByAccount'                          => 'Divisé par compte',
     'coveredWithTags'                         => 'Recouvert de tags',
-    'leftUnbalanced'                          => 'Restant déséquilibré',
     'leftInBudget'                            => 'Budget restant',
     'sumOfSums'                               => 'Montant des sommes',
     'noCategory'                              => '(aucune catégorie)',
@@ -964,7 +970,7 @@ return [
     'account_role_sharedAsset'                => 'Compte d\'actif partagé',
     'account_role_savingAsset'                => 'Compte d’épargne',
     'account_role_ccAsset'                    => 'Carte de crédit',
-    'account_role_cashWalletAsset'            => 'Cash wallet',
+    'account_role_cashWalletAsset'            => 'Porte-monnaie',
     'budget_chart_click'                      => 'Cliquez sur le nom du budget dans le tableau ci-dessus pour voir un graphique.',
     'category_chart_click'                    => 'Cliquez sur un nom de catégorie dans le tableau ci-dessus pour voir un graphique.',
     'in_out_accounts'                         => 'Gagné et dépensé par compte',
@@ -1013,6 +1019,7 @@ return [
     'remove_money_from_piggy_title'           => 'Retirer l’argent de la tirelire ":name"',
     'add'                                     => 'Ajouter',
     'no_money_for_piggy'                      => 'Vous n\'avez pas d\'argent à placer dans cette tirelire.',
+    'suggested_savings_per_month'             => 'Suggéré par mois',
 
     'remove'                    => 'Enlever',
     'max_amount_add'            => 'Le montant maximum que vous pouvez ajouter est',
@@ -1024,7 +1031,7 @@ return [
     'events'                    => 'Evènements',
     'target_amount'             => 'Montant cible',
     'start_date'                => 'Date de début',
-    'no_start_date'             => 'No start date',
+    'no_start_date'             => 'Pas de date de début',
     'target_date'               => 'Date cible',
     'no_target_date'            => 'Aucune date butoir',
     'table'                     => 'Tableau',
@@ -1056,7 +1063,7 @@ return [
     'instance_configuration'                => 'Configuration',
     'firefly_instance_configuration'        => 'Options de configuration pour Firefly III',
     'setting_single_user_mode'              => 'Mode utilisateur unique',
-    'setting_single_user_mode_explain'      => 'Par défaut, Firefly III accepte uniquement un (1) enregistrement : vous. Il s\'agit d\'une mesure de sécurité qui empêche les autres d\'utiliser votre instance, à moins que vous ne les autorisiez. Les enregistrements futurs sont bloqués. Lorsque vous désactivez cette case, d\'autres personnes peuvent utiliser votre instance aussi bien, en supposant qu\'elles puissent l\'atteindre (quand il est connecté à Internet).',
+    'setting_single_user_mode_explain'      => 'Par défaut, Firefly III accepte uniquement une (1) inscription : vous. Il s\'agit d\'une mesure de sécurité qui empêche les inconnus d\'utiliser votre instance, à moins que vous ne les y autorisiez. Les inscriptions futures sont bloquées. Lorsque vous désactivez cette case, d\'autres personnes peuvent utiliser votre instance, en supposant qu\'elles puissent l\'atteindre (quand elle est connectée à Internet).',
     'store_configuration'                   => 'Sauvegarder la configuration',
     'single_user_administration'            => 'Gestion de l\'utilisateur pour :email',
     'edit_user'                             => 'Modifier l\'utilisateur :email',
@@ -1066,7 +1073,7 @@ return [
     'total_size'                            => 'taille totale',
     'budget_or_budgets'                     => 'budget(s)',
     'budgets_with_limits'                   => 'budget(s) avec montant configuré',
-    'nr_of_rules_in_total_groups'           => ':count_rules règle(s) dans :count_groups  groupe(s) de règles',
+    'nr_of_rules_in_total_groups'           => ':count_rules règle(s) dans :count_groups groupe(s) de règles',
     'tag_or_tags'                           => 'tag·s',
     'configuration_updated'                 => 'La configuration a été mise à jour',
     'setting_is_demo_site'                  => 'Site de démonstration',
@@ -1128,6 +1135,8 @@ return [
     'is (partially) refunded by_inward'     => 'est (partiellement) remboursé par',
     'is (partially) paid for by_inward'     => 'est (partiellement) payé par',
     'is (partially) reimbursed by_inward'   => 'est (partiellement) remboursé par',
+    'inward_transaction'                    => 'Opération entrante',
+    'outward_transaction'                   => 'Opération sortante',
     'relates to_outward'                    => 'se rapporte à',
     '(partially) refunds_outward'           => 'rembourse (partiellement)',
     '(partially) pays for_outward'          => 'paye (partiellement) pour',
@@ -1148,27 +1157,10 @@ return [
     'no_edit_multiple_left'                 => 'Vous n\'avez sélectionné aucune transaction valide à éditer.',
     'cannot_convert_split_journal'          => 'Vous ne pouvez pas convertir une transaction ventilée',
 
-    // import bread crumbs and titles:
-    'import'                                => 'Import',
+    // Import page (general strings only)
+    'import_index_title'                    => 'Importer des opérations dans Firefly III',
     'import_data'                           => 'Importer des données',
-    'import_general_index_file'             => 'Importer un fichier',
-    'import_from_bunq'                      => 'Importer depuis bunq',
-    'import_using_spectre'                  => 'Importer en utilisant Spectre',
-    'import_using_plaid'                    => 'Importer en utilisant Plaid',
-    'import_config_bread_crumb'             => 'Configurez votre import',
-
-    // import index page:
-    'import_index_title'                    => 'Importer des données dans Firefly III',
-    'import_index_sub_title'                => 'Index',
-    'import_general_index_intro'            => 'Bienvenue dans la routine d\'importation de Firefly III. Il existe différentes façons d\'importer des données dans Firefly III, affichées ici sous forme de boutons.',
-    'upload_error'                          => 'Le fichier que vous avez téléchargé n\'a pas pu être traité. Peut-être qu\'il s\'agit d\'un type de fichier ou d\'un encodage invalide. Plus d\'informations dans les fichiers journaux.',
-    'reset_import_settings_title'           => 'Reset import configuration',
-    'reset_import_settings_text'            => 'You can use these links to reset your import settings for specific providers. This is useful when bad settings stop you from importing data.',
-    'reset_settings_bunq'                   => 'Remove bunq API key, local external IP address and bunq related RSA keys.',
-    'reset_settings_spectre'                => 'Remove Spectre secrets and ID\'s. This will also remove your Spectre keypair. Remember to update the new one.',
-    'settings_reset_for_bunq'               => 'Bunq settings reset.',
-    'settings_reset_for_spectre'            => 'Spectre settings reset.',
-
+    'import_transactions'                   => 'Importer des opérations',
 
     // sandstorm.io errors and messages:
     'sandstorm_not_available'               => 'Cette fonction n\'est pas disponible lorsque vous utilisez Firefly III dans un environnement Sandstorm.io.',
@@ -1218,4 +1210,68 @@ return [
     'no_bills_intro_default'                => 'Vous n\'avez pas encore de factures. Vous pouvez créer des factures pour suivre les dépenses ordinaires, comme votre loyer ou l\'assurance.',
     'no_bills_imperative_default'           => 'Avez-vous des factures régulières ? Créez une facture et suivez vos paiements :',
     'no_bills_create_default'               => 'Créer une facture',
+
+    // recurring transactions
+    'recurrences'                           => 'Opérations périodiques',
+    'no_recurring_title_default'            => 'Créons une opération périodique !',
+    'no_recurring_intro_default'            => 'Vous n’avez pas encore d\'opérations périodiques. Vous pouvez en utiliser pour que Firefly III crée automatiquement des opérations pour vous.',
+    'no_recurring_imperative_default'       => 'Il s’agit d’une fonctionnalité plutôt poussée, mais elle peut être très utile. Assurez-vous de lire la documentation ( icône ? en haut à droite) avant de continuer.',
+    'no_recurring_create_default'           => 'Créer une opération périodique',
+    'make_new_recurring'                    => 'Créer une opération périodique',
+    'recurring_daily'                       => 'Tous les jours',
+    'recurring_weekly'                      => 'Chaque semaine le :weekday',
+    'recurring_monthly'                     => 'Le :dayOfMonth(er/ème) jour de chaque mois',
+    'recurring_ndom'                        => 'Le :dayOfMonth(er/ème) :weekday de chaque mois',
+    'recurring_yearly'                      => 'Chaque année le :date',
+    'overview_for_recurrence'               => 'Aperçu de l’opération périodique ":title"',
+    'warning_duplicates_repetitions'        => 'Dans de rares cas, des dates apparaissent en double dans cette liste. Cela peut arriver lorsque plusieurs répétitions se superposent. Firefly III génèrera toujours une seule transaction par jour.',
+    'created_transactions'                  => 'Opérations associées',
+    'expected_Withdrawals'                  => 'Dépenses attendues',
+    'expected_Deposits'                     => 'Revenus attendus',
+    'expected_Transfers'                    => 'Transferts attendus',
+    'created_Withdrawals'                   => 'Dépenses créées',
+    'created_Deposits'                      => 'Revenus créés',
+    'created_Transfers'                     => 'Transferts créés',
+    'created_from_recurrence'               => 'Créé à partir de l\'opération périodique ":title" (#:id)',
+
+    'recurring_meta_field_tags'          => 'Mots-clés',
+    'recurring_meta_field_notes'         => 'Notes',
+    'recurring_meta_field_bill_id'       => 'Facture',
+    'recurring_meta_field_piggy_bank_id' => 'Tirelire',
+    'create_new_recurrence'              => 'Créer une nouvelle opération périodique',
+    'help_first_date'                    => 'Indiquer la première occurrence attendue. Doit être dans le futur.',
+    'help_first_date_no_past'            => 'Indiquer la première occurrence attendue. Firefly III ne créera pas d\'opérations dans le passé.',
+    'no_currency'                        => '(pas de devise)',
+    'mandatory_for_recurring'            => 'Informations de répétition obligatoires',
+    'mandatory_for_transaction'          => 'Informations d\'opération obligatoires',
+    'optional_for_recurring'             => 'Informations de répétition optionnelles',
+    'optional_for_transaction'           => 'Informations d\'opération optionnelles',
+    'change_date_other_options'          => 'Modifiez la date de début pour voir plus d\'options.',
+    'mandatory_fields_for_tranaction'    => 'Les valeurs ci-dessous seront enregistrées dans les opérations créées',
+    'click_for_calendar'                 => 'Cliquez ici pour voir les répétitions des opérations sur un calendrier.',
+    'repeat_forever'                     => 'Répéter pour toujours',
+    'repeat_until_date'                  => 'Répéter jusqu\'à une date',
+    'repeat_times'                       => 'Répéter un nombre de fois',
+    'recurring_skips_one'                => 'Tous les',
+    'recurring_skips_more'               => 'Passer :count répétitions',
+    'store_new_recurrence'               => 'Enregistrer l\'opération périodique',
+    'stored_new_recurrence'              => 'Opération périodique ":title" enregistrée avec succès.',
+    'edit_recurrence'                    => 'Modifier l\'opération périodique ":title"',
+    'recurring_repeats_until'            => 'Se répète jusqu\'à :date',
+    'recurring_repeats_forever'          => 'Se répète pour toujours',
+    'recurring_repeats_x_times'          => 'Se répète :count fois',
+    'update_recurrence'                  => 'Mettre à jour l\'opération périodique',
+    'updated_recurrence'                 => 'Opération périodique ":title" mise à jour',
+    'recurrence_is_inactive'             => 'Cette opération périodique n’est pas active et ne génère pas de nouvelles opérations.',
+    'delete_recurring'                   => 'Supprimer l\'opération périodique ":title"',
+    'new_recurring_transaction'          => 'Nouvelle opération périodique',
+    'help_weekend'                       => 'Que doit faire Firefly III lorsque l’opération périodique tombe un samedi ou un dimanche ?',
+    'do_nothing'                         => 'Créer l\'opération tout de même',
+    'skip_transaction'                   => 'Ignorer l’occurrence',
+    'jump_to_friday'                     => 'Créer l\'opération le vendredi précédent',
+    'jump_to_monday'                     => 'Créer l\'opération le lundi suivant',
+    'will_jump_friday'                   => 'Sera créé le vendredi plutôt que les week-ends.',
+    'will_jump_monday'                   => 'Sera créé le lundi plutôt que les week-ends.',
+    'except_weekends'                    => 'Sauf les week-ends',
+    'recurrence_deleted'                 => 'Opération périodique ":title" supprimée',
 ];

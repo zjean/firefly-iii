@@ -37,26 +37,24 @@ use Mockery;
 
 /**
  * Class ConfigurationControllerTest
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ReconcileControllerTest extends TestCase
 {
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         Log::debug(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::edit
+     * Test editing a reconciliation.
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testEdit()
+    public function testEdit(): void
     {
         $repository  = $this->mock(JournalRepositoryInterface::class);
         $journal     = $this->user()->transactionJournals()->where('transaction_type_id', 5)->first();
@@ -76,9 +74,11 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::edit
+     * Test the redirect if journal is not a reconciliation.
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testEditRedirect()
+    public function testEditRedirect(): void
     {
         $journal = $this->user()->transactionJournals()->where('transaction_type_id', '!=', 5)->first();
         $this->be($this->user());
@@ -87,51 +87,13 @@ class ReconcileControllerTest extends TestCase
         $response->assertRedirect(route('transactions.edit', [$journal->id]));
     }
 
-    /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::overview()
-     */
-    public function testOverview()
-    {
-        $transactions = $this->user()->transactions()->inRandomOrder()->take(3)->get();
-        $repository   = $this->mock(JournalRepositoryInterface::class);
-        $repository->shouldReceive('firstNull')->andReturn(new TransactionJournal);
-        $repository->shouldReceive('getTransactionsById')->andReturn($transactions)->twice();
-
-        $parameters = [
-            'startBalance' => '0',
-            'endBalance'   => '10',
-            'transactions' => [1, 2, 3],
-            'cleared'      => [4, 5, 6],
-        ];
-        $this->be($this->user());
-        $response = $this->get(route('accounts.reconcile.overview', [1, '20170101', '20170131']) . '?' . http_build_query($parameters));
-        $response->assertStatus(200);
-    }
 
     /**
-     * @covers                   \FireflyIII\Http\Controllers\Account\ReconcileController::overview()
-     * @expectedExceptionMessage is not an asset account
+     * Test showing the reconciliation.
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testOverviewNotAsset()
-    {
-        $account    = $this->user()->accounts()->where('account_type_id', '!=', 3)->first();
-        $parameters = [
-            'startBalance' => '0',
-            'endBalance'   => '10',
-            'transactions' => [1, 2, 3],
-            'cleared'      => [4, 5, 6],
-        ];
-        $this->be($this->user());
-        $response = $this->get(route('accounts.reconcile.overview', [$account->id, '20170101', '20170131']) . '?' . http_build_query($parameters));
-        $response->assertStatus(500);
-    }
-
-    /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::__construct
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::reconcile()
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::redirectToOriginalAccount()
-     */
-    public function testReconcile()
+    public function testReconcile(): void
     {
         $repository = $this->mock(CurrencyRepositoryInterface::class);
         $repository->shouldReceive('findNull')->once()->andReturn(TransactionCurrency::find(1));
@@ -144,11 +106,11 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::__construct
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::reconcile()
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::redirectToOriginalAccount()
+     * Test showing the reconciliation (its a initial balance).
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testReconcileInitialBalance()
+    public function testReconcileInitialBalance(): void
     {
         $transaction = Transaction::leftJoin('accounts', 'accounts.id', '=', 'transactions.account_id')
                                   ->where('accounts.user_id', $this->user()->id)->where('accounts.account_type_id', 6)->first(['account_id']);
@@ -158,11 +120,11 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::__construct
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::reconcile()
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::redirectToOriginalAccount()
+     * Test reconcile view (without date info).
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testReconcileNoDates()
+    public function testReconcileNoDates(): void
     {
         $repository = $this->mock(CurrencyRepositoryInterface::class);
         $repository->shouldReceive('findNull')->once()->andReturn(TransactionCurrency::find(1));
@@ -176,11 +138,11 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::__construct
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::reconcile()
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::redirectToOriginalAccount()
+     * Test reconcile view (without end date).
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testReconcileNoEndDate()
+    public function testReconcileNoEndDate(): void
     {
         $repository = $this->mock(CurrencyRepositoryInterface::class);
         $repository->shouldReceive('findNull')->once()->andReturn(TransactionCurrency::find(1));
@@ -194,11 +156,11 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::__construct
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::reconcile()
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::redirectToOriginalAccount()
+     * Test reconcile view when account is not an asset.
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testReconcileNotAsset()
+    public function testReconcileNotAsset(): void
     {
         $account = $this->user()->accounts()->where('account_type_id', '!=', 6)->where('account_type_id', '!=', 3)->first();
         $this->be($this->user());
@@ -207,9 +169,11 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::show()
+     * Test show for actual reconciliation.
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testShow()
+    public function testShow(): void
     {
         $journal    = $this->user()->transactionJournals()->where('transaction_type_id', 5)->first();
         $repository = $this->mock(JournalRepositoryInterface::class);
@@ -225,9 +189,11 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::show()
+     * Test show for actual reconciliation, but its not a reconciliation.
+     *
+     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController
      */
-    public function testShowSomethingElse()
+    public function testShowSomethingElse(): void
     {
         $journal = $this->user()->transactionJournals()->where('transaction_type_id', '!=', 5)->first();
         $this->be($this->user());
@@ -237,10 +203,12 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController::submit()
+     * Submit reconciliation.
+     *
+     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController
      * @covers       \FireflyIII\Http\Requests\ReconciliationStoreRequest
      */
-    public function testSubmit()
+    public function testSubmit(): void
     {
         $repository   = $this->mock(AccountRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
@@ -266,35 +234,10 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::transactions()
-     */
-    public function testTransactions()
-    {
-        $repository = $this->mock(CurrencyRepositoryInterface::class);
-        $repository->shouldReceive('findNull')->once()->andReturn(TransactionCurrency::find(1));
-
-        $this->be($this->user());
-        $response = $this->get(route('accounts.reconcile.transactions', [1, '20170101', '20170131']));
-        $response->assertStatus(200);
-    }
-
-    /**
-     * @covers \FireflyIII\Http\Controllers\Account\ReconcileController::transactions()
-     */
-    public function testTransactionsInitialBalance()
-    {
-        $transaction = Transaction::leftJoin('accounts', 'accounts.id', '=', 'transactions.account_id')
-                                  ->where('accounts.user_id', $this->user()->id)->where('accounts.account_type_id', 6)->first(['account_id']);
-        $this->be($this->user());
-        $response = $this->get(route('accounts.reconcile.transactions', [$transaction->account_id, '20170101', '20170131']));
-        $response->assertStatus(302);
-    }
-
-    /**
-     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController::update
+     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController
      * @covers       \FireflyIII\Http\Requests\ReconciliationUpdateRequest
      */
-    public function testUpdate()
+    public function testUpdate(): void
     {
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('firstNull')->andReturn(new TransactionJournal);
@@ -314,10 +257,10 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController::update
+     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController
      * @covers       \FireflyIII\Http\Requests\ReconciliationUpdateRequest
      */
-    public function testUpdateNotReconcile()
+    public function testUpdateNotReconcile(): void
     {
         $journal = $this->user()->transactionJournals()->where('transaction_type_id', '!=', 5)->first();
         $data    = [
@@ -331,10 +274,10 @@ class ReconcileControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController::update
+     * @covers       \FireflyIII\Http\Controllers\Account\ReconcileController
      * @covers       \FireflyIII\Http\Requests\ReconciliationUpdateRequest
      */
-    public function testUpdateZero()
+    public function testUpdateZero(): void
     {
         $journal = $this->user()->transactionJournals()->where('transaction_type_id', 5)->first();
         $data    = [

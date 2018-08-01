@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * firefly.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -20,6 +19,8 @@ declare(strict_types=1);
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
+declare(strict_types=1);
 
 return [
     // general stuff:
@@ -179,6 +180,7 @@ return [
     'authorization_request_intro'                => '<strong>:client</strong> vraagt ​​toestemming om toegang te krijgen tot je financiële administratie. Wil je <strong>:client</strong> autoriseren om toegang te krijgen tot je gegevens?',
     'scopes_will_be_able'                        => 'Deze applicatie krijgt toegang tot:',
     'button_authorize'                           => 'Toestaan',
+    'none_in_select_list'                        => '(geen)',
 
     // check for updates:
     'update_check_title'                         => 'Op updates controleren',
@@ -463,6 +465,7 @@ return [
     'pref_two_factor_auth_code_help'          => 'Scan deze QR code met een app op je telefoon (zoals Authy of Google Authenticator). Vul de code die je terug krijgt hier in.',
     'pref_two_factor_auth_reset_code'         => 'Reset de verificatiecode',
     'pref_two_factor_auth_disable_2fa'        => '2FA uitzetten',
+    '2fa_use_secret_instead'                  => 'Als je de QR code niet kan scannen gebruik dan de geheime code: :secret.',
     'pref_save_settings'                      => 'Instellingen opslaan',
     'saved_preferences'                       => 'Voorkeuren opgeslagen!',
     'preferences_general'                     => 'Algemeen',
@@ -604,6 +607,7 @@ return [
     'cannot_delete_currency'                  => 'Kan ":name" niet verwijderen, want deze is in gebruik.',
     'deleted_currency'                        => 'Valuta :name verwijderd',
     'created_currency'                        => 'Nieuwe valuta :name opgeslagen',
+    'could_not_store_currency'                => 'Kon nieuwe valuta niet opslaan.',
     'updated_currency'                        => 'Valuta :name bijgewerkt',
     'ask_site_owner'                          => 'Vraag :owner of deze valuta wilt toevoegen, verwijderen of wijzigen.',
     'currencies_intro'                        => 'Firefly III ondersteunt diverse valuta die je hier kan instellen en bewerken.',
@@ -666,6 +670,7 @@ return [
     'bill_will_automatch'                     => 'Waar van toepassing wordt dit contract automatisch gekoppeld aan transacties',
     'skips_over'                              => 'slaat over',
     'bill_store_error'                        => 'Er ging wat fout bij het opslaan van het contract. Kijk in de logbestanden',
+    'list_inactive_rule'                      => 'inactieve regel',
 
     // accounts:
     'details_for_asset'                       => 'Overzicht voor betaalrekening ":name"',
@@ -801,6 +806,7 @@ return [
     'opt_group_savingAsset'                   => 'Spaarrekeningen',
     'opt_group_sharedAsset'                   => 'Gedeelde betaalrekeningen',
     'opt_group_ccAsset'                       => 'Creditcards',
+    'opt_group_cashWalletAsset'               => 'Cash portomonees',
     'notes'                                   => 'Notities',
     'unknown_journal_error'                   => 'Kon de transactie niet opslaan. Kijk in de logbestanden.',
 
@@ -816,6 +822,7 @@ return [
     'language'                                => 'Taal',
     'new_savings_account'                     => ':bank_name spaarrekening',
     'cash_wallet'                             => 'Cash-rekening',
+    'currency_not_present'                    => 'Geen zorgen als de valuta die je gewend bent er niet tussen staat. Je kan je eigen valuta maken onder Opties > Valuta.',
 
     // home page:
     'yourAccounts'                            => 'Je betaalrekeningen',
@@ -895,7 +902,6 @@ return [
     'balanceEnd'                              => 'Saldo aan het einde van de periode',
     'splitByAccount'                          => 'Per betaalrekening',
     'coveredWithTags'                         => 'Gecorrigeerd met tags',
-    'leftUnbalanced'                          => 'Ongecorrigeerd',
     'leftInBudget'                            => 'Over van budget',
     'sumOfSums'                               => 'Alles bij elkaar',
     'noCategory'                              => '(zonder categorie)',
@@ -1013,6 +1019,7 @@ return [
     'remove_money_from_piggy_title'           => 'Haal geld uit spaarpotje ":name"',
     'add'                                     => 'Toevoegen',
     'no_money_for_piggy'                      => 'Er is geen geld voor dit spaarpotje.',
+    'suggested_savings_per_month'             => 'Voorgesteld per maand',
 
     'remove'                    => 'Verwijderen',
     'max_amount_add'            => 'Hooguit toe te voegen',
@@ -1128,6 +1135,8 @@ return [
     'is (partially) refunded by_inward'     => 'wordt (deels) terugbetaald door',
     'is (partially) paid for by_inward'     => 'wordt (deels) betaald door',
     'is (partially) reimbursed by_inward'   => 'wordt (deels) vergoed door',
+    'inward_transaction'                    => 'Actieve transactie',
+    'outward_transaction'                   => 'Passieve transactie',
     'relates to_outward'                    => 'gerelateerd aan',
     '(partially) refunds_outward'           => 'is een (gedeeltelijke) terugbetaling voor',
     '(partially) pays for_outward'          => 'betaalt (deels) voor',
@@ -1148,27 +1157,10 @@ return [
     'no_edit_multiple_left'                 => 'Je hebt geen geldige transacties geselecteerd.',
     'cannot_convert_split_journal'          => 'Kan geen gesplitste transactie omzetten',
 
-    // import bread crumbs and titles:
-    'import'                                => 'Import',
+    // Import page (general strings only)
+    'import_index_title'                    => 'Transacties importeren in Firefly III',
     'import_data'                           => 'Importeer data',
-    'import_general_index_file'             => 'Importeer een bestand',
-    'import_from_bunq'                      => 'Importeer uit bunq',
-    'import_using_spectre'                  => 'Importeer via Spectre',
-    'import_using_plaid'                    => 'Importeer via Plaid',
-    'import_config_bread_crumb'             => 'Instellen van je import',
-
-    // import index page:
-    'import_index_title'                    => 'Gegevens importeren in Firefly III',
-    'import_index_sub_title'                => 'Index',
-    'import_general_index_intro'            => 'Dit is de import-routine van Firefly III. Er zijn verschillende manieren om gegevens te importeren in Firefly III, hier als knoppen weergegeven.',
-    'upload_error'                          => 'Het bestand dat je hebt geüpload kan niet gebruikt worden. Het is wellicht het verkeerde type of de verkeerde encoding. In de logbestanden staat meer info.',
-    'reset_import_settings_title'           => 'Reset importconfiguratie',
-    'reset_import_settings_text'            => 'Gebruik deze links om importinstellingen voor specifieke providers te resetten. Handig als verkeerde instellingen voorkomen dat je verder kan.',
-    'reset_settings_bunq'                   => 'Verwijdert de bunq API key, je externe IP adres zoals Firefly III die kent, en de voor bunq gegenereerde RSA sleutels.',
-    'reset_settings_spectre'                => 'Verwijdert je Spectre secrets en ID\'s. Dit verwijdert ook je Spectre keypair. Vergeet die niet te updaten.',
-    'settings_reset_for_bunq'               => 'Bunq-instellingen zijn gereset.',
-    'settings_reset_for_spectre'            => 'Spectre-instellingen zijn gereset.',
-
+    'import_transactions'                   => 'Importeer transacties',
 
     // sandstorm.io errors and messages:
     'sandstorm_not_available'               => 'Deze functie werkt niet als je Firefly III gebruikt in combinatie met Sandstorm.IO.',
@@ -1218,4 +1210,68 @@ return [
     'no_bills_intro_default'                => 'Je hebt nog geen contracten. Je kan contracten gebruiken om terugkerende uitgaven bij te houden, zoals de huur of verzekeringen.',
     'no_bills_imperative_default'           => 'Heb je zulke uitgaven? Maak dan een contract en houd de betalingen bij:',
     'no_bills_create_default'               => 'Maak een contract',
+
+    // recurring transactions
+    'recurrences'                           => 'Periodieke transacties',
+    'no_recurring_title_default'            => 'Maak een periodieke transactie!',
+    'no_recurring_intro_default'            => 'Je hebt nog geen periodieke transacties. Je kan deze gebruiken om er voor te zorgen dat Firefly III automatisch nieuwe transacties voor je maakt.',
+    'no_recurring_imperative_default'       => 'Dit is een behoorlijk geadvanceerde functie maar het kan vreselijk handig zijn. Lees ook zeker de documentatie (?)-icoontje rechtsboven) voor je verder gaat.',
+    'no_recurring_create_default'           => 'Maak een periodieke transactie',
+    'make_new_recurring'                    => 'Maak een periodieke transactie',
+    'recurring_daily'                       => 'Elke dag',
+    'recurring_weekly'                      => 'Elke week op :weekday',
+    'recurring_monthly'                     => 'Elke maand op de :dayOfMonth(e) dag',
+    'recurring_ndom'                        => 'Elke maand op de :dayOfMonth(e) :weekday',
+    'recurring_yearly'                      => 'Elk jaar op :date',
+    'overview_for_recurrence'               => 'Overzicht voor periodieke transactie ":title"',
+    'warning_duplicates_repetitions'        => 'Soms zie je hier datums dubbel staan. Dat kan als meerdere herhalingen in elkaars vaarwater zitten. Firefly III maakt altijd maar één transactie per dag.',
+    'created_transactions'                  => 'Gerelateerde transacties',
+    'expected_Withdrawals'                  => 'Verwachte uitgaven',
+    'expected_Deposits'                     => 'Verwachte inkomsten',
+    'expected_Transfers'                    => 'Verwachte overschrijvingen',
+    'created_Withdrawals'                   => 'Gemaakte uitgaven',
+    'created_Deposits'                      => 'Gemaakte inkomsten',
+    'created_Transfers'                     => 'Gemaakte overschrijvingen',
+    'created_from_recurrence'               => 'Gemaakt door periodieke transactie ":title" (#:id)',
+
+    'recurring_meta_field_tags'          => 'Tags',
+    'recurring_meta_field_notes'         => 'Notities',
+    'recurring_meta_field_bill_id'       => 'Contract',
+    'recurring_meta_field_piggy_bank_id' => 'Spaarpotje',
+    'create_new_recurrence'              => 'Maak een nieuwe periodieke transactie',
+    'help_first_date'                    => 'Geef aan wanneer je de eerste transactie verwacht. Dit moet in de toekomst zijn.',
+    'help_first_date_no_past'            => 'Geef aan wanneer je de eerste transactie verwacht. Firefly III zal geen transacties in het verleden maken.',
+    'no_currency'                        => '(geen valuta)',
+    'mandatory_for_recurring'            => 'Verplichte periodieke informatie',
+    'mandatory_for_transaction'          => 'Verplichte transactieinformatie',
+    'optional_for_recurring'             => 'Optionele periodieke informatie',
+    'optional_for_transaction'           => 'Optionele transactieinformatie',
+    'change_date_other_options'          => 'Wijzig de "eerste datum" om meer opties te zien.',
+    'mandatory_fields_for_tranaction'    => 'De waarden die je hier invult worden gebruikt om de transactie(s) te maken',
+    'click_for_calendar'                 => 'Hier vind je een kalender die laat zien wanneer de transactie zal herhalen.',
+    'repeat_forever'                     => 'Voor altijd herhalen',
+    'repeat_until_date'                  => 'Herhalen tot een datum',
+    'repeat_times'                       => 'Een aantal maal herhalen',
+    'recurring_skips_one'                => 'Elke tweede',
+    'recurring_skips_more'               => 'Slaat :count keer over',
+    'store_new_recurrence'               => 'Sla periodieke transactie op',
+    'stored_new_recurrence'              => 'Periodieke transactie ":title" is opgeslagen.',
+    'edit_recurrence'                    => 'Wijzig periodieke transactie ":title"',
+    'recurring_repeats_until'            => 'Herhaalt tot :date',
+    'recurring_repeats_forever'          => 'Blijft herhalen',
+    'recurring_repeats_x_times'          => 'Herhaalt :count keer',
+    'update_recurrence'                  => 'Wijzig periodieke transactie',
+    'updated_recurrence'                 => 'Periodieke transactie ":title" is gewijzigd',
+    'recurrence_is_inactive'             => 'Deze periodieke transactie is niet actief en maakt geen transacties aan.',
+    'delete_recurring'                   => 'Verwijder periodieke transactie ":title"',
+    'new_recurring_transaction'          => 'Nieuwe periodieke transactie',
+    'help_weekend'                       => 'Wat moet Firefly III doen als de periodieke transactie in het weekend valt?',
+    'do_nothing'                         => 'Gewoon transactie maken',
+    'skip_transaction'                   => 'Transactie overslaan',
+    'jump_to_friday'                     => 'Transactie maken op de vrijdag ervoor',
+    'jump_to_monday'                     => 'Transactie maken op de maandag erna',
+    'will_jump_friday'                   => 'Wordt op de vrijdag ervoor gemaakt i.p.v. in het weekend.',
+    'will_jump_monday'                   => 'Wordt op de maandag erna gemaakt i. p. v. in het weekend.',
+    'except_weekends'                    => 'Behalve de weekenden',
+    'recurrence_deleted'                 => 'Periodieke transactie ":title" verwijderd',
 ];

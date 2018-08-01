@@ -37,10 +37,12 @@ class AddTagTest extends TestCase
      * @covers \FireflyIII\TransactionRules\Actions\AddTag::__construct
      * @covers \FireflyIII\TransactionRules\Actions\AddTag::act()
      */
-    public function testActExistingTag()
+    public function testActExistingTag(): void
     {
-        $tag     = Tag::inRandomOrder()->whereNull('deleted_at')->first();
-        $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
+        $tag     = $this->user()->tags()->inRandomOrder()->whereNull('deleted_at')->first();
+        /** @var TransactionJournal $journal */
+        $journal = $this->user()->transactionJournals()->inRandomOrder()->whereNull('deleted_at')->first();
+        $journal->tags()->sync([]);
         $journal->tags()->sync([$tag->id]);
         $this->assertDatabaseHas('tag_transaction_journal', ['tag_id' => $tag->id, 'transaction_journal_id' => $journal->id]);
         $ruleAction               = new RuleAction;
@@ -55,11 +57,11 @@ class AddTagTest extends TestCase
     /**
      * @covers \FireflyIII\TransactionRules\Actions\AddTag::act()
      */
-    public function testActNoTag()
+    public function testActNoTag(): void
     {
         $journal                  = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
         $ruleAction               = new RuleAction;
-        $ruleAction->action_value = 'TestTag-' . random_int(1, 1000);
+        $ruleAction->action_value = 'TestTag-' . random_int(1, 10000);
         $action                   = new AddTag($ruleAction);
         $result                   = $action->act($journal);
         $this->assertTrue($result);

@@ -37,33 +37,8 @@ use Illuminate\Support\Collection;
 class PopupReport implements PopupReportInterface
 {
     /**
-     * @param $account
-     * @param $attributes
+     * Collect the tranactions for one account and one budget.
      *
-     * @return Collection
-     */
-    public function balanceDifference($account, $attributes): Collection
-    {
-        // row that displays difference
-        /** @var JournalCollectorInterface $collector */
-        $collector = app(JournalCollectorInterface::class);
-        $collector
-            ->setAccounts(new Collection([$account]))
-            ->setTypes([TransactionType::WITHDRAWAL])
-            ->setRange($attributes['startDate'], $attributes['endDate'])
-            ->withoutBudget();
-        $journals = $collector->getJournals();
-
-        return $journals->filter(
-            function (Transaction $transaction) {
-                $tags = $transaction->transactionJournal->tags()->where('tagMode', 'balancingAct')->count();
-
-                return 0 === $tags;
-            }
-        );
-    }
-
-    /**
      * @param Budget  $budget
      * @param Account $account
      * @param array   $attributes
@@ -80,6 +55,8 @@ class PopupReport implements PopupReportInterface
     }
 
     /**
+     * Collect the tranactions for one account and no budget.
+     *
      * @param Account $account
      * @param array   $attributes
      *
@@ -99,6 +76,8 @@ class PopupReport implements PopupReportInterface
     }
 
     /**
+     * Collect the tranactions for a budget.
+     *
      * @param Budget $budget
      * @param array  $attributes
      *
@@ -122,6 +101,8 @@ class PopupReport implements PopupReportInterface
     }
 
     /**
+     * Collect journals by a category.
+     *
      * @param Category $category
      * @param array    $attributes
      *
@@ -139,6 +120,8 @@ class PopupReport implements PopupReportInterface
     }
 
     /**
+     * Group transactions by expense.
+     *
      * @param Account $account
      * @param array   $attributes
      *
@@ -146,6 +129,10 @@ class PopupReport implements PopupReportInterface
      */
     public function byExpenses(Account $account, array $attributes): Collection
     {
+        /** @var JournalRepositoryInterface $repository */
+        $repository = app(JournalRepositoryInterface::class);
+        $repository->setUser($account->user);
+
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
 
@@ -157,9 +144,9 @@ class PopupReport implements PopupReportInterface
 
         // filter for transfers and withdrawals TO the given $account
         $journals = $journals->filter(
-            function (Transaction $transaction) use ($report) {
+            function (Transaction $transaction) use ($report, $repository) {
                 // get the destinations:
-                $sources = $transaction->transactionJournal->sourceAccountList()->pluck('id')->toArray();
+                $sources = $repository->getJournalSourceAccounts($transaction->transactionJournal)->pluck('id')->toArray();
 
                 // do these intersect with the current list?
                 return !empty(array_intersect($report, $sources));
@@ -170,6 +157,8 @@ class PopupReport implements PopupReportInterface
     }
 
     /**
+     * Collect transactions by income.
+     *
      * @param Account $account
      * @param array   $attributes
      *

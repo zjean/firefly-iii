@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 /**
  * list.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -21,6 +20,8 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 return [
     'buttons'                 => 'Boutons',
     'icon'                    => 'Icône',
@@ -33,7 +34,7 @@ return [
     'name'                    => 'Nom',
     'role'                    => 'Rôle',
     'currentBalance'          => 'Solde courant',
-    'linked_to_rules'         => 'Relevant rules',
+    'linked_to_rules'         => 'Règles applicables',
     'active'                  => 'Actif ?',
     'lastActivity'            => 'Activité récente',
     'balanceDiff'             => 'Différence d\'équilibre',
@@ -111,10 +112,20 @@ return [
     'sepa-cc'                 => 'Code de compensation SEPA',
     'sepa-ep'                 => 'Objectif externe SEPA',
     'sepa-ci'                 => 'Identifiant SEPA Creditor',
+    'external_id'             => 'ID externe',
     'account_at_bunq'         => 'Compte avec bunq',
-    'file_name'               => 'File name',
-    'file_size'               => 'File size',
-    'file_type'               => 'File type',
-    'attached_to'             => 'Attached to',
-    'file_exists'             => 'File exists',
+    'file_name'               => 'Nom du fichier',
+    'file_size'               => 'Taille du fichier',
+    'file_type'               => 'Type de fichier',
+    'attached_to'             => 'Attaché à',
+    'file_exists'             => 'Le fichier existe',
+    'spectre_bank'            => 'Banque',
+    'spectre_last_use'        => 'Dernière connexion',
+    'spectre_status'          => 'Statut',
+    'bunq_payment_id'         => 'ID de paiement bunq',
+    'repetitions'             => 'Répétitions',
+    'title'                   => 'Titre',
+    'transaction_s'           => 'Opération(s)',
+    'field'                   => 'Champ',
+    'value'                   => 'Valeur',
 ];

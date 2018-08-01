@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * AccountController.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -20,6 +19,7 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
 
 namespace FireflyIII\Api\V1\Controllers;
 
@@ -29,6 +29,8 @@ use FireflyIII\Models\AccountType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Transformers\AccountTransformer;
+use FireflyIII\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use League\Fractal\Manager;
@@ -36,34 +38,35 @@ use League\Fractal\Pagination\IlluminatePaginatorAdapter;
 use League\Fractal\Resource\Collection as FractalCollection;
 use League\Fractal\Resource\Item;
 use League\Fractal\Serializer\JsonApiSerializer;
-use Preferences;
 
 /**
- * Class AccountController
+ * Class AccountController.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class AccountController extends Controller
 {
-    /** @var CurrencyRepositoryInterface */
+    /** @var CurrencyRepositoryInterface The currency repository */
     private $currencyRepository;
-    /** @var AccountRepositoryInterface */
+    /** @var AccountRepositoryInterface The account repository */
     private $repository;
 
     /**
      * AccountController constructor.
-     *
-     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function __construct()
     {
         parent::__construct();
         $this->middleware(
             function ($request, $next) {
+                /** @var User $user */
+                $user = auth()->user();
                 // @var AccountRepositoryInterface repository
                 $this->repository = app(AccountRepositoryInterface::class);
-                $this->repository->setUser(auth()->user());
+                $this->repository->setUser($user);
 
                 $this->currencyRepository = app(CurrencyRepositoryInterface::class);
-                $this->currencyRepository->setUser(auth()->user());
+                $this->currencyRepository->setUser($user);
 
                 return $next($request);
             }
@@ -75,9 +78,9 @@ class AccountController extends Controller
      *
      * @param \FireflyIII\Models\Account $account
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function delete(Account $account)
+    public function delete(Account $account): JsonResponse
     {
         $this->repository->destroy($account, null);
 
@@ -89,12 +92,12 @@ class AccountController extends Controller
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         // create some objects:
-        $manager = new Manager();
+        $manager = new Manager;
         $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
 
         // read type from URI
@@ -103,7 +106,7 @@ class AccountController extends Controller
 
         // types to get, page size:
         $types    = $this->mapTypes($this->parameters->get('type'));
-        $pageSize = (int)Preferences::getForUser(auth()->user(), 'listPageSize', 50)->data;
+        $pageSize = (int)app('preferences')->getForUser(auth()->user(), 'listPageSize', 50)->data;
 
         // get list of accounts. Count it and split it.
         $collection = $this->repository->getAccountsByType($types);
@@ -123,14 +126,16 @@ class AccountController extends Controller
     }
 
     /**
+     * Show single instance.
+     *
      * @param Request $request
      * @param Account $account
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Request $request, Account $account)
+    public function show(Request $request, Account $account): JsonResponse
     {
-        $manager = new Manager();
+        $manager = new Manager;
 
         // add include parameter:
         $include = $request->get('include') ?? '';
@@ -144,11 +149,13 @@ class AccountController extends Controller
     }
 
     /**
+     * Store a new instance.
+     *
      * @param AccountRequest $request
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(AccountRequest $request)
+    public function store(AccountRequest $request): JsonResponse
     {
         $data = $request->getAll();
         // if currency ID is 0, find the currency by the code:
@@ -157,7 +164,7 @@ class AccountController extends Controller
             $data['currency_id'] = null === $currency ? 0 : $currency->id;
         }
         $account = $this->repository->store($data);
-        $manager = new Manager();
+        $manager = new Manager;
         $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
         $manager->setSerializer(new JsonApiSerializer($baseUrl));
 
@@ -174,7 +181,7 @@ class AccountController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(AccountRequest $request, Account $account)
+    public function update(AccountRequest $request, Account $account): JsonResponse
     {
         $data = $request->getAll();
         // if currency ID is 0, find the currency by the code:
@@ -185,7 +192,7 @@ class AccountController extends Controller
         // set correct type:
         $data['type'] = config('firefly.shortNamesByFullName.' . $account->accountType->type);
         $this->repository->update($account, $data);
-        $manager = new Manager();
+        $manager = new Manager;
         $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
         $manager->setSerializer(new JsonApiSerializer($baseUrl));
 
@@ -195,52 +202,25 @@ class AccountController extends Controller
     }
 
     /**
+     * All the available types.
+     *
      * @param string $type
      *
      * @return array
      */
     private function mapTypes(string $type): array
     {
-        $types = [
-            'all'                        => [
-                AccountType::DEFAULT,
-                AccountType::CASH,
-                AccountType::ASSET,
-                AccountType::EXPENSE,
-                AccountType::REVENUE,
-                AccountType::INITIAL_BALANCE,
-                AccountType::BENEFICIARY,
-                AccountType::IMPORT,
-                AccountType::RECONCILIATION,
-                AccountType::LOAN,
-            ],
-            'asset'                      => [
-                AccountType::DEFAULT,
-                AccountType::ASSET,
-            ],
-            'cash'                       => [
-                AccountType::CASH,
-            ],
-            'expense'                    => [
-                AccountType::EXPENSE,
-                AccountType::BENEFICIARY,
-            ],
-            'revenue'                    => [
-                AccountType::REVENUE,
-            ],
-            'special'                    => [
-                AccountType::CASH,
-                AccountType::INITIAL_BALANCE,
-                AccountType::IMPORT,
-                AccountType::RECONCILIATION,
-                AccountType::LOAN,
-            ],
-            'hidden'                     => [
-                AccountType::INITIAL_BALANCE,
-                AccountType::IMPORT,
-                AccountType::RECONCILIATION,
-                AccountType::LOAN,
-            ],
+        $types  = [
+            'all'                        => [AccountType::DEFAULT, AccountType::CASH, AccountType::ASSET, AccountType::EXPENSE, AccountType::REVENUE,
+                                             AccountType::INITIAL_BALANCE, AccountType::BENEFICIARY, AccountType::IMPORT, AccountType::RECONCILIATION,
+                                             AccountType::LOAN,],
+            'asset'                      => [AccountType::DEFAULT, AccountType::ASSET,],
+            'cash'                       => [AccountType::CASH,],
+            'expense'                    => [AccountType::EXPENSE, AccountType::BENEFICIARY,],
+            'revenue'                    => [AccountType::REVENUE,],
+            'special'                    => [AccountType::CASH, AccountType::INITIAL_BALANCE, AccountType::IMPORT, AccountType::RECONCILIATION,
+                                             AccountType::LOAN,],
+            'hidden'                     => [AccountType::INITIAL_BALANCE, AccountType::IMPORT, AccountType::RECONCILIATION, AccountType::LOAN,],
             AccountType::DEFAULT         => [AccountType::DEFAULT],
             AccountType::CASH            => [AccountType::CASH],
             AccountType::ASSET           => [AccountType::ASSET],
@@ -252,10 +232,11 @@ class AccountController extends Controller
             AccountType::RECONCILIATION  => [AccountType::RECONCILIATION],
             AccountType::LOAN            => [AccountType::LOAN],
         ];
+        $return = $types['all'];
         if (isset($types[$type])) {
-            return $types[$type];
+            $return = $types[$type];
         }
 
-        return $types['all']; // @codeCoverageIgnore
+        return $return; // @codeCoverageIgnore
     }
 }

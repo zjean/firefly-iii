@@ -31,7 +31,7 @@ class MassEditJournalRequest extends Request
     /**
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         // Only allow logged in users
         return auth()->check();
@@ -40,16 +40,16 @@ class MassEditJournalRequest extends Request
     /**
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         // fixed
 
         return [
-            'description.*'            => 'required|min:1,max:255',
-            'source_account_id.*'      => 'numeric|belongsToUser:accounts,id',
-            'destination_account_id.*' => 'numeric|belongsToUser:accounts,id',
-            'revenue_account'          => 'max:255',
-            'expense_account'          => 'max:255',
+            'description.*'    => 'required|min:1,max:255',
+            'source_id.*'      => 'numeric|belongsToUser:accounts,id',
+            'destination_id.*' => 'numeric|belongsToUser:accounts,id',
+            'revenue_account'  => 'max:255',
+            'expense_account'  => 'max:255',
         ];
     }
 }

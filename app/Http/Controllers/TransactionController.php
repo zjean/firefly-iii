@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+/** @noinspection CallableParameterUseCaseInTypeContextInspection */
+/** @noinspection MoreThanThreeArgumentsInspection */
 declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers;
@@ -34,15 +36,17 @@ use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\LinkType\LinkTypeRepositoryInterface;
 use FireflyIII\Transformers\TransactionTransformer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Log;
-use Preferences;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use View;
 
 /**
  * Class TransactionController.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class TransactionController extends Controller
 {
@@ -58,7 +62,7 @@ class TransactionController extends Controller
 
         $this->middleware(
             function ($request, $next) {
-                app('view')->share('title', trans('firefly.transactions'));
+                app('view')->share('title', (string)trans('firefly.transactions'));
                 app('view')->share('mainTitleIcon', 'fa-repeat');
                 $this->repository = app(JournalRepositoryInterface::class);
 
@@ -70,21 +74,19 @@ class TransactionController extends Controller
     /**
      * Index for a range of transactions.
      *
-     * @param Request $request
-     * @param string  $what
-     * @param Carbon  $start
-     * @param Carbon  $end
+     * @param Request     $request
+     * @param string      $what
+     * @param Carbon|null $start
+     * @param Carbon|null $end
      *
-     * @return View
-     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index(Request $request, string $what, Carbon $start = null, Carbon $end = null)
     {
         $subTitleIcon = config('firefly.transactionIconsByWhat.' . $what);
         $types        = config('firefly.transactionTypesByWhat.' . $what);
         $page         = (int)$request->get('page');
-        $pageSize     = (int)Preferences::get('listPageSize', 50)->data;
-        $path         = route('transactions.index', [$what]);
+        $pageSize     = (int)app('preferences')->get('listPageSize', 50)->data;
         if (null === $start) {
             $start = session('start');
             $end   = session('end');
@@ -96,9 +98,12 @@ class TransactionController extends Controller
         if ($end < $start) {
             [$start, $end] = [$end, $start];
         }
+
+        $path = route('transactions.index', [$what, $start->format('Y-m-d'), $end->format('Y-m-d')]);
+
         $startStr = $start->formatLocalized($this->monthAndDayFormat);
         $endStr   = $end->formatLocalized($this->monthAndDayFormat);
-        $subTitle = trans('firefly.title_' . $what . '_between', ['start' => $startStr, 'end' => $endStr]);
+        $subTitle = (string)trans('firefly.title_' . $what . '_between', ['start' => $startStr, 'end' => $endStr]);
         $periods  = $this->getPeriodOverview($what, $end);
 
         /** @var JournalCollectorInterface $collector */
@@ -126,12 +131,12 @@ class TransactionController extends Controller
         $subTitleIcon = config('firefly.transactionIconsByWhat.' . $what);
         $types        = config('firefly.transactionTypesByWhat.' . $what);
         $page         = (int)$request->get('page');
-        $pageSize     = (int)Preferences::get('listPageSize', 50)->data;
+        $pageSize     = (int)app('preferences')->get('listPageSize', 50)->data;
         $path         = route('transactions.index.all', [$what]);
         $first        = $this->repository->firstNull();
         $start        = null === $first ? new Carbon : $first->date;
         $end          = new Carbon;
-        $subTitle     = trans('firefly.all_' . $what);
+        $subTitle     = (string)trans('firefly.all_' . $what);
 
         /** @var JournalCollectorInterface $collector */
         $collector = app(JournalCollectorInterface::class);
@@ -150,17 +155,18 @@ class TransactionController extends Controller
     /**
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function reconcile(Request $request)
+    public function reconcile(Request $request): JsonResponse
     {
         $transactionIds = $request->get('transactions');
         foreach ($transactionIds as $transactionId) {
             $transactionId = (int)$transactionId;
             $transaction   = $this->repository->findTransaction($transactionId);
-            Log::debug(sprintf('Transaction ID is %d', $transaction->id));
-
-            $this->repository->reconcile($transaction);
+            if (null !== $transaction) {
+                Log::debug(sprintf('Transaction ID is %d', $transaction->id));
+                $this->repository->reconcile($transaction);
+            }
         }
 
         return response()->json(['ok' => 'reconciled']);
@@ -170,8 +176,9 @@ class TransactionController extends Controller
      * @param Request $request
      *
      * @return \Illuminate\Http\JsonResponse
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    public function reorder(Request $request)
+    public function reorder(Request $request): JsonResponse
     {
         $ids  = $request->get('items');
         $date = new Carbon($request->get('date'));
@@ -179,14 +186,14 @@ class TransactionController extends Controller
             $order = 0;
             $ids   = array_unique($ids);
             foreach ($ids as $id) {
-                $journal = $this->repository->find((int)$id);
-                if ($journal && $journal->date->isSameDay($date)) {
+                $journal = $this->repository->findNull((int)$id);
+                if (null !== $journal && $journal->date->isSameDay($date)) {
                     $this->repository->setOrder($journal, $order);
                     ++$order;
                 }
             }
         }
-        Preferences::mark();
+        app('preferences')->mark();
 
         return response()->json([true]);
     }
@@ -226,7 +233,7 @@ class TransactionController extends Controller
 
         $events   = $this->repository->getPiggyBankEvents($journal);
         $what     = strtolower($transactionType);
-        $subTitle = trans('firefly.' . $what) . ' "' . $journal->description . '"';
+        $subTitle = (string)trans('firefly.' . $what) . ' "' . $journal->description . '"';
 
         return view('transactions.show', compact('journal', 'events', 'subTitle', 'what', 'transactions', 'linkTypes', 'links'));
     }
@@ -237,10 +244,13 @@ class TransactionController extends Controller
      * @param Carbon $date
      *
      * @return Collection
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function getPeriodOverview(string $what, Carbon $date): Collection
     {
-        $range = Preferences::get('viewRange', '1M')->data;
+        $range = app('preferences')->get('viewRange', '1M')->data;
         $first = $this->repository->firstNull();
         $start = new Carbon;
         $start->subYear();
@@ -267,11 +277,12 @@ class TransactionController extends Controller
                 $sums     = $this->sumPerCurrency($journals);
                 $dateName = app('navigation')->periodShow($currentDate['start'], $currentDate['period']);
                 $sum      = $journals->sum('transaction_amount');
+                /** @noinspection PhpUndefinedMethodInspection */
                 $entries->push(
                     [
-                        'name'  => $dateName,
-                        'sums'  => $sums,
-                        'sum'   => $sum,
+                        'name' => $dateName,
+                        'sums' => $sums,
+                        'sum'  => $sum,
                         'start' => $currentDate['start']->format('Y-m-d'),
                         'end'   => $currentDate['end']->format('Y-m-d'),
                     ]

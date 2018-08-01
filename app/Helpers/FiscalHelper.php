@@ -23,7 +23,6 @@ declare(strict_types=1);
 namespace FireflyIII\Helpers;
 
 use Carbon\Carbon;
-use Preferences;
 
 /**
  * Class FiscalHelper.
@@ -38,7 +37,7 @@ class FiscalHelper implements FiscalHelperInterface
      */
     public function __construct()
     {
-        $this->useCustomFiscalYear = Preferences::get('customFiscalYear', false)->data;
+        $this->useCustomFiscalYear = app('preferences')->get('customFiscalYear', false)->data;
     }
 
     /**
@@ -54,10 +53,10 @@ class FiscalHelper implements FiscalHelperInterface
             // add 1 year and sub 1 day
             $endDate->addYear();
             $endDate->subDay();
-
-            return $endDate;
         }
-        $endDate->endOfYear();
+        if (false === $this->useCustomFiscalYear) {
+            $endDate->endOfYear();
+        }
 
         return $endDate;
     }
@@ -72,7 +71,7 @@ class FiscalHelper implements FiscalHelperInterface
         // get start mm-dd. Then create a start date in the year passed.
         $startDate = clone $date;
         if (true === $this->useCustomFiscalYear) {
-            $prefStartStr = Preferences::get('fiscalYearStart', '01-01')->data;
+            $prefStartStr = app('preferences')->get('fiscalYearStart', '01-01')->data;
             [$mth, $day] = explode('-', $prefStartStr);
             $startDate->month((int)$mth)->day((int)$day);
 
@@ -80,10 +79,10 @@ class FiscalHelper implements FiscalHelperInterface
             if ($startDate > $date) {
                 $startDate->subYear();
             }
-
-            return $startDate;
         }
-        $startDate->startOfYear();
+        if (false === $this->useCustomFiscalYear) {
+            $startDate->startOfYear();
+        }
 
         return $startDate;
     }

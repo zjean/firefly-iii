@@ -31,16 +31,18 @@ use FireflyIII\Repositories\PiggyBank\PiggyBankRepositoryInterface;
 use FireflyIII\Transformers\AccountTransformer;
 use FireflyIII\Transformers\PiggyBankTransformer;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Log;
-use Preferences;
 use Symfony\Component\HttpFoundation\ParameterBag;
-use View;
 
 /**
  * Class PiggyBankController.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class PiggyBankController extends Controller
 {
@@ -61,7 +63,7 @@ class PiggyBankController extends Controller
 
         $this->middleware(
             function ($request, $next) {
-                app('view')->share('title', trans('firefly.piggyBanks'));
+                app('view')->share('title', (string)trans('firefly.piggyBanks'));
                 app('view')->share('mainTitleIcon', 'fa-sort-amount-asc');
 
                 $this->piggyRepos    = app(PiggyBankRepositoryInterface::class);
@@ -78,7 +80,7 @@ class PiggyBankController extends Controller
      *
      * @param PiggyBank $piggyBank
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function add(PiggyBank $piggyBank)
     {
@@ -104,7 +106,7 @@ class PiggyBankController extends Controller
      *
      * @param PiggyBank $piggyBank
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function addMobile(PiggyBank $piggyBank)
     {
@@ -130,7 +132,7 @@ class PiggyBankController extends Controller
      */
     public function create()
     {
-        $subTitle     = trans('firefly.new_piggy_bank');
+        $subTitle     = (string)trans('firefly.new_piggy_bank');
         $subTitleIcon = 'fa-plus';
 
         // put previous url in session if not redirect from store (not "create another").
@@ -145,11 +147,11 @@ class PiggyBankController extends Controller
     /**
      * @param PiggyBank $piggyBank
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function delete(PiggyBank $piggyBank)
     {
-        $subTitle = trans('firefly.delete_piggy_bank', ['name' => $piggyBank->name]);
+        $subTitle = (string)trans('firefly.delete_piggy_bank', ['name' => $piggyBank->name]);
 
         // put previous url in session
         $this->rememberPreviousUri('piggy-banks.delete.uri');
@@ -160,12 +162,12 @@ class PiggyBankController extends Controller
     /**
      * @param PiggyBank $piggyBank
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function destroy(PiggyBank $piggyBank)
+    public function destroy(PiggyBank $piggyBank): RedirectResponse
     {
         session()->flash('success', (string)trans('firefly.deleted_piggy_bank', ['name' => $piggyBank->name]));
-        Preferences::mark();
+        app('preferences')->mark();
         $this->piggyRepos->destroy($piggyBank);
 
         return redirect($this->getPreviousUri('piggy-banks.delete.uri'));
@@ -174,11 +176,13 @@ class PiggyBankController extends Controller
     /**
      * @param PiggyBank $piggyBank
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function edit(PiggyBank $piggyBank)
     {
-        $subTitle     = trans('firefly.update_piggy_title', ['name' => $piggyBank->name]);
+        $subTitle     = (string)trans('firefly.update_piggy_title', ['name' => $piggyBank->name]);
         $subTitleIcon = 'fa-pencil';
         $targetDate   = null;
         $startDate    = null;
@@ -212,7 +216,9 @@ class PiggyBankController extends Controller
     /**
      * @param Request $request
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function index(Request $request)
     {
@@ -220,7 +226,7 @@ class PiggyBankController extends Controller
         $collection = $this->piggyRepos->getPiggyBanks();
         $total      = $collection->count();
         $page       = 0 === (int)$request->get('page') ? 1 : (int)$request->get('page');
-        $pageSize   = (int)Preferences::get('listPageSize', 50)->data;
+        $pageSize   = (int)app('preferences')->get('listPageSize', 50)->data;
         $accounts   = [];
         /** @var Carbon $end */
         $end = session('end', Carbon::now()->endOfMonth());
@@ -267,9 +273,9 @@ class PiggyBankController extends Controller
      * @param Request   $request
      * @param PiggyBank $piggyBank
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function postAdd(Request $request, PiggyBank $piggyBank)
+    public function postAdd(Request $request, PiggyBank $piggyBank): RedirectResponse
     {
         $amount     = $request->get('amount') ?? '0';
         $currency   = app('amount')->getDefaultCurrency();
@@ -286,7 +292,7 @@ class PiggyBankController extends Controller
                     ['amount' => app('amount')->formatAnything($currency, $amount, false), 'name' => $piggyBank->name]
                 )
             );
-            Preferences::mark();
+            app('preferences')->mark();
 
             return redirect(route('piggy-banks.index'));
         }
@@ -307,9 +313,9 @@ class PiggyBankController extends Controller
      * @param Request   $request
      * @param PiggyBank $piggyBank
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function postRemove(Request $request, PiggyBank $piggyBank)
+    public function postRemove(Request $request, PiggyBank $piggyBank): RedirectResponse
     {
         $amount     = $request->get('amount') ?? '0';
         $currency   = app('amount')->getDefaultCurrency();
@@ -326,7 +332,7 @@ class PiggyBankController extends Controller
                     ['amount' => app('amount')->formatAnything($currency, $amount, false), 'name' => $piggyBank->name]
                 )
             );
-            Preferences::mark();
+            app('preferences')->mark();
 
             return redirect(route('piggy-banks.index'));
         }
@@ -347,7 +353,7 @@ class PiggyBankController extends Controller
     /**
      * @param PiggyBank $piggyBank
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function remove(PiggyBank $piggyBank)
     {
@@ -367,7 +373,7 @@ class PiggyBankController extends Controller
      *
      * @param PiggyBank $piggyBank
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function removeMobile(PiggyBank $piggyBank)
     {
@@ -400,15 +406,21 @@ class PiggyBankController extends Controller
     /**
      * @param PiggyBank $piggyBank
      *
-     * @return View
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function show(PiggyBank $piggyBank)
     {
-        $note     = $piggyBank->notes()->first();
-        $events   = $this->piggyRepos->getEvents($piggyBank);
-        $subTitle = $piggyBank->name;
+        /** @var Carbon $end */
+        $end = session('end', Carbon::now()->endOfMonth());
+        // transform piggies using the transformer:
+        $parameters = new ParameterBag;
+        $parameters->set('end', $end);
+        $transformer = new PiggyBankTransformer(new ParameterBag);
+        $piggy       = $transformer->transform($piggyBank);
+        $events      = $this->piggyRepos->getEvents($piggyBank);
+        $subTitle    = $piggyBank->name;
 
-        return view('piggy-banks.show', compact('piggyBank', 'events', 'subTitle', 'note'));
+        return view('piggy-banks.show', compact('piggyBank', 'events', 'subTitle', 'piggy'));
     }
 
     /**
@@ -425,17 +437,19 @@ class PiggyBankController extends Controller
         $piggyBank = $this->piggyRepos->store($data);
 
         session()->flash('success', (string)trans('firefly.stored_piggy_bank', ['name' => $piggyBank->name]));
-        Preferences::mark();
+        app('preferences')->mark();
+
+        $redirect = redirect($this->getPreviousUri('piggy-banks.create.uri'));
 
         if (1 === (int)$request->get('create_another')) {
             // @codeCoverageIgnoreStart
             session()->put('piggy-banks.create.fromStore', true);
 
-            return redirect(route('piggy-banks.create'))->withInput();
+            $redirect = redirect(route('piggy-banks.create'))->withInput();
             // @codeCoverageIgnoreEnd
         }
 
-        return redirect($this->getPreviousUri('piggy-banks.create.uri'));
+        return $redirect;
     }
 
     /**
@@ -450,16 +464,18 @@ class PiggyBankController extends Controller
         $piggyBank = $this->piggyRepos->update($piggyBank, $data);
 
         session()->flash('success', (string)trans('firefly.updated_piggy_bank', ['name' => $piggyBank->name]));
-        Preferences::mark();
+        app('preferences')->mark();
+
+        $redirect = redirect($this->getPreviousUri('piggy-banks.edit.uri'));
 
         if (1 === (int)$request->get('return_to_edit')) {
             // @codeCoverageIgnoreStart
             session()->put('piggy-banks.edit.fromUpdate', true);
 
-            return redirect(route('piggy-banks.edit', [$piggyBank->id]));
+            $redirect = redirect(route('piggy-banks.edit', [$piggyBank->id]));
             // @codeCoverageIgnoreEnd
         }
 
-        return redirect($this->getPreviousUri('piggy-banks.edit.uri'));
+        return $redirect;
     }
 }

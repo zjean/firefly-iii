@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+
 /**
  * UserController.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
@@ -20,6 +20,7 @@ declare(strict_types=1);
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
 
 namespace FireflyIII\Api\V1\Controllers;
 
@@ -28,6 +29,7 @@ use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
 use FireflyIII\Transformers\UserTransformer;
 use FireflyIII\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use League\Fractal\Manager;
@@ -35,22 +37,21 @@ use League\Fractal\Pagination\IlluminatePaginatorAdapter;
 use League\Fractal\Resource\Collection as FractalCollection;
 use League\Fractal\Resource\Item;
 use League\Fractal\Serializer\JsonApiSerializer;
-use Preferences;
 
 
 /**
- * Class UserController
+ * Class UserController.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class UserController extends Controller
 {
 
-    /** @var UserRepositoryInterface */
+    /** @var UserRepositoryInterface The user repository */
     private $repository;
 
     /**
      * UserController constructor.
-     *
-     * @throws \FireflyIII\Exceptions\FireflyException
      */
     public function __construct()
     {
@@ -70,12 +71,14 @@ class UserController extends Controller
      *
      * @param  \FireflyIII\User $user
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      * @throws FireflyException
      */
-    public function delete(User $user)
+    public function delete(User $user): JsonResponse
     {
-        if (auth()->user()->hasRole('owner')) {
+        /** @var User $admin */
+        $admin = auth()->user();
+        if ($this->repository->hasRole($admin, 'owner')) {
             $this->repository->destroy($user);
 
             return response()->json([], 204);
@@ -88,12 +91,12 @@ class UserController extends Controller
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         // user preferences
-        $pageSize = (int)Preferences::getForUser(auth()->user(), 'listPageSize', 50)->data;
+        $pageSize = (int)app('preferences')->getForUser(auth()->user(), 'listPageSize', 50)->data;
 
         // make manager
         $manager = new Manager();
@@ -117,12 +120,14 @@ class UserController extends Controller
     }
 
     /**
+     * Show a single user.
+     *
      * @param Request $request
      * @param User    $user
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function show(Request $request, User $user)
+    public function show(Request $request, User $user): JsonResponse
     {
         // make manager
         $manager = new Manager();
@@ -140,11 +145,13 @@ class UserController extends Controller
     }
 
     /**
+     * Store a new user.
+     *
      * @param UserRequest $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function store(UserRequest $request)
+    public function store(UserRequest $request): JsonResponse
     {
         $data = $request->getAll();
         $user = $this->repository->store($data);
@@ -165,12 +172,14 @@ class UserController extends Controller
     }
 
     /**
+     * Update a user.
+     *
      * @param UserRequest $request
      * @param User        $user
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function update(UserRequest $request, User $user)
+    public function update(UserRequest $request, User $user): JsonResponse
     {
         $data = $request->getAll();
         $user = $this->repository->update($user, $data);
