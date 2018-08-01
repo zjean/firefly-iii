@@ -37,11 +37,11 @@ use Log;
  */
 class JobStatusController extends Controller
 {
-    /** @var ImportJobRepositoryInterface */
+    /** @var ImportJobRepositoryInterface The import job repository */
     private $repository;
 
     /**
-     *
+     * JobStatusController constructor.
      */
     public function __construct()
     {
@@ -59,6 +59,8 @@ class JobStatusController extends Controller
     }
 
     /**
+     * Index for job status.
+     *
      * @param ImportJob $importJob
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -72,6 +74,8 @@ class JobStatusController extends Controller
     }
 
     /**
+     * JSON overview of job status.
+     *
      * @param ImportJob $importJob
      *
      * @return JsonResponse
@@ -93,8 +97,8 @@ class JobStatusController extends Controller
         if ('file' === $importJob->provider) {
             $json['download_config'] = true;
             $json['download_config_text']
-                                     = (string)trans('import.should_download_config', ['route' => route('import.job.download', [$importJob->key])]) . ' '
-                                       . (string)trans('import.share_config_file');
+                                     = trans('import.should_download_config', ['route' => route('import.job.download', [$importJob->key])]) . ' '
+                                       . trans('import.share_config_file');
         }
 
         // if count is zero:
@@ -120,17 +124,20 @@ class JobStatusController extends Controller
     }
 
     /**
+     * Calls to start the job.
+     *
      * @param ImportJob $importJob
      *
      * @return JsonResponse
      */
     public function start(ImportJob $importJob): JsonResponse
     {
+        Log::debug('Now in JobStatusController::start');
         // catch impossible status:
         $allowed = ['ready_to_run', 'need_job_config'];
 
         if (null !== $importJob && !\in_array($importJob->status, $allowed, true)) {
-            Log::error('Job is not ready.');
+            Log::error(sprintf('Job is not ready. Status should be in array, but is %s', $importJob->status), $allowed);
             $this->repository->setStatus($importJob, 'error');
 
             return response()->json(
@@ -151,7 +158,11 @@ class JobStatusController extends Controller
         /** @var RoutineInterface $routine */
         $routine = app($className);
         $routine->setImportJob($importJob);
+
+        Log::debug(sprintf('Created class of type %s', $className));
+
         try {
+            Log::debug(sprintf('Try to call %s:run()', $className));
             $routine->run();
         } catch (FireflyException|Exception $e) {
             $message = 'The import routine crashed: ' . $e->getMessage();
@@ -183,7 +194,7 @@ class JobStatusController extends Controller
         // catch impossible status:
         $allowed = ['provider_finished', 'storing_data'];
         if (null !== $importJob && !\in_array($importJob->status, $allowed, true)) {
-            Log::error('Job is not ready.');
+            Log::error(sprintf('Job is not ready. Status should be in array, but is %s', $importJob->status), $allowed);
 
             return response()->json(
                 ['status' => 'NOK', 'message' => sprintf('JobStatusController::start expects status "provider_finished" instead of "%s".', $importJob->status)]
@@ -214,6 +225,8 @@ class JobStatusController extends Controller
     }
 
     /**
+     * Store the transactions.
+     *
      * @param ImportJob $importJob
      *
      * @throws FireflyException

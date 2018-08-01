@@ -61,7 +61,7 @@ class Range
     }
 
     /**
-     *
+     * Configure the list length.
      */
     private function configureList(): void
     {
@@ -70,7 +70,7 @@ class Range
     }
 
     /**
-     *
+     * Configure the user's view.
      */
     private function configureView(): void
     {
@@ -101,6 +101,8 @@ class Range
     }
 
     /**
+     * Error when sqlite in docker.
+     *
      * @param Request $request
      */
     private function loseItAll(Request $request): void
@@ -113,6 +115,8 @@ class Range
     }
 
     /**
+     * Set the range for the current view.
+     *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function setRange(): void
@@ -120,8 +124,7 @@ class Range
         // ignore preference. set the range to be the current month:
         if (!app('session')->has('start') && !app('session')->has('end')) {
             $viewRange = app('preferences')->get('viewRange', '1M')->data;
-            $start     = new Carbon;
-            $start     = app('navigation')->updateStartDate($viewRange, $start);
+            $start     = app('navigation')->updateStartDate($viewRange, new Carbon);
             $end       = app('navigation')->updateEndDate($viewRange, $start);
 
             app('session')->put('start', $start);

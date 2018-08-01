@@ -41,6 +41,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @property int        $id
  * @property int        $order
  * @property Collection $rules
+ * @property string      description
  */
 class RuleGroup extends Model
 {
@@ -74,7 +75,10 @@ class RuleGroup extends Model
     {
         if (auth()->check()) {
             $ruleGroupId = (int)$value;
-            $ruleGroup   = auth()->user()->ruleGroups()->find($ruleGroupId);
+            /** @var User $user */
+            $user = auth()->user();
+            /** @var RuleGroup $ruleGroup */
+            $ruleGroup   = $user->ruleGroups()->find($ruleGroupId);
             if (null !== $ruleGroup) {
                 return $ruleGroup;
             }
@@ -86,7 +90,7 @@ class RuleGroup extends Model
      * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function rules()
+    public function rules(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Rule::class);
     }
@@ -95,7 +99,7 @@ class RuleGroup extends Model
      * @codeCoverageIgnore
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user()
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class);
     }

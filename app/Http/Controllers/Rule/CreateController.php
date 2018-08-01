@@ -30,7 +30,7 @@ use FireflyIII\Models\Bill;
 use FireflyIII\Models\RuleGroup;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
 use FireflyIII\Repositories\Rule\RuleRepositoryInterface;
-use FireflyIII\Repositories\RuleGroup\RuleGroupRepositoryInterface;
+
 use FireflyIII\Support\Http\Controllers\RuleManagement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,9 +43,9 @@ use Throwable;
 class CreateController extends Controller
 {
     use RuleManagement;
-    /** @var BillRepositoryInterface */
+    /** @var BillRepositoryInterface Bill repository */
     private $billRepos;
-    /** @var RuleGroupRepositoryInterface */
+    /** @var RuleRepositoryInterface Rule repository */
     private $ruleRepos;
 
     /**
@@ -70,8 +70,6 @@ class CreateController extends Controller
 
     /**
      * Create a new rule. It will be stored under the given $ruleGroup.
-     *
-     * TODO remove bill from this method, move to separate routine.
      *
      * @param Request   $request
      * @param RuleGroup $ruleGroup
@@ -143,6 +141,8 @@ class CreateController extends Controller
     }
 
     /**
+     * Store the new rule.
+     *
      * @param RuleFormRequest $request
      *
      * @return RedirectResponse|\Illuminate\Routing\Redirector
@@ -178,13 +178,14 @@ class CreateController extends Controller
     }
 
     /**
+     * Get actions based on a bill.
+     *
      * @param Bill $bill
      *
      * @return array
      */
     private function getActionsForBill(Bill $bill): array
     {
-        $result = '';
         try {
             $result = view(
                 'rules.partials.action',
@@ -220,8 +221,8 @@ class CreateController extends Controller
         $triggers = ['currency_is', 'amount_more', 'amount_less', 'description_contains'];
         $values   = [
             $bill->transactionCurrency()->first()->name,
-            round($bill->amount_min, 12),
-            round($bill->amount_max, 12),
+            round((float)$bill->amount_min, 12),
+            round((float)$bill->amount_max, 12),
             $bill->name,
         ];
         foreach ($triggers as $index => $trigger) {

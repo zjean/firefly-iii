@@ -42,7 +42,7 @@ use Throwable;
  */
 class ExpenseController extends Controller
 {
-    /** @var AccountRepositoryInterface */
+    /** @var AccountRepositoryInterface The account repository */
     protected $accountRepository;
 
     /**
@@ -107,7 +107,7 @@ class ExpenseController extends Controller
         try {
             $result = view('reports.partials.exp-budgets', compact('together'))->render();
         } catch (Throwable $e) {
-            Log::error(sprintf('Could not render category::expenses: %s', $e->getMessage()));
+            Log::error(sprintf('Could not render category::budget: %s', $e->getMessage()));
             $result = 'An error prevented Firefly III from rendering. Apologies.';
         }
         $cache->store($result);
@@ -180,7 +180,7 @@ class ExpenseController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
-     * Overview of spending
+     * Overview of spending.
      *
      * @param Collection $accounts
      * @param Collection $expense
@@ -231,6 +231,8 @@ class ExpenseController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * List of top expenses.
+     *
      * @param Collection $accounts
      * @param Collection $expense
      * @param Carbon     $start
@@ -269,7 +271,7 @@ class ExpenseController extends Controller
         try {
             $result = view('reports.partials.top-transactions', compact('sorted'))->render();
         } catch (Throwable $e) {
-            Log::error(sprintf('Could not render category::expenses: %s', $e->getMessage()));
+            Log::error(sprintf('Could not render category::topExpense: %s', $e->getMessage()));
             $result = 'An error prevented Firefly III from rendering. Apologies.';
         }
         $cache->store($result);
@@ -278,6 +280,8 @@ class ExpenseController extends Controller
     }
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * List of top income.
+     *
      * @param Collection $accounts
      * @param Collection $expense
      * @param Carbon     $start
@@ -316,7 +320,7 @@ class ExpenseController extends Controller
         try {
             $result = view('reports.partials.top-transactions', compact('sorted'))->render();
         } catch (Throwable $e) {
-            Log::error(sprintf('Could not render category::expenses: %s', $e->getMessage()));
+            Log::error(sprintf('Could not render category::topIncome: %s', $e->getMessage()));
             $result = 'An error prevented Firefly III from rendering. Apologies.';
         }
         $cache->store($result);
@@ -325,6 +329,8 @@ class ExpenseController extends Controller
     }
 
     /**
+     * Combine accounts into a single list.
+     *
      * @param Collection $accounts
      *
      * @return array
@@ -349,6 +355,8 @@ class ExpenseController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Group by category (earnings).
+     *
      * @param Collection $assets
      * @param Collection $opposing
      * @param Carbon     $start
@@ -414,6 +422,8 @@ class ExpenseController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Earned in period for accounts.
+     *
      * @param Collection $assets
      * @param Collection $opposing
      * @param Carbon     $start
@@ -457,6 +467,8 @@ class ExpenseController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Spent by budget.
+     *
      * @param Collection $assets
      * @param Collection $opposing
      * @param Carbon     $start
@@ -521,6 +533,8 @@ class ExpenseController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Spent by category.
+     *
      * @param Collection $assets
      * @param Collection $opposing
      * @param Carbon     $start
@@ -586,6 +600,8 @@ class ExpenseController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Spent in a period.
+     *
      * @param Collection $assets
      * @param Collection $opposing
      * @param Carbon     $start

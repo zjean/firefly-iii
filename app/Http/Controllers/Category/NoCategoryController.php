@@ -29,7 +29,7 @@ use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Helpers\Filter\InternalTransferFilter;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Models\TransactionType;
-use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
+
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Http\Request;
@@ -43,10 +43,8 @@ use Log;
 class NoCategoryController extends Controller
 {
 
-    /** @var JournalRepositoryInterface */
+    /** @var JournalRepositoryInterface Journals and transactions overview */
     private $journalRepos;
-    /** @var CategoryRepositoryInterface */
-    private $repository;
 
     /**
      * CategoryController constructor.
@@ -60,7 +58,6 @@ class NoCategoryController extends Controller
                 app('view')->share('title', (string)trans('firefly.categories'));
                 app('view')->share('mainTitleIcon', 'fa-bar-chart');
                 $this->journalRepos = app(JournalRepositoryInterface::class);
-                $this->repository   = app(CategoryRepositoryInterface::class);
 
                 return $next($request);
             }
@@ -68,8 +65,11 @@ class NoCategoryController extends Controller
     }
 
     /**
+     * Show transactions without a category.
+     *
      * @param Request     $request
-     * @param string|null $moment
+     * @param Carbon|null $start
+     * @param Carbon|null $end
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
@@ -105,6 +105,8 @@ class NoCategoryController extends Controller
 
 
     /**
+     * Show all transactions without a category.
+     *
      * @param Request     $request
      * @param string|null $moment
      *
@@ -140,6 +142,8 @@ class NoCategoryController extends Controller
 
 
     /**
+     * Show period overview for no category view.
+     *
      * @param Carbon $theDate
      *
      * @return Collection

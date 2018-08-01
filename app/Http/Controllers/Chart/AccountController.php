@@ -52,11 +52,11 @@ class AccountController extends Controller
 {
     use DateCalculation;
 
-    /** @var GeneratorInterface */
+    /** @var GeneratorInterface Chart generation methods. */
     protected $generator;
 
     /**
-     *
+     * AccountController constructor.
      */
     public function __construct()
     {
@@ -74,7 +74,9 @@ class AccountController extends Controller
      */
     public function expenseAccounts(AccountRepositoryInterface $repository): JsonResponse
     {
+        /** @var Carbon $start */
         $start = clone session('start', Carbon::now()->startOfMonth());
+        /** @var Carbon $end */
         $end   = clone session('end', Carbon::now()->endOfMonth());
         $cache = new CacheProperties;
         $cache->addProperty($start);
@@ -109,6 +111,8 @@ class AccountController extends Controller
 
 
     /**
+     * Expenses per budget, as shown on account overview.
+     *
      * @param Account $account
      * @param Carbon  $start
      * @param Carbon  $end
@@ -152,6 +156,8 @@ class AccountController extends Controller
     }
 
     /**
+     * Expenses per budget for all time, as shown on account overview.
+     *
      * @param AccountRepositoryInterface $repository
      * @param Account                    $account
      *
@@ -167,6 +173,8 @@ class AccountController extends Controller
 
 
     /**
+     * Expenses per category for one single account.
+     *
      * @param Account $account
      * @param Carbon  $start
      * @param Carbon  $end
@@ -210,6 +218,8 @@ class AccountController extends Controller
     }
 
     /**
+     * Expenses grouped by category for account.
+     *
      * @param AccountRepositoryInterface $repository
      * @param Account                    $account
      *
@@ -253,6 +263,8 @@ class AccountController extends Controller
 
 
     /**
+     * Shows all income per account for each category.
+     *
      * @param Account $account
      * @param Carbon  $start
      * @param Carbon  $end
@@ -296,6 +308,8 @@ class AccountController extends Controller
     }
 
     /**
+     * Shows the income grouped by category for an account, in all time.
+     *
      * @param AccountRepositoryInterface $repository
      * @param Account                    $account
      *
@@ -311,6 +325,8 @@ class AccountController extends Controller
 
 
     /**
+     * Shows overview of account during a single period.
+     *
      * @param Account $account
      * @param Carbon  $start
      *
@@ -427,6 +443,8 @@ class AccountController extends Controller
 
 
     /**
+     * Shows an overview of the account balances for a set of accounts.
+     *
      * @param Collection $accounts
      * @param Carbon     $start
      * @param Carbon     $end
@@ -451,10 +469,14 @@ class AccountController extends Controller
 
         /** @var CurrencyRepositoryInterface $repository */
         $repository = app(CurrencyRepositoryInterface::class);
-        $default    = app('amount')->getDefaultCurrency();
-        $chartData  = [];
+        /** @var AccountRepositoryInterface $accountRepos */
+        $accountRepos = app(AccountRepositoryInterface::class);
+
+        $default   = app('amount')->getDefaultCurrency();
+        $chartData = [];
+        /** @var Account $account */
         foreach ($accounts as $account) {
-            $currency = $repository->findNull((int)$account->getMeta('currency_id'));
+            $currency = $repository->findNull((int)$accountRepos->getMetaValue($account, 'currency_id'));
             if (null === $currency) {
                 $currency = $default;
             }
@@ -484,6 +506,8 @@ class AccountController extends Controller
     }
 
     /**
+     * Get the budget names from a set of budget ID's.
+     *
      * @param array $budgetIds
      *
      * @return array
@@ -506,7 +530,7 @@ class AccountController extends Controller
     }
 
     /**
-     * Small helper function for some of the charts.
+     * Get the category names from a set of category ID's. Small helper function for some of the charts.
      *
      * @param array $categoryIds
      *

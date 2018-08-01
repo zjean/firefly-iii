@@ -37,11 +37,11 @@ use Illuminate\Http\Request;
  */
 class RecurrenceController extends Controller
 {
-    /** @var RecurringRepositoryInterface */
+    /** @var RecurringRepositoryInterface The recurring repository. */
     private $recurring;
 
     /**
-     *
+     * RecurrenceController constructor.
      */
     public function __construct()
     {
@@ -58,6 +58,8 @@ class RecurrenceController extends Controller
     }
 
     /**
+     * Shows all events for a repetition. Used in calendar.
+     *
      * @param Request $request
      *
      * @throws FireflyException
@@ -86,13 +88,13 @@ class RecurrenceController extends Controller
         // if $firstDate is beyond start, use that one:
         $actualStart = clone $firstDate;
 
-        if ($repetitionType === 'weekly' || $repetitionType === 'monthly') {
+        if ('weekly' === $repetitionType || 'monthly' === $repetitionType) {
             $repetitionMoment = explode(',', $request->get('type'))[1] ?? '1';
         }
-        if ($repetitionType === 'ndom') {
+        if ('ndom' === $repetitionType) {
             $repetitionMoment = str_ireplace('ndom,', '', $request->get('type'));
         }
-        if ($repetitionType === 'yearly') {
+        if ('yearly' === $repetitionType) {
             $repetitionMoment = explode(',', $request->get('type'))[1] ?? '2018-01-01';
         }
         $repetition                    = new RecurrenceRepetition;
@@ -139,6 +141,8 @@ class RecurrenceController extends Controller
     }
 
     /**
+     * Suggests repetition moments.
+     *
      * @param Request $request
      *
      * @return JsonResponse
@@ -152,10 +156,10 @@ class RecurrenceController extends Controller
         if ($date > $today || 'true' === (string)$request->get('past')) {
             $weekly     = sprintf('weekly,%s', $date->dayOfWeekIso);
             $monthly    = sprintf('monthly,%s', $date->day);
-            $dayOfWeek  = trans(sprintf('config.dow_%s', $date->dayOfWeekIso));
+            $dayOfWeek  = (string)trans(sprintf('config.dow_%s', $date->dayOfWeekIso));
             $ndom       = sprintf('ndom,%s,%s', $date->weekOfMonth, $date->dayOfWeekIso);
             $yearly     = sprintf('yearly,%s', $date->format('Y-m-d'));
-            $yearlyDate = $date->formatLocalized(trans('config.month_and_day_no_year'));
+            $yearlyDate = $date->formatLocalized((string)trans('config.month_and_day_no_year'));
             $result     = [
                 'daily'  => ['label' => (string)trans('firefly.recurring_daily'), 'selected' => 0 === strpos($preSelected, 'daily')],
                 $weekly  => ['label'    => (string)trans('firefly.recurring_weekly', ['weekday' => $dayOfWeek]),

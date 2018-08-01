@@ -36,11 +36,11 @@ use Log;
  */
 class ReportController extends Controller
 {
-    /** @var GeneratorInterface */
+    /** @var GeneratorInterface Chart generation methods. */
     protected $generator;
 
     /**
-     *
+     * ReportController constructor.
      */
     public function __construct()
     {
@@ -147,9 +147,9 @@ class ReportController extends Controller
     /**
      * Shows sum income and expense, debit/credit: operations.
      *
+     * @param Collection $accounts
      * @param Carbon     $start
      * @param Carbon     $end
-     * @param Collection $accounts
      *
      * @return \Illuminate\Http\JsonResponse
      *
@@ -220,6 +220,8 @@ class ReportController extends Controller
     }
 
     /**
+     * Sum up an array.
+     *
      * @param $array
      *
      * @return string

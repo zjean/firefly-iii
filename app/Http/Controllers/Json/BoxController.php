@@ -44,6 +44,8 @@ class BoxController extends Controller
 {
 
     /**
+     * How much money user has available.
+     *
      * @param BudgetRepositoryInterface $repository
      *
      * @return JsonResponse
@@ -52,7 +54,9 @@ class BoxController extends Controller
      */
     public function available(BudgetRepositoryInterface $repository): JsonResponse
     {
+        /** @var Carbon $start */
         $start = session('start', Carbon::now()->startOfMonth());
+        /** @var Carbon $end */
         $end   = session('end', Carbon::now()->endOfMonth());
         $today = new Carbon;
         $cache = new CacheProperties;
@@ -98,6 +102,8 @@ class BoxController extends Controller
 
 
     /**
+     * Current total balance.
+     *
      * @param CurrencyRepositoryInterface $repository
      *
      * @return JsonResponse
@@ -107,7 +113,9 @@ class BoxController extends Controller
     public function balance(CurrencyRepositoryInterface $repository): JsonResponse
     {
         // Cache result, return cache if present.
+        /** @var Carbon $start */
         $start = session('start', Carbon::now()->startOfMonth());
+        /** @var Carbon $end */
         $end   = session('end', Carbon::now()->endOfMonth());
         $cache = new CacheProperties;
         $cache->addProperty($start);
@@ -183,13 +191,17 @@ class BoxController extends Controller
 
 
     /**
+     * Bills to pay and paid.
+     *
      * @param BillRepositoryInterface $repository
      *
      * @return JsonResponse
      */
     public function bills(BillRepositoryInterface $repository): JsonResponse
     {
+        /** @var Carbon $start */
         $start = session('start', Carbon::now()->startOfMonth());
+        /** @var Carbon $end */
         $end   = session('end', Carbon::now()->endOfMonth());
 
         $cache = new CacheProperties;
@@ -219,6 +231,8 @@ class BoxController extends Controller
 
 
     /**
+     * Total user net worth.
+     *
      * @param AccountRepositoryInterface $repository
      *
      * @return JsonResponse
@@ -282,6 +296,8 @@ class BoxController extends Controller
     }
 
     /**
+     * Get a currency or return default currency.
+     *
      * @param Account $account
      *
      * @return TransactionCurrency
@@ -307,6 +323,8 @@ class BoxController extends Controller
     }
 
     /**
+     * Check if date is outside session range.
+     *
      * @param Carbon $date
      *
      * @return bool

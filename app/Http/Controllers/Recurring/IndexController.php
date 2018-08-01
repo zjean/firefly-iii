@@ -39,11 +39,11 @@ use Symfony\Component\HttpFoundation\ParameterBag;
  */
 class IndexController extends Controller
 {
-    /** @var RecurringRepositoryInterface */
+    /** @var RecurringRepositoryInterface Recurring repository */
     private $recurring;
 
     /**
-     *
+     * IndexController constructor.
      */
     public function __construct()
     {
@@ -63,7 +63,7 @@ class IndexController extends Controller
     }
 
     /**
-     * TODO: split collection into pages
+     * Show all recurring transactions.
      *
      * @param Request $request
      *
@@ -93,19 +93,18 @@ class IndexController extends Controller
     }
 
     /**
-     * @param Request    $request
+     * Show a single recurring transaction.
+     *
      * @param Recurrence $recurrence
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      * @throws FireflyException
      */
-    public function show(Request $request, Recurrence $recurrence)
+    public function show(Recurrence $recurrence)
     {
         $transformer  = new RecurrenceTransformer(new ParameterBag);
         $array        = $transformer->transform($recurrence);
-        $page         = (int)$request->get('page');
-        $pageSize     = (int)app('preferences')->get('listPageSize', 50)->data;
-        $transactions = $this->recurring->getTransactions($recurrence, $page, $pageSize);
+        $transactions = $this->recurring->getTransactions($recurrence);
 
         // transform dates back to Carbon objects:
         foreach ($array['recurrence_repetitions'] as $index => $repetition) {

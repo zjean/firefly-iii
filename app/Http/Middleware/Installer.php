@@ -61,8 +61,6 @@ class Installer
 
             return $next($request);
         }
-        // Log::debug(sprintf('URL is %s, will run installer middleware', $url));
-
         // no tables present?
         try {
             DB::table('users')->count();
@@ -99,6 +97,8 @@ class Installer
     }
 
     /**
+     * Is access denied error.
+     *
      * @param string $message
      *
      * @return bool
@@ -109,6 +109,8 @@ class Installer
     }
 
     /**
+     * Is no tables exist error.
+     *
      * @param string $message
      *
      * @return bool

@@ -33,6 +33,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class Request extends FormRequest
 {
     /**
+     * Return a boolean value.
+     *
      * @param string $field
      *
      * @return bool
@@ -50,16 +52,24 @@ class Request extends FormRequest
     }
 
     /**
+     * Return floating value.
+     *
      * @param string $field
      *
-     * @return float
+     * @return float|null
      */
-    public function float(string $field): float
+    public function float(string $field): ?float
     {
-        return (float)$this->get($field);
+        $res = $this->get($field);
+        if(null === $res) {
+            return null;
+        }
+        return (float)$res;
     }
 
     /**
+     * Return integer value.
+     *
      * @param string $field
      *
      * @return int
@@ -70,6 +80,8 @@ class Request extends FormRequest
     }
 
     /**
+     * Return string value.
+     *
      * @param string $field
      *
      * @return string
@@ -133,6 +145,8 @@ class Request extends FormRequest
     }
 
     /**
+     * Return date or NULL.
+     *
      * @param string $field
      *
      * @return Carbon|null

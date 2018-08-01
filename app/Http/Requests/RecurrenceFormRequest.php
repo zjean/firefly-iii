@@ -37,6 +37,8 @@ class RecurrenceFormRequest extends Request
 {
 
     /**
+     * Verify the request.
+     *
      * @return bool
      */
     public function authorize(): bool
@@ -46,6 +48,8 @@ class RecurrenceFormRequest extends Request
     }
 
     /**
+     * Get the data required by the controller.
+     *
      * @return array
      * @throws FireflyException
      *
@@ -133,6 +137,8 @@ class RecurrenceFormRequest extends Request
     }
 
     /**
+     * The rules for this request.
+     *
      * @return array
      * @throws FireflyException
      *
@@ -143,8 +149,7 @@ class RecurrenceFormRequest extends Request
     public function rules(): array
     {
         $today    = new Carbon;
-        $tomorrow = clone $today;
-        $tomorrow->addDay();
+        $tomorrow = Carbon::create()->addDay();
         $rules = [
             // mandatory info for recurrence.
             'title'                   => 'required|between:1,255|uniqueObjectForUser:recurrences,title',
@@ -185,7 +190,7 @@ class RecurrenceFormRequest extends Request
             $rules['repetitions'] = 'required|numeric|between:0,254';
         }
         // if foreign amount, currency must be  different.
-        if (0.0 !== $this->float('foreign_amount')) {
+        if (null !== $this->float('foreign_amount')) {
             $rules['foreign_currency_id'] = 'exists:transaction_currencies,id|different:transaction_currency_id';
         }
 
@@ -228,6 +233,8 @@ class RecurrenceFormRequest extends Request
     }
 
     /**
+     * Parses repetition data.
+     *
      * @return array
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)

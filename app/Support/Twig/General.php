@@ -24,6 +24,7 @@ namespace FireflyIII\Support\Twig;
 
 use Carbon\Carbon;
 use FireflyIII\Models\Account;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use FireflyIII\Support\Twig\Extension\Account as AccountExtension;
 use League\CommonMark\CommonMarkConverter;
 use Route;
@@ -45,7 +46,7 @@ class General extends Twig_Extension
             $this->balance(),
             $this->formatFilesize(),
             $this->mimeIcon(),
-            $this->markdown(),
+            $this->markdown()
         ];
     }
 
@@ -64,6 +65,7 @@ class General extends Twig_Extension
             $this->activeRoutePartialWhat(),
             $this->formatDate(),
             new Twig_SimpleFunction('accountGetMetaField', [AccountExtension::class, 'getMetaField']),
+            $this->hasRole(),
         ];
     }
 
@@ -150,6 +152,7 @@ class General extends Twig_Extension
                 if (null === $account) {
                     return 'NULL';
                 }
+                /** @var Carbon $date */
                 $date = session('end', Carbon::now()->endOfMonth());
 
                 return app('steam')->balance($account, $date);
@@ -173,7 +176,7 @@ class General extends Twig_Extension
     /**
      * @return Twig_SimpleFunction
      */
-    protected function formatDate()
+    protected function formatDate(): Twig_SimpleFunction
     {
         return new Twig_SimpleFunction(
             'formatDate',
@@ -230,6 +233,25 @@ class General extends Twig_Extension
             'getCurrencySymbol',
             function (): string {
                 return app('amount')->getCurrencySymbol();
+            }
+        );
+    }
+
+    /**
+     * Will return true if the user is of role X.
+     *
+     * @return Twig_SimpleFunction
+     */
+    protected function hasRole(): Twig_SimpleFunction
+    {
+        return new Twig_SimpleFunction(
+            'hasRole',
+            function (string $role): bool {
+                $repository = app(UserRepositoryInterface::class);
+                if ($repository->hasRole(auth()->user(), $role)) {
+                    return true;
+                }
+                return false;
             }
         );
     }
@@ -329,7 +351,7 @@ class General extends Twig_Extension
     /**
      * @return Twig_SimpleFunction
      */
-    protected function phpdate()
+    protected function phpdate(): Twig_SimpleFunction
     {
         return new Twig_SimpleFunction(
             'phpdate',

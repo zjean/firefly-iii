@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers;
 
+use Carbon\Carbon;
 use FireflyIII\Helpers\Attachments\AttachmentHelperInterface;
 use FireflyIII\Helpers\Collector\JournalCollectorInterface;
 use FireflyIII\Http\Requests\BillFormRequest;
@@ -48,13 +49,13 @@ class BillController extends Controller
 {
     /** @var AttachmentHelperInterface Helper for attachments. */
     private $attachments;
-    /** @var BillRepositoryInterface */
+    /** @var BillRepositoryInterface Bill repository */
     private $billRepository;
-    /** @var RuleGroupRepositoryInterface */
+    /** @var RuleGroupRepositoryInterface Rule group repository */
     private $ruleGroupRepos;
 
     /**
-     *
+     * BillController constructor.
      */
     public function __construct()
     {
@@ -79,6 +80,8 @@ class BillController extends Controller
     }
 
     /**
+     * Create a new bill.
+     *
      * @param Request $request
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -104,6 +107,8 @@ class BillController extends Controller
     }
 
     /**
+     * Delete a bill.
+     *
      * @param Bill $bill
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -118,6 +123,8 @@ class BillController extends Controller
     }
 
     /**
+     * Destroy a bill.
+     *
      * @param Request $request
      * @param Bill    $bill
      *
@@ -135,6 +142,8 @@ class BillController extends Controller
     }
 
     /**
+     * Edit a bill.
+     *
      * @param Request $request
      * @param Bill    $bill
      *
@@ -158,8 +167,8 @@ class BillController extends Controller
         }
 
         $currency         = app('amount')->getDefaultCurrency();
-        $bill->amount_min = round($bill->amount_min, $currency->decimal_places);
-        $bill->amount_max = round($bill->amount_max, $currency->decimal_places);
+        $bill->amount_min = round((float)$bill->amount_min, $currency->decimal_places);
+        $bill->amount_max = round((float)$bill->amount_max, $currency->decimal_places);
         $defaultCurrency  = app('amount')->getDefaultCurrency();
 
         // code to handle active-checkboxes
@@ -178,6 +187,8 @@ class BillController extends Controller
     }
 
     /**
+     * Show all bills.
+     *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
@@ -218,6 +229,8 @@ class BillController extends Controller
     }
 
     /**
+     * Rescan bills for transactions.
+     *
      * @param Request $request
      * @param Bill    $bill
      *
@@ -253,6 +266,8 @@ class BillController extends Controller
     }
 
     /**
+     * Show a bill.
+     *
      * @param Request $request
      * @param Bill    $bill
      *
@@ -263,7 +278,9 @@ class BillController extends Controller
         // add info about rules:
         $rules          = $this->billRepository->getRulesForBill($bill);
         $subTitle       = $bill->name;
+        /** @var Carbon $start */
         $start          = session('start');
+        /** @var Carbon $end */
         $end            = session('end');
         $year           = $start->year;
         $page           = (int)$request->get('page');
@@ -295,6 +312,8 @@ class BillController extends Controller
 
 
     /**
+     * Store a new bill.
+     *
      * @param BillFormRequest $request
      *
      * @return RedirectResponse
@@ -350,6 +369,8 @@ class BillController extends Controller
     }
 
     /**
+     * Update a bill.
+     *
      * @param BillFormRequest $request
      * @param Bill            $bill
      *

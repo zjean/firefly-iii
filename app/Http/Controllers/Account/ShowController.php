@@ -45,13 +45,13 @@ use View;
  */
 class ShowController extends Controller
 {
-    /** @var CurrencyRepositoryInterface */
+    /** @var CurrencyRepositoryInterface The currency repository */
     private $currencyRepos;
-    /** @var AccountRepositoryInterface */
+    /** @var AccountRepositoryInterface The account repository */
     private $repository;
 
     /**
-     *
+     * ShowController constructor.
      */
     public function __construct()
     {
@@ -71,6 +71,7 @@ class ShowController extends Controller
         );
     }
 
+    /** @noinspection MoreThanThreeArgumentsInspection */
     /**
      * Show an account.
      *
@@ -89,7 +90,9 @@ class ShowController extends Controller
         if (AccountType::INITIAL_BALANCE === $account->accountType->type) {
             return $this->redirectToOriginalAccount($account);
         }
+        /** @var Carbon $start */
         $start = $start ?? session('start');
+        /** @var Carbon $end */
         $end   = $end ?? session('end');
         if ($end < $start) {
             throw new FireflyException('End is after start!'); // @codeCoverageIgnore
@@ -241,6 +244,8 @@ class ShowController extends Controller
     }
 
     /**
+     * Redirect to the original account.
+     *
      * @param Account $account
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector

@@ -41,11 +41,11 @@ class IndexController extends Controller
 {
 
     use DateCalculation;
-    /** @var BudgetRepositoryInterface */
+    /** @var BudgetRepositoryInterface The budget repository */
     private $repository;
 
     /**
-     *
+     * IndexController constructor.
      */
     public function __construct()
     {
@@ -66,6 +66,8 @@ class IndexController extends Controller
 
 
     /**
+     * Show all budgets.
+     *
      * @param Request     $request
      * @param string|null $moment
      *
@@ -75,6 +77,7 @@ class IndexController extends Controller
      */
     public function index(Request $request, string $moment = null)
     {
+        /** @var string $range */
         $range    = app('preferences')->get('viewRange', '1M')->data;
         /** @var Carbon $start */
         $start    = session('start', new Carbon);

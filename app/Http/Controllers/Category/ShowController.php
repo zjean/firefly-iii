@@ -36,7 +36,7 @@ use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-
+use Log;
 
 /**
  *
@@ -47,11 +47,11 @@ use Illuminate\Support\Collection;
 class ShowController extends Controller
 {
 
-    /** @var AccountRepositoryInterface */
+    /** @var AccountRepositoryInterface The account repository */
     private $accountRepos;
-    /** @var JournalRepositoryInterface */
+    /** @var JournalRepositoryInterface Journals and transactions overview */
     private $journalRepos;
-    /** @var CategoryRepositoryInterface */
+    /** @var CategoryRepositoryInterface The category repository */
     private $repository;
 
     /**
@@ -77,6 +77,8 @@ class ShowController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Show a single category.
+     *
      * @param Request     $request
      * @param Category    $category
      * @param Carbon|null $start
@@ -86,10 +88,11 @@ class ShowController extends Controller
      */
     public function show(Request $request, Category $category, Carbon $start = null, Carbon $end = null)
     {
+        Log::debug('Now in show()');
         /** @var Carbon $start */
-        $start = $start ?? session('start');
+        $start = $start ?? session('start', Carbon::create()->startOfMonth());
         /** @var Carbon $end */
-        $end          = $end ?? session('end');
+        $end          = $end ?? session('end', Carbon::create()->startOfMonth());
         $subTitleIcon = 'fa-bar-chart';
         $moment       = '';
         $page         = (int)$request->get('page');
@@ -110,10 +113,14 @@ class ShowController extends Controller
         $transactions = $collector->getPaginatedJournals();
         $transactions->setPath($path);
 
+        Log::debug('End of show()');
+
         return view('categories.show', compact('category', 'transactions', 'moment', 'periods', 'subTitle', 'subTitleIcon', 'start', 'end'));
     }
 
     /**
+     * Show all transactions within a category.
+     *
      * @param Request  $request
      * @param Category $category
      *
@@ -150,6 +157,8 @@ class ShowController extends Controller
     }
 
     /**
+     * Get a period overview for category.
+     *
      * @param Category $category
      *
      * @param Carbon   $date

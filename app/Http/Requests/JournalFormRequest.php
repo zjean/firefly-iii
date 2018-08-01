@@ -33,6 +33,8 @@ use Log;
 class JournalFormRequest extends Request
 {
     /**
+     * Verify the request.
+     *
      * @return bool
      */
     public function authorize(): bool
@@ -140,8 +142,9 @@ class JournalFormRequest extends Request
     }
 
     /**
-     * @return array
+     * Rules for this request.
      *
+     * @return array
      * @throws FireflyException
      */
     public function rules(): array
@@ -158,11 +161,11 @@ class JournalFormRequest extends Request
             'due_date'                  => 'date|nullable',
             'payment_date'              => 'date|nullable',
             'invoice_date'              => 'date|nullable',
-            'internal_reference'        => 'min:1,max:255|nullable',
-            'notes'                     => 'min:1,max:50000|nullable',
+            'internal_reference'        => 'min:1|max:255|nullable',
+            'notes'                     => 'min:1|max:50000|nullable',
             // and then transaction rules:
             'description'               => 'required|between:1,255',
-            'amount'                    => 'numeric|required|more:0',
+            'amount'                    => 'numeric|required|more:0|less:10000000',//
             'budget_id'                 => 'mustExist:budgets,id|belongsToUser:budgets,id|nullable',
             'category'                  => 'between:1,255|nullable',
             'source_id'                 => 'numeric|belongsToUser:accounts,id|nullable',
@@ -234,6 +237,8 @@ class JournalFormRequest extends Request
     }
 
     /**
+     * Check if amounts are valid.
+     *
      * @param Validator $validator
      */
     private function validNativeAmount(Validator $validator): void
@@ -257,12 +262,15 @@ class JournalFormRequest extends Request
     }
 
     /**
+     * Check if deposit amount is valid.
+     *
      * @param Validator $validator
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function validateDeposit(Validator $validator): void
     {
+        $data = $validator->getData();
         $selectedCurrency = (int)($data['amount_currency_id_amount'] ?? 0);
         $accountCurrency  = (int)($data['destination_account_currency'] ?? 0);
         $nativeAmount     = (string)($data['native_amount'] ?? '');
@@ -274,12 +282,15 @@ class JournalFormRequest extends Request
     }
 
     /**
+     * Check if transfer amount is valid.
+     *
      * @param Validator $validator
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function validateTransfer(Validator $validator): void
     {
+        $data = $validator->getData();
         $sourceCurrency      = (int)($data['source_account_currency'] ?? 0);
         $destinationCurrency = (int)($data['destination_account_currency'] ?? 0);
         $sourceAmount        = (string)($data['source_amount'] ?? '');
@@ -299,6 +310,8 @@ class JournalFormRequest extends Request
     }
 
     /**
+     * Check if withdrawal amount is valid.
+     *
      * @param Validator $validator
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */

@@ -39,11 +39,11 @@ use Illuminate\Support\Collection;
  */
 class TagController extends Controller
 {
-    /** @var TagRepositoryInterface */
+    /** @var TagRepositoryInterface The tag repository. */
     protected $repository;
 
     /**
-     *
+     * TagController constructor.
      */
     public function __construct()
     {
@@ -63,6 +63,8 @@ class TagController extends Controller
     }
 
     /**
+     * Create a new tag.
+     *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function create()
@@ -97,6 +99,8 @@ class TagController extends Controller
     }
 
     /**
+     * Destroy a tag.
+     *
      * @param Tag $tag
      *
      * @return RedirectResponse
@@ -162,11 +166,11 @@ class TagController extends Controller
     }
 
     /**
+     * Show a single tag.
+     *
      * @param Request     $request
      * @param Tag         $tag
      * @param string|null $moment
-     *
-     * TODO will be cleaned up and separated
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      *
@@ -190,7 +194,7 @@ class TagController extends Controller
         // prep for "all" view.
         if ('all' === $moment) {
             $subTitle = (string)trans('firefly.all_journals_for_tag', ['tag' => $tag->tag]);
-            $start    = $this->repository->firstUseDate($tag);
+            $start    = $this->repository->firstUseDate($tag) ?? new Carbon;
             $end      = new Carbon;
             $path     = route('tags.show', [$tag->id, 'all']);
         }
@@ -235,6 +239,8 @@ class TagController extends Controller
     }
 
     /**
+     * Store a tag.
+     *
      * @param TagFormRequest $request
      *
      * @return RedirectResponse
@@ -261,6 +267,8 @@ class TagController extends Controller
     }
 
     /**
+     * Update a tag.
+     *
      * @param TagFormRequest $request
      * @param Tag            $tag
      *
@@ -288,6 +296,8 @@ class TagController extends Controller
     }
 
     /**
+     * Get overview of periods for tag.
+     *
      * @param Tag $tag
      *
      * @return Collection
@@ -299,8 +309,8 @@ class TagController extends Controller
         // get first and last tag date from tag:
         $range = app('preferences')->get('viewRange', '1M')->data;
         /** @var Carbon $end */
-        $end   = app('navigation')->endOfX($this->repository->lastUseDate($tag), $range, null);
-        $start = $this->repository->firstUseDate($tag);
+        $end   = app('navigation')->endOfX($this->repository->lastUseDate($tag) ?? new Carbon, $range, null);
+        $start = $this->repository->firstUseDate($tag) ?? new Carbon;
 
 
         // properties for entries with their amounts.

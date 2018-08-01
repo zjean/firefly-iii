@@ -1,7 +1,7 @@
 <?php
 /**
- * PiggyBank.php
- * Copyright (c) 2017 thegrumpydictator@gmail.com
+ * StageGetTransactionsHandler.php
+ * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
  *
@@ -18,34 +18,38 @@
  * You should have received a copy of the GNU General Public License
  * along with Firefly III. If not, see <http://www.gnu.org/licenses/>.
  */
+
 declare(strict_types=1);
 
-namespace FireflyIII\Support\Twig;
+namespace FireflyIII\Support\Import\Routine\Ynab;
 
-use FireflyIII\Models\PiggyBank as PB;
-use Twig_Extension;
-use Twig_SimpleFunction;
+use FireflyIII\Models\ImportJob;
+use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
 
 /**
- * Class PiggyBank.
+ * Class StageGetTransactionsHandler
  */
-class PiggyBank extends Twig_Extension
+class StageGetTransactionsHandler
 {
+    /** @var ImportJob */
+    private $importJob;
+    /** @var ImportJobRepositoryInterface */
+    private $repository;
+
     /**
      *
      */
-    public function getFunctions(): array
+    public function run(): void
     {
-        $functions = [];
-
-        $functions[] = new Twig_SimpleFunction(
-            'currentRelevantRepAmount',
-            function (PB $piggyBank) {
-                return $piggyBank->currentRelevantRep()->currentamount;
-            }
-        );
-
-        return $functions;
     }
 
+    /**
+     * @param ImportJob $importJob
+     */
+    public function setImportJob(ImportJob $importJob): void
+    {
+        $this->importJob  = $importJob;
+        $this->repository = app(ImportJobRepositoryInterface::class);
+        $this->repository->setUser($importJob->user);
+    }
 }

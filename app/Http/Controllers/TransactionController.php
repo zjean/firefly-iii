@@ -50,7 +50,7 @@ use View;
  */
 class TransactionController extends Controller
 {
-    /** @var JournalRepositoryInterface */
+    /** @var JournalRepositoryInterface Journals and transactions overview */
     private $repository;
 
     /**
@@ -121,6 +121,8 @@ class TransactionController extends Controller
     }
 
     /**
+     * Index for ALL transactions.
+     *
      * @param Request $request
      * @param string  $what
      *
@@ -153,6 +155,8 @@ class TransactionController extends Controller
     }
 
     /**
+     * Do a reconciliation.
+     *
      * @param Request $request
      *
      * @return JsonResponse
@@ -173,6 +177,8 @@ class TransactionController extends Controller
     }
 
     /**
+     * Reorder transactions.
+     *
      * @param Request $request
      *
      * @return \Illuminate\Http\JsonResponse
@@ -199,6 +205,8 @@ class TransactionController extends Controller
     }
 
     /**
+     * Show a transaction.
+     *
      * @param TransactionJournal          $journal
      * @param LinkTypeRepositoryInterface $linkTypeRepository
      *
@@ -239,6 +247,8 @@ class TransactionController extends Controller
     }
 
     /**
+     * Get period overview for index.
+     *
      * @param string $what
      *
      * @param Carbon $date
@@ -252,8 +262,7 @@ class TransactionController extends Controller
     {
         $range = app('preferences')->get('viewRange', '1M')->data;
         $first = $this->repository->firstNull();
-        $start = new Carbon;
-        $start->subYear();
+        $start = Carbon::create()->subYear();
         $types   = config('firefly.transactionTypesByWhat.' . $what);
         $entries = new Collection;
         if (null !== $first) {
@@ -294,6 +303,8 @@ class TransactionController extends Controller
     }
 
     /**
+     * Collect the sum per currency.
+     *
      * @param Collection $collection
      *
      * @return array

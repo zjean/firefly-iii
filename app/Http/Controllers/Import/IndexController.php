@@ -32,19 +32,20 @@ use Illuminate\Http\Response as LaravelResponse;
 use Log;
 
 /**
- * Class FileController.
+ *
+ * Class IndexController
  */
 class IndexController extends Controller
 {
     /** @var array */
     public $providers;
-    /** @var ImportJobRepositoryInterface */
+    /** @var ImportJobRepositoryInterface The import job repository */
     public $repository;
-    /** @var UserRepositoryInterface */
+    /** @var UserRepositoryInterface The user repository */
     public $userRepository;
 
     /**
-     *
+     * IndexController constructor.
      */
     public function __construct()
     {
@@ -77,9 +78,15 @@ class IndexController extends Controller
     {
         Log::debug(sprintf('Will create job for provider "%s"', $importProvider));
 
-        $importJob = $this->repository->create($importProvider);
-        $hasPreReq = (bool)config(sprintf('import.has_prereq.%s', $importProvider));
-        $hasConfig = (bool)config(sprintf('import.has_job_config.%s', $importProvider));
+        $importJob      = $this->repository->create($importProvider);
+        $hasPreReq      = (bool)config(sprintf('import.has_prereq.%s', $importProvider));
+        $hasConfig      = (bool)config(sprintf('import.has_job_config.%s', $importProvider));
+        $allowedForDemo = (bool)config(sprintf('import.allowed_for_demo.%s', $importProvider));
+        $isDemoUser     = $this->userRepository->hasRole(auth()->user(), 'demo');
+
+        if ($isDemoUser && !$allowedForDemo) {
+            return redirect(route('import.index'));
+        }
 
         Log::debug(sprintf('Created job #%d for provider %s', $importJob->id, $importProvider));
 
@@ -179,7 +186,8 @@ class IndexController extends Controller
         $providers    = $this->providers;
         $subTitle     = (string)trans('import.index_breadcrumb');
         $subTitleIcon = 'fa-home';
+        $isDemoUser   = $this->userRepository->hasRole(auth()->user(), 'demo');
 
-        return view('import.index', compact('subTitle', 'subTitleIcon', 'providers'));
+        return view('import.index', compact('subTitle', 'subTitleIcon', 'providers', 'isDemoUser'));
     }
 }

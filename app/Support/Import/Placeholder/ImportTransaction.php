@@ -128,6 +128,7 @@ class ImportTransaction
      * @param ColumnValue $columnValue
      *
      * @throws FireflyException
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function addColumnValue(ColumnValue $columnValue): void
     {
@@ -226,7 +227,6 @@ class ImportTransaction
      * Calculate the amount of this transaction.
      *
      * @return string
-     * @throws FireflyException
      */
     public function calculateAmount(): string
     {
@@ -258,7 +258,7 @@ class ImportTransaction
             if ($conversion === -1) {
                 $result = app('steam')->negative($result);
             }
-            if ($conversion === 1) {
+            if (1 === $conversion) {
                 $result = app('steam')->positive($result);
             }
             Log::debug(sprintf('convertedAmount after conversion is  %s', $result));
@@ -301,7 +301,7 @@ class ImportTransaction
             if ($conversion === -1) {
                 $result = app('steam')->negative($result);
             }
-            if ($conversion === 1) {
+            if (1 === $conversion) {
                 $result = app('steam')->positive($result);
             }
             Log::debug(sprintf('Foreign amount after conversion is  %s', $result));

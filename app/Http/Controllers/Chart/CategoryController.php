@@ -38,11 +38,11 @@ use Illuminate\Support\Collection;
  */
 class CategoryController extends Controller
 {
-    /** @var GeneratorInterface */
+    /** @var GeneratorInterface Chart generation methods. */
     protected $generator;
 
     /**
-     *
+     * CategoryController constructor.
      */
     public function __construct()
     {
@@ -112,6 +112,8 @@ class CategoryController extends Controller
 
 
     /**
+     * Shows the category chart on the front page.
+     *
      * @param CategoryRepositoryInterface $repository
      * @param AccountRepositoryInterface  $accountRepository
      *
@@ -154,6 +156,8 @@ class CategoryController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Chart report.
+     *
      * @param Category   $category
      * @param Collection $accounts
      * @param Carbon     $start
@@ -172,7 +176,7 @@ class CategoryController extends Controller
         $cache->addProperty($accounts->pluck('id')->toArray());
         $cache->addProperty($category);
         if ($cache->has()) {
-            return $cache->get(); // @codeCoverageIgnore
+            return response()->json($cache->get());// @codeCoverageIgnore
         }
         $repository = app(CategoryRepositoryInterface::class);
         $expenses   = $repository->periodExpenses(new Collection([$category]), $accounts, $start, $end);
@@ -215,6 +219,8 @@ class CategoryController extends Controller
 
 
     /**
+     * Chart for period for transactions without a category.
+     *
      * @param Collection $accounts
      * @param Carbon     $start
      * @param Carbon     $end
@@ -231,7 +237,7 @@ class CategoryController extends Controller
         $cache->addProperty('chart.category.period.no-cat');
         $cache->addProperty($accounts->pluck('id')->toArray());
         if ($cache->has()) {
-            return $cache->get(); // @codeCoverageIgnore
+            return response()->json($cache->get()); // @codeCoverageIgnore
         }
         $repository = app(CategoryRepositoryInterface::class);
         $expenses   = $repository->periodExpensesNoCategory($accounts, $start, $end);
@@ -272,6 +278,8 @@ class CategoryController extends Controller
     }
 
     /**
+     * Chart for a specific period.
+     *
      * @param Category                    $category
      * @param                             $date
      *
@@ -289,6 +297,8 @@ class CategoryController extends Controller
 
 
     /**
+     * Chart for a specific period (start and end).
+     *
      * @param Category $category
      * @param Carbon   $start
      * @param Carbon   $end

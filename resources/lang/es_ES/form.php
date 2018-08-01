@@ -105,7 +105,7 @@ return [
     'tags'                        => 'Etiquetas',
     'deletePermanently'           => 'Borrar permanentemente',
     'cancel'                      => 'Cancelar',
-    'targetdate'                  => 'Fecha tope',
+    'targetdate'                  => 'Fecha límite',
     'startdate'                   => 'Fecha de inicio',
     'tag'                         => 'Etiqueta',
     'under'                       => 'Debajo',
@@ -237,5 +237,6 @@ return [
     'repetitions'             => 'Repetitions',
     'calendar'                => 'Calendar',
     'weekend'                 => 'Weekend',
+    'client_secret'           => 'Client secret',
 
 ];

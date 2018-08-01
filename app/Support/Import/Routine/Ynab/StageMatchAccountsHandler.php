@@ -1,6 +1,6 @@
 <?php
 /**
- * TransactionTypeRepositoryInterface.php
+ * StageMatchAccountsHandler.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
@@ -21,23 +21,37 @@
 
 declare(strict_types=1);
 
-namespace FireflyIII\Repositories\TransactionType;
+namespace FireflyIII\Support\Import\Routine\Ynab;
 
-use FireflyIII\Models\TransactionType;
+use FireflyIII\Models\ImportJob;
+use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
 
 /**
- * Interface TransactionTypeRepositoryInterface
- *
+ * Class StageMatchAccountsHandler
  */
-interface TransactionTypeRepositoryInterface
+class StageMatchAccountsHandler
 {
-    /**
-     * Find a transaction type or return NULL.
-     *
-     * @param string $type
-     *
-     * @return TransactionType|null
-     */
-    public function findByType(string $type): ?TransactionType;
 
+
+    /** @var ImportJob */
+    private $importJob;
+    /** @var ImportJobRepositoryInterface */
+    private $repository;
+
+    /**
+     *
+     */
+    public function run(): void
+    {
+    }
+
+    /**
+     * @param ImportJob $importJob
+     */
+    public function setImportJob(ImportJob $importJob): void
+    {
+        $this->importJob  = $importJob;
+        $this->repository = app(ImportJobRepositoryInterface::class);
+        $this->repository->setUser($importJob->user);
+    }
 }

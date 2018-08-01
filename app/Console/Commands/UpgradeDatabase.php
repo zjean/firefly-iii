@@ -82,7 +82,7 @@ class UpgradeDatabase extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle(): int
     {
         $this->setTransactionIdentifier();
         $this->updateAccountCurrencies();
@@ -96,6 +96,8 @@ class UpgradeDatabase extends Command
         $this->migrateBillsToRules();
 
         $this->info('Firefly III database is up to date.');
+
+        return 0;
     }
 
     /**
@@ -197,7 +199,7 @@ class UpgradeDatabase extends Command
                             [
                                 'rule_id'         => $rule->id,
                                 'trigger_type'    => 'amount_more',
-                                'trigger_value'   => round($bill->amount_min, $currency->decimal_places),
+                                'trigger_value'   => round((float)$bill->amount_min, $currency->decimal_places),
                                 'active'          => 1,
                                 'stop_processing' => 0,
                                 'order'           => 4,
@@ -209,7 +211,7 @@ class UpgradeDatabase extends Command
                             [
                                 'rule_id'         => $rule->id,
                                 'trigger_type'    => 'amount_exactly',
-                                'trigger_value'   => round($bill->amount_min, $currency->decimal_places),
+                                'trigger_value'   => round((float)$bill->amount_min, $currency->decimal_places),
                                 'active'          => 1,
                                 'stop_processing' => 0,
                                 'order'           => 3,

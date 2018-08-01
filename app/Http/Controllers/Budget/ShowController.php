@@ -44,11 +44,11 @@ use Illuminate\Support\Collection;
 class ShowController extends Controller
 {
 
-    /** @var BudgetRepositoryInterface */
+    /** @var BudgetRepositoryInterface The budget repository */
     private $repository;
 
     /**
-     *
+     * ShowController constructor.
      */
     public function __construct()
     {
@@ -68,6 +68,8 @@ class ShowController extends Controller
     }
 
     /**
+     * Show transactions without a budget.
+     *
      * @param Request     $request
      * @param Carbon|null $start
      * @param Carbon|null $end
@@ -99,6 +101,8 @@ class ShowController extends Controller
     }
 
     /**
+     * Shows ALL transactions without a budget.
+     *
      * @param Request                    $request
      * @param JournalRepositoryInterface $repository
      *
@@ -123,11 +127,13 @@ class ShowController extends Controller
         $transactions = $collector->getPaginatedJournals();
         $transactions->setPath(route('budgets.no-budget'));
 
-        return view('budgets.no-budget', compact('transactions', 'subTitle', 'moment', 'periods', 'start', 'end'));
+        return view('budgets.no-budget', compact('transactions', 'subTitle', 'moment',  'start', 'end'));
     }
 
 
     /**
+     * Show a single budget.
+     *
      * @param Request $request
      * @param Budget  $budget
      *
@@ -156,6 +162,8 @@ class ShowController extends Controller
     }
 
     /**
+     * Show a single budget by a budget limit.
+     *
      * @param Request     $request
      * @param Budget      $budget
      * @param BudgetLimit $budgetLimit
@@ -187,6 +195,7 @@ class ShowController extends Controller
                   ->setBudget($budget)->setLimit($pageSize)->setPage($page)->withBudgetInformation();
         $transactions = $collector->getPaginatedJournals();
         $transactions->setPath(route('budgets.show', [$budget->id, $budgetLimit->id]));
+        /** @var Carbon $start */
         $start  = session('first', Carbon::create()->startOfYear());
         $end    = new Carbon;
         $limits = $this->getLimits($budget, $start, $end);
@@ -195,6 +204,8 @@ class ShowController extends Controller
     }
 
     /**
+     * Gets all budget limits for a budget.
+     *
      * @param Budget $budget
      * @param Carbon $start
      * @param Carbon $end
@@ -229,6 +240,8 @@ class ShowController extends Controller
 
 
     /**
+     * Gets period overview used for budgets.
+     *
      * @return Collection
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)

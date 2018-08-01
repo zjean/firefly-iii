@@ -50,10 +50,10 @@ use Illuminate\Support\Collection;
 class BudgetController extends Controller
 {
     use DateCalculation;
-    /** @var GeneratorInterface */
+    /** @var GeneratorInterface Chart generation methods. */
     protected $generator;
 
-    /** @var BudgetRepositoryInterface */
+    /** @var BudgetRepositoryInterface The budget repository */
     protected $repository;
 
     /**
@@ -75,13 +75,16 @@ class BudgetController extends Controller
 
 
     /**
+     * Shows overview of a single budget.
+     *
      * @param Budget $budget
      *
      * @return JsonResponse
      */
     public function budget(Budget $budget): JsonResponse
     {
-        $start = $this->repository->firstUseDate($budget);
+        /** @var Carbon $start */
+        $start = $this->repository->firstUseDate($budget) ?? session('start', new Carbon);
         /** @var Carbon $end */
         $end   = session('end', new Carbon);
         $cache = new CacheProperties();
@@ -122,7 +125,6 @@ class BudgetController extends Controller
 
     /**
      * Shows the amount left in a specific budget limit.
-     *
      *
      * @param Budget      $budget
      * @param BudgetLimit $budgetLimit
@@ -169,6 +171,8 @@ class BudgetController extends Controller
 
 
     /**
+     * Shows how much is spent per asset account.
+     *
      * @param Budget           $budget
      * @param BudgetLimit|null $budgetLimit
      *
@@ -217,6 +221,8 @@ class BudgetController extends Controller
 
 
     /**
+     * Shows how much is spent per category.
+     *
      * @param Budget           $budget
      * @param BudgetLimit|null $budgetLimit
      *
@@ -266,6 +272,8 @@ class BudgetController extends Controller
 
 
     /**
+     * Shows how much is spent per expense account.
+     *
      * @param Budget           $budget
      * @param BudgetLimit|null $budgetLimit
      *
@@ -370,6 +378,7 @@ class BudgetController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Shows a budget overview chart (spent and budgeted).
      *
      * @param Budget     $budget
      * @param Carbon     $start
@@ -415,6 +424,8 @@ class BudgetController extends Controller
 
 
     /**
+     * Shows a chart for transactions without a budget.
+     *
      * @param Collection $accounts
      * @param Carbon     $start
      * @param Carbon     $end
@@ -451,6 +462,8 @@ class BudgetController extends Controller
     }
 
     /**
+     * Get the account names belonging to a bunch of account ID's.
+     *
      * @param array $accountIds
      *
      * @return array
@@ -473,6 +486,8 @@ class BudgetController extends Controller
     }
 
     /**
+     * Get the amount of money budgeted in a period.
+     *
      * @param Budget $budget
      * @param Carbon $start
      * @param Carbon $end
@@ -501,7 +516,7 @@ class BudgetController extends Controller
     }
 
     /**
-     * Small helper function for some of the charts.
+     * Small helper function for some of the charts. Extracts category names from a bunch of ID's.
      *
      * @param array $categoryIds
      *
@@ -526,6 +541,7 @@ class BudgetController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Get the expenses for a budget in a date range.
      *
      * @param Collection $limits
      * @param Budget     $budget

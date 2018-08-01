@@ -27,8 +27,8 @@ use FireflyIII\Import\Prerequisites\PrerequisitesInterface;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
 use FireflyIII\User;
 use Illuminate\Routing\Route;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Class ImportProvider.
@@ -36,23 +36,9 @@ use Log;
 class ImportProvider implements BinderInterface
 {
     /**
-     * @param string $value
-     * @param Route  $route
-     *
-     * @return Carbon
-     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
-     */
-    public static function routeBinder(string $value, Route $route): string
-    {
-        $providers = array_keys(self::getProviders());
-        if (\in_array($value, $providers, true)) {
-            return $value;
-        }
-        throw new NotFoundHttpException;
-    }
-
-    /**
      * @return array
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public static function getProviders(): array
     {
@@ -66,27 +52,20 @@ class ImportProvider implements BinderInterface
         $isDemoUser    = $repository->hasRole($user, 'demo');
         $isDebug       = (bool)config('app.debug');
         foreach ($providerNames as $providerName) {
-            //Log::debug(sprintf('Now with provider %s', $providerName));
             // only consider enabled providers
             $enabled        = (bool)config(sprintf('import.enabled.%s', $providerName));
-            $allowedForDemo = (bool)config(sprintf('import.allowed_for_demo.%s', $providerName));
             $allowedForUser = (bool)config(sprintf('import.allowed_for_user.%s', $providerName));
             if (false === $enabled) {
-                //Log::debug('Provider is not enabled. NEXT!');
                 continue;
             }
 
-            if (true === $isDemoUser && false === $allowedForDemo) {
-                //Log::debug('User is demo and this provider is not allowed for demo user. NEXT!');
-                continue;
-            }
             if (false === $isDemoUser && false === $allowedForUser && false === $isDebug) {
-                //Log::debug('User is not demo and this provider is not allowed for such users. NEXT!');
                 continue; // @codeCoverageIgnore
             }
 
             $providers[$providerName] = [
-                'has_prereq' => (bool)config('import.has_prereq.' . $providerName),
+                'has_prereq'       => (bool)config('import.has_prereq.' . $providerName),
+                'allowed_for_demo' => (bool)config(sprintf('import.allowed_for_demo.%s', $providerName)),
             ];
             $class                    = (string)config(sprintf('import.prerequisites.%s', $providerName));
             $result                   = false;
@@ -102,5 +81,21 @@ class ImportProvider implements BinderInterface
         Log::debug(sprintf('Enabled providers: %s', json_encode(array_keys($providers))));
 
         return $providers;
+    }
+
+    /**
+     * @param string $value
+     * @param Route  $route
+     *
+     * @return Carbon
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public static function routeBinder(string $value, Route $route): string
+    {
+        $providers = array_keys(self::getProviders());
+        if (\in_array($value, $providers, true)) {
+            return $value;
+        }
+        throw new NotFoundHttpException;
     }
 }

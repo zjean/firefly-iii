@@ -1,6 +1,6 @@
 <?php
 /**
- * TransactionTypeRepository.php
+ * GetAccountsRequest.php
  * Copyright (c) 2018 thegrumpydictator@gmail.com
  *
  * This file is part of Firefly III.
@@ -21,24 +21,34 @@
 
 declare(strict_types=1);
 
-namespace FireflyIII\Repositories\TransactionType;
+namespace FireflyIII\Services\Ynab\Request;
 
-use FireflyIII\Models\TransactionType;
+use Log;
 
 /**
- * Class TransactionTypeRepository
+ * Class GetAccountsRequest
  */
-class TransactionTypeRepository implements TransactionTypeRepositoryInterface
+class GetAccountsRequest extends YnabRequest
 {
+    /** @var array */
+    public $accounts;
+    /** @var string */
+    public $budgetId;
+
     /**
-     * Find a transaction type or return NULL.
      *
-     * @param string $type
-     *
-     * @return TransactionType|null
      */
-    public function findByType(string $type): ?TransactionType
+    public function call(): void
     {
-        return TransactionType::where('type', ucfirst($type))->first();
+        Log::debug('Now in GetAccountsRequest::call()');
+        $uri = $this->api . sprintf('/budgets/%s/accounts', $this->budgetId);
+
+        Log::debug(sprintf('URI is %s', $uri));
+
+        $result = $this->authenticatedGetRequest($uri, []);
+        //Log::debug('Raw GetAccountsRequest result', $result);
+
+        // expect data in [data][accounts]
+        $this->accounts = $result['data']['accounts'] ?? [];
     }
 }

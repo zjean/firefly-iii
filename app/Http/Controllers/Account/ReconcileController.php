@@ -45,15 +45,15 @@ use Log;
  */
 class ReconcileController extends Controller
 {
-    /** @var AccountRepositoryInterface */
+    /** @var AccountRepositoryInterface The account repository */
     private $accountRepos;
-    /** @var CurrencyRepositoryInterface */
+    /** @var CurrencyRepositoryInterface The currency repository */
     private $currencyRepos;
-    /** @var JournalRepositoryInterface */
+    /** @var JournalRepositoryInterface Journals and transactions overview */
     private $repository;
 
     /**
-     *
+     * ReconcileController constructor.
      */
     public function __construct()
     {
@@ -74,6 +74,8 @@ class ReconcileController extends Controller
     }
 
     /**
+     * Edit a reconciliation.
+     *
      * @param TransactionJournal $journal
      *
      * @return $this|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
@@ -110,6 +112,8 @@ class ReconcileController extends Controller
     }
 
     /**
+     * Reconciliation overview.
+     *
      * @param Account     $account
      * @param Carbon|null $start
      * @param Carbon|null $end
@@ -140,10 +144,13 @@ class ReconcileController extends Controller
 
         // get start and end
         if (null === $start && null === $end) {
+            /** @var Carbon $start */
             $start = clone session('start', app('navigation')->startOfPeriod(new Carbon, $range));
+            /** @var Carbon $end */
             $end   = clone session('end', app('navigation')->endOfPeriod(new Carbon, $range));
         }
         if (null === $end) {
+            /** @var Carbon $end */
             $end = app('navigation')->endOfPeriod($start, $range);
         }
 
@@ -168,6 +175,8 @@ class ReconcileController extends Controller
     }
 
     /**
+     * Show a single reconciliation.
+     *
      * @param TransactionJournal $journal
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
@@ -179,7 +188,7 @@ class ReconcileController extends Controller
         if (TransactionType::RECONCILIATION !== $journal->transactionType->type) {
             return redirect(route('transactions.show', [$journal->id]));
         }
-        $subTitle = (string)trans('firefly.reconciliation') . ' "' . $journal->description . '"';
+        $subTitle = trans('firefly.reconciliation') . ' "' . $journal->description . '"';
 
         // get main transaction:
         $transaction = $this->repository->getAssetTransaction($journal);
@@ -193,6 +202,8 @@ class ReconcileController extends Controller
 
     /** @noinspection MoreThanThreeArgumentsInspection */
     /**
+     * Submit a new reconciliation.
+     *
      * @param ReconciliationStoreRequest $request
      * @param Account                    $account
      * @param Carbon                     $start
@@ -278,6 +289,8 @@ class ReconcileController extends Controller
 
 
     /**
+     * Update a reconciliation.
+     *
      * @param ReconciliationUpdateRequest $request
      * @param TransactionJournal          $journal
      *
@@ -359,6 +372,8 @@ class ReconcileController extends Controller
     }
 
     /**
+     * Redirect user to the original asset account.
+     *
      * @param Account $account
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector

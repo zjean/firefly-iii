@@ -31,7 +31,7 @@ use Log;
  */
 class HelpController extends Controller
 {
-    /** @var HelpInterface */
+    /** @var HelpInterface Help interface. */
     private $help;
 
     /**
@@ -51,12 +51,15 @@ class HelpController extends Controller
     }
 
     /**
+     * Show help for a route.
+     *
      * @param   $route
      *
      * @return JsonResponse
      */
     public function show(string $route): JsonResponse
     {
+        /** @var string $language */
         $language = app('preferences')->get('language', config('firefly.default_language', 'en_US'))->data;
         $html     = $this->getHelpText($route, $language);
 
@@ -64,6 +67,8 @@ class HelpController extends Controller
     }
 
     /**
+     * Gets the help text.
+     *
      * @param string $route
      * @param string $language
      *
@@ -74,7 +79,7 @@ class HelpController extends Controller
     private function getHelpText(string $route, string $language): string
     {
         // get language and default variables.
-        $content = '<p>' . (string)trans('firefly.route_has_no_help') . '</p>';
+        $content = '<p>' . trans('firefly.route_has_no_help') . '</p>';
 
         // if no such route, log error and return default text.
         if (!$this->help->hasRoute($route)) {
@@ -116,6 +121,6 @@ class HelpController extends Controller
             return $content;
         }
 
-        return '<p>' . (string)trans('firefly.route_has_no_help') . '</p>';
+        return '<p>' . trans('firefly.route_has_no_help') . '</p>';
     }
 }
