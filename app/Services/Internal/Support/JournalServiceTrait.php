@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Services\Internal\Support;
 
+use Exception;
 use FireflyIII\Factory\BillFactory;
 use FireflyIII\Factory\TagFactory;
 use FireflyIII\Factory\TransactionJournalMetaFactory;
@@ -95,19 +96,13 @@ trait JournalServiceTrait
      */
     protected function storeMeta(TransactionJournal $journal, array $data, string $field): void
     {
-
-        if (!isset($data[$field])) {
-            Log::debug(sprintf('Want to store meta-field "%s", but no value.', $field));
-
-            return;
-        }
         $set = [
             'journal' => $journal,
             'name'    => $field,
-            'data'    => (string)$data[$field],
+            'data'    => (string)($data[$field] ?? ''),
         ];
 
-        Log::debug(sprintf('Going to store meta-field "%s", with value "%s".', $field, (string)$data[$field]));
+        Log::debug(sprintf('Going to store meta-field "%s", with value "%s".', $set['name'], $set['data']));
 
         /** @var TransactionJournalMetaFactory $factory */
         $factory = app(TransactionJournalMetaFactory::class);
@@ -134,7 +129,11 @@ trait JournalServiceTrait
         }
         $note = $journal->notes()->first();
         if (null !== $note) {
-            $note->delete();
+            try {
+                $note->delete();
+            } catch (Exception $e) {
+                Log::debug(sprintf('Journal service trait could not delete note: %s', $e->getMessage()));
+            }
         }
 
 

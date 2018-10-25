@@ -23,7 +23,6 @@ declare(strict_types=1);
 namespace Tests\Unit\TransactionRules\Triggers;
 
 use FireflyIII\Models\Transaction;
-use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Triggers\BudgetIs;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -34,77 +33,65 @@ use Tests\TestCase;
 class BudgetIsTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs
      */
     public function testTriggeredJournal(): void
     {
-        do {
-            $journal = TransactionJournal::inRandomOrder()->where('transaction_type_id', 1)->whereNull('deleted_at')->first();
-            $count   = $journal->transactions()->count();
-        } while ($count !== 2);
-
-        $budget = $journal->user->budgets()->first();
-        $journal->budgets()->detach();
-        $journal->budgets()->save($budget);
-        $this->assertEquals(1, $journal->budgets()->count());
+        $withdrawal = $this->getRandomWithdrawal();
+        $budget     = $withdrawal->user->budgets()->first();
+        $withdrawal->budgets()->detach();
+        $withdrawal->budgets()->save($budget);
+        $this->assertEquals(1, $withdrawal->budgets()->count());
 
         $trigger = BudgetIs::makeFromStrings($budget->name, false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertTrue($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs
      */
     public function testTriggeredNotJournal(): void
     {
-        do {
-            $journal = TransactionJournal::inRandomOrder()->where('transaction_type_id', 1)->whereNull('deleted_at')->first();
-            $count   = $journal->transactions()->count();
-        } while ($count !== 2);
-
-        $budget      = $journal->user->budgets()->first();
-        $otherBudget = $journal->user->budgets()->where('id', '!=', $budget->id)->first();
-        $journal->budgets()->detach();
-        $journal->budgets()->save($budget);
-        $this->assertEquals(1, $journal->budgets()->count());
+        $withdrawal  = $this->getRandomWithdrawal();
+        $budget      = $withdrawal->user->budgets()->first();
+        $otherBudget = $withdrawal->user->budgets()->where('id', '!=', $budget->id)->first();
+        $withdrawal->budgets()->detach();
+        $withdrawal->budgets()->save($budget);
+        $this->assertEquals(1, $withdrawal->budgets()->count());
 
         $trigger = BudgetIs::makeFromStrings($otherBudget->name, false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertFalse($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs
      */
     public function testTriggeredTransaction(): void
     {
-        do {
-            $journal = TransactionJournal::inRandomOrder()->where('transaction_type_id', 1)->whereNull('deleted_at')->first();
-            $count   = $journal->transactions()->count();
-        } while ($count !== 2);
-
+        $withdrawal = $this->getRandomWithdrawal();
         /** @var Collection $transactions */
-        $transactions = $journal->transactions()->get();
-        $budget      = $journal->user->budgets()->first();
+        $transactions = $withdrawal->transactions()->get();
+        $budget       = $withdrawal->user->budgets()->first();
 
-        $journal->budgets()->detach();
+        $withdrawal->budgets()->detach();
         /** @var Transaction $transaction */
-        foreach($transactions as $transaction) {
+        foreach ($transactions as $transaction) {
             $transaction->budgets()->detach();
             $transaction->budgets()->save($budget);
             $this->assertEquals(1, $transaction->budgets()->count());
         }
 
-        $this->assertEquals(0, $journal->budgets()->count());
+        $this->assertEquals(0, $withdrawal->budgets()->count());
 
         $trigger = BudgetIs::makeFromStrings($budget->name, false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertTrue($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs
      */
     public function testWillMatchEverythingNotNull(): void
     {
@@ -114,7 +101,7 @@ class BudgetIsTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\BudgetIs
      */
     public function testWillMatchEverythingNull(): void
     {

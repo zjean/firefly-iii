@@ -29,6 +29,7 @@ use Preferences;
 use Route;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class AuthenticateTwoFactorTest
@@ -36,7 +37,21 @@ use Tests\TestCase;
 class AuthenticateTwoFactorTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor::handle
+     * Set up test
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+        Route::middleware(AuthenticateTwoFactor::class)->any(
+            '/_test/authenticate', function () {
+            return 'OK';
+        }
+        );
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor
      */
     public function testMiddleware(): void
     {
@@ -54,7 +69,7 @@ class AuthenticateTwoFactorTest extends TestCase
      * cookie     : false
      *
      *
-     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor::handle
+     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor
      */
     public function testMiddlewareNoTwoFA(): void
     {
@@ -85,7 +100,7 @@ class AuthenticateTwoFactorTest extends TestCase
      * cookie     : false
      *
      *
-     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor::handle
+     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor
      */
     public function testMiddlewareTwoFAAuthed(): void
     {
@@ -118,7 +133,7 @@ class AuthenticateTwoFactorTest extends TestCase
      * cookie     : false
      *
      *
-     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor::handle
+     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor
      */
     public function testMiddlewareTwoFANoSecret(): void
     {
@@ -149,7 +164,7 @@ class AuthenticateTwoFactorTest extends TestCase
      * cookie     : false
      *
      *
-     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor::handle
+     * @covers \FireflyIII\Http\Middleware\AuthenticateTwoFactor
      */
     public function testMiddlewareTwoFASecret(): void
     {
@@ -173,19 +188,5 @@ class AuthenticateTwoFactorTest extends TestCase
         $response = $this->call('GET', '/_test/authenticate', [], $cookie);
         $this->assertEquals(Response::HTTP_FOUND, $response->getStatusCode());
         $response->assertRedirect(route('two-factor.index'));
-    }
-
-    /**
-     * Set up test
-     */
-    protected function setUp()
-    {
-        parent::setUp();
-
-        Route::middleware(AuthenticateTwoFactor::class)->any(
-            '/_test/authenticate', function () {
-            return 'OK';
-        }
-        );
     }
 }

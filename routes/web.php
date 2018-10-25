@@ -33,6 +33,12 @@ Route::group(
 }
 );
 
+Route::group(
+    ['middleware' => 'binders-only','namespace' => 'FireflyIII\Http\Controllers\System', 'as' => 'cron.', 'prefix' => 'cron'], function () {
+    Route::get('run/{cliToken}', ['uses' => 'CronController@cron', 'as' => 'cron']);
+}
+);
+
 /**
  * These routes only work when the user is NOT logged in.
  */
@@ -110,10 +116,10 @@ Route::group(
     ['middleware' => 'user-full-auth', 'namespace' => 'FireflyIII\Http\Controllers', 'prefix' => 'accounts', 'as' => 'accounts.'], function () {
 
     // show:
-    Route::get('{what}', ['uses' => 'Account\IndexController@index', 'as' => 'index'])->where('what', 'revenue|asset|expense');
+    Route::get('{what}', ['uses' => 'Account\IndexController@index', 'as' => 'index'])->where('what', 'revenue|asset|expense|liabilities');
 
     // create
-    Route::get('create/{what}', ['uses' => 'Account\CreateController@create', 'as' => 'create'])->where('what', 'revenue|asset|expense');
+    Route::get('create/{what}', ['uses' => 'Account\CreateController@create', 'as' => 'create'])->where('what', 'revenue|asset|expense|liabilities');
     Route::post('store', ['uses' => 'Account\CreateController@store', 'as' => 'store']);
 
 
@@ -208,15 +214,19 @@ Route::group(
     Route::get('list/no-budget/all', ['uses' => 'Budget\ShowController@noBudgetAll', 'as' => 'no-budget-all']);
     Route::get('list/no-budget/{start_date?}/{end_date?}', ['uses' => 'Budget\ShowController@noBudget', 'as' => 'no-budget']);
 
+    // reorder budgets
+    Route::get('reorder', ['uses' => 'Budget\IndexController@reorder', 'as' => 'reorder']);
 
     // index
-    Route::get('{moment?}', ['uses' => 'Budget\IndexController@index', 'as' => 'index']);
+    Route::get('{start_date?}/{end_date?}', ['uses' => 'Budget\IndexController@index', 'as' => 'index']);
 
     // update budget amount and income amount
     Route::get('income/{start_date}/{end_date}', ['uses' => 'Budget\AmountController@updateIncome', 'as' => 'income']);
     Route::get('info/{start_date}/{end_date}', ['uses' => 'Budget\AmountController@infoIncome', 'as' => 'income.info']);
     Route::post('income', ['uses' => 'Budget\AmountController@postUpdateIncome', 'as' => 'income.post']);
     Route::post('amount/{budget}', ['uses' => 'Budget\AmountController@amount', 'as' => 'amount']);
+
+
 }
 );
 
@@ -242,11 +252,11 @@ Route::group(
     Route::post('destroy/{category}', ['uses' => 'CategoryController@destroy', 'as' => 'destroy']);
 
     // show category:
-    Route::get('show/{category}/all', ['uses' => 'Category\ShowController@showAll', 'as' => 'show-all']);
+    Route::get('show/{category}/all', ['uses' => 'Category\ShowController@showAll', 'as' => 'show.all']);
     Route::get('show/{category}/{start_date?}/{end_date?}', ['uses' => 'Category\ShowController@show', 'as' => 'show']);
 
     // no category controller:
-    Route::get('list/no-category/all', ['uses' => 'Category\NoCategoryController@showAll', 'as' => 'no-category-all']);
+    Route::get('list/no-category/all', ['uses' => 'Category\NoCategoryController@showAll', 'as' => 'no-category.all']);
     Route::get('list/no-category/{start_date?}/{end_date?}', ['uses' => 'Category\NoCategoryController@show', 'as' => 'no-category']);
 
 }
@@ -537,18 +547,12 @@ Route::group(
     ['middleware' => 'user-full-auth', 'namespace' => 'FireflyIII\Http\Controllers', 'prefix' => 'json', 'as' => 'json.'], function () {
 
     // for auto complete
-    Route::get('expense-accounts', ['uses' => 'Json\AutoCompleteController@expenseAccounts', 'as' => 'expense-accounts']);
-    Route::get('all-accounts', ['uses' => 'Json\AutoCompleteController@allAccounts', 'as' => 'all-accounts']);
-    Route::get('revenue-accounts', ['uses' => 'Json\AutoCompleteController@revenueAccounts', 'as' => 'revenue-accounts']);
-    Route::get('categories', ['uses' => 'Json\AutoCompleteController@categories', 'as' => 'categories']);
-    Route::get('budgets', ['uses' => 'Json\AutoCompleteController@budgets', 'as' => 'budgets']);
-    Route::get('tags', ['uses' => 'Json\AutoCompleteController@tags', 'as' => 'tags']);
-    Route::get('bills', ['uses' => 'Json\AutoCompleteController@bills', 'as' => 'bills']);
-    Route::get('currency-names', ['uses' => 'Json\AutoCompleteController@currencyNames', 'as' => 'currency-names']);
+
+
     Route::get('transaction-journals/all', ['uses' => 'Json\AutoCompleteController@allTransactionJournals', 'as' => 'all-transaction-journals']);
     Route::get('transaction-journals/with-id/{tj}', ['uses' => 'Json\AutoCompleteController@journalsWithId', 'as' => 'journals-with-id']);
     Route::get('transaction-journals/{what}', ['uses' => 'Json\AutoCompleteController@transactionJournals', 'as' => 'transaction-journals']);
-    Route::get('transaction-types', ['uses' => 'Json\AutoCompleteController@transactionTypes', 'as' => 'transaction-types']);
+//    Route::get('transaction-types', ['uses' => 'Json\AutoCompleteController@transactionTypes', 'as' => 'transaction-types']);
 
     // boxes
     Route::get('box/balance', ['uses' => 'Json\BoxController@balance', 'as' => 'box.balance']);
@@ -571,6 +575,7 @@ Route::group(
     Route::post('intro/enable/{route}/{specificPage?}', ['uses' => 'Json\IntroController@postEnable', 'as' => 'intro.enable']);
     Route::get('intro/{route}/{specificPage?}', ['uses' => 'Json\IntroController@getIntroSteps', 'as' => 'intro']);
 
+    Route::get('/{subject}', ['uses' => 'Json\AutoCompleteController@autoComplete', 'as' => 'autocomplete']);
 
 }
 );
@@ -781,6 +786,7 @@ Route::group(
 
     // create controller
     Route::get('create/{ruleGroup?}', ['uses' => 'Rule\CreateController@create', 'as' => 'create']);
+    Route::get('create-from-bill/{bill}', ['uses' => 'Rule\CreateController@createFromBill', 'as' => 'create-from-bill']);
     Route::post('store', ['uses' => 'Rule\CreateController@store', 'as' => 'store']);
 
     // delete controller
@@ -803,7 +809,6 @@ Route::group(
     // edit controller
     Route::get('edit/{rule}', ['uses' => 'Rule\EditController@edit', 'as' => 'edit']);
     Route::post('update/{rule}', ['uses' => 'Rule\EditController@update', 'as' => 'update']);
-
 
 
 }
@@ -848,7 +853,8 @@ Route::group(
     Route::get('', ['uses' => 'TagController@index', 'as' => 'index']);
     Route::get('create', ['uses' => 'TagController@create', 'as' => 'create']);
 
-    Route::get('show/{tag}/{moment?}', ['uses' => 'TagController@show', 'as' => 'show']);
+    Route::get('show/{tag}/all', ['uses' => 'TagController@showAll', 'as' => 'show.all']);
+    Route::get('show/{tag}/{start_date?}/{end_date?}', ['uses' => 'TagController@show', 'as' => 'show']);
 
     Route::get('edit/{tag}', ['uses' => 'TagController@edit', 'as' => 'edit']);
     Route::get('delete/{tag}', ['uses' => 'TagController@delete', 'as' => 'delete']);

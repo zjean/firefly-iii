@@ -18,11 +18,12 @@
     {% set sum_max =0 %}
     {% set expected_total = 0 %}
     {% set count = 0 %}
+
     {% for entry in bills %}
         {% if entry.active %}
             {% set count = count + 1 %}
             {% set sum_min = sum_min + entry.amount_min %}
-            {% set sum_max = sum_min + entry.amount_max %}
+            {% set sum_max = sum_max + entry.amount_max %}
             {% set expected_total = expected_total + ((entry.amount_min + entry.amount_max) / 2) %}
         {% endif %}
         <tr>
@@ -57,8 +58,8 @@
                 {% endif %}
             </td>
             <td data-value="{{ entry.amount_min }}" style="text-align: right;">
-                <span style="margin-right:5px;" title="{{ entry.amount_min|formatAmountPlain }} - {{ entry.amount_max|formatAmountPlain }}">
-                    ~ {{ ((entry.amount_max+ entry.amount_min)/2)|formatAmount }}
+                <span style="margin-right:5px;">
+                    ~ {{ formatAmountByCurrency(entry.currency, (entry.amount_max + entry.amount_min)/2) }}
                 </span>
             </td>
 
@@ -96,8 +97,11 @@
             #}
             {% if entry.paid_dates|length > 0 and entry.active %}
                 <td class="paid_in_period text-success" data-value="{{ entry.paid_dates[0] }}">
-                    {% for date in entry.paid_dates %}
-                        {{ formatDate(date, monthAndDayFormat) }}<br/>
+                    {% for transaction_id, date in entry.paid_dates %}
+                        <a href="{{ route('transactions.show',transaction_id) }}">
+                            {{ formatDate(date, monthAndDayFormat) }}
+                        </a>
+                        <br/>
                     {% endfor %}
                 </td>
                 <td class="expected_in_period hidden-sm hidden-xs" data-value="{{ entry.next_expected_match }}">
@@ -127,12 +131,12 @@
         <td style="text-align:right;" colspan="3">{{ 'sum'|_ }} ({{ 'active_bills_only'|_ }})</td>
         <td style="text-align:right;" colspan="1">
             <span style="margin-right:5px;">
-                {{ sum_min|formatAmount }}
+                {{ formatAmountBySymbol(sum_min,'¤') }}
             </span>
         </td>
         <td style="text-align:right;" colspan="1">
             <span style="margin-right:5px;">
-                {{ sum_max|formatAmount }}
+                {{ formatAmountBySymbol(sum_max,'¤') }}
             </span>
         </td>
         <td colspan="5">&nbsp;</td>
@@ -151,12 +155,12 @@
         <td style="text-align:right;" colspan="3">{{ 'average_per_bill'|_ }} ({{ 'active_bills_only'|_ }})</td>
         <td style="text-align:right;" colspan="1">
             <span style="margin-right:5px;">
-                {{ avg_min|formatAmount }}
+                {{ formatAmountBySymbol(avg_min,'¤') }}
             </span>
         </td>
         <td style="text-align:right;" colspan="1">
             <span style="margin-right:5px;">
-                {{ avg_max|formatAmount }}
+                {{ formatAmountBySymbol(avg_max,'¤') }}
             </span>
         </td>
         <td colspan="6">&nbsp;</td>
@@ -165,7 +169,7 @@
         <td style="text-align:right;" colspan="3">{{ 'expected_total'|_ }} ({{ 'active_bills_only'|_ }})</td>
         <td style="text-align:right;" colspan="1">
             <span style="margin-right:5px;">
-                ~ {{ expected_total|formatAmount }}
+                ~ {{ formatAmountBySymbol(expected_total,'¤') }}
             </span>
         </td>
         <td colspan="6">&nbsp;</td>

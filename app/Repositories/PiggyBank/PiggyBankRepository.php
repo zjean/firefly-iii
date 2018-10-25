@@ -45,6 +45,16 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
     private $user;
 
     /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
+
+    /**
      * @param PiggyBank $piggyBank
      * @param string    $amount
      *
@@ -443,15 +453,15 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
     /**
      * @param array $data
      *
-     * @return PiggyBank
+     * @return PiggyBank|null
      */
-    public function store(array $data): PiggyBank
+    public function store(array $data): ?PiggyBank
     {
         $data['order'] = $this->getMaxOrder() + 1;
         /** @var PiggyBank $piggyBank */
         $piggyBank = PiggyBank::create($data);
 
-        $this->updateNote($piggyBank, $data['note']);
+        $this->updateNote($piggyBank, $data['notes']);
 
         // repetition is auto created.
         $repetition = $this->getRepetition($piggyBank);
@@ -479,7 +489,7 @@ class PiggyBankRepository implements PiggyBankRepositoryInterface
 
         $piggyBank->save();
 
-        $this->updateNote($piggyBank, $data['note']);
+        $this->updateNote($piggyBank, $data['notes']);
 
         // if the piggy bank is now smaller than the current relevant rep,
         // remove money from the rep.

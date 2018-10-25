@@ -28,6 +28,7 @@ use Illuminate\Support\Str;
 
 /**
  * Class UseEncryption.
+ * @codeCoverageIgnore
  */
 class UseEncryption extends Command
 {
@@ -62,6 +63,7 @@ class UseEncryption extends Command
         $this->handleObjects('Category', 'name', 'encrypted');
         $this->handleObjects('PiggyBank', 'name', 'encrypted');
         $this->handleObjects('TransactionJournal', 'description', 'encrypted');
+
         return 0;
     }
 
@@ -77,7 +79,7 @@ class UseEncryption extends Command
         $fqn     = sprintf('FireflyIII\Models\%s', $class);
         $encrypt = true === config('firefly.encryption') ? 0 : 1;
         /** @noinspection PhpUndefinedMethodInspection */
-        $set = $fqn::where($indicator, $encrypt)->get();
+        $set = $fqn::where($indicator, $encrypt)->withTrashed()->get();
 
         foreach ($set as $entry) {
             $newName       = $entry->$field;

@@ -25,7 +25,7 @@ namespace FireflyIII\Services\Internal\Update;
 
 use FireflyIII\Models\Bill;
 use FireflyIII\Services\Internal\Support\BillServiceTrait;
-
+use Log;
 /**
  * @codeCoverageIgnore
  * Class BillUpdateService
@@ -33,6 +33,16 @@ use FireflyIII\Services\Internal\Support\BillServiceTrait;
 class BillUpdateService
 {
     use BillServiceTrait;
+
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
 
     /**
      * @param Bill  $bill
@@ -47,15 +57,15 @@ class BillUpdateService
         $bill->amount_min              = $data['amount_min'];
         $bill->amount_max              = $data['amount_max'];
         $bill->date                    = $data['date'];
-        $bill->transaction_currency_id = $data['transaction_currency_id'];
+        $bill->transaction_currency_id = $data['currency_id'];
         $bill->repeat_freq             = $data['repeat_freq'];
         $bill->skip                    = $data['skip'];
         $bill->automatch               = true;
-        $bill->active                  = $data['active']??true;
+        $bill->active                  = $data['active'] ?? true;
         $bill->save();
 
         // update note:
-        if (isset($data['notes']) && null !== $data['notes']) {
+        if (isset($data['notes'])) {
             $this->updateNote($bill, (string)$data['notes']);
         }
 

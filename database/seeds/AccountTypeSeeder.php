@@ -28,7 +28,7 @@ use Illuminate\Database\Seeder;
  */
 class AccountTypeSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         $types = [
             AccountType::DEFAULT,
@@ -41,12 +41,14 @@ class AccountTypeSeeder extends Seeder
             AccountType::IMPORT,
             AccountType::LOAN,
             AccountType::RECONCILIATION,
+            AccountType::DEBT,
+            AccountType::MORTGAGE
         ];
         foreach ($types as $type) {
             try {
                 AccountType::create(['type' => $type]);
             } catch (PDOException $e) {
-                Log::warning(sprintf('Could not create account type "%s". It might exist already.', $type));
+                Log::warning(sprintf('Could not create account type "%s". It might exist already: %s', $type , $e->getMessage()));
             }
         }
     }

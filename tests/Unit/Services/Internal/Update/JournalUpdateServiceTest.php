@@ -34,12 +34,22 @@ use FireflyIII\Services\Internal\Update\JournalUpdateService;
 use FireflyIII\Services\Internal\Update\TransactionUpdateService;
 use Mockery;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class JournalUpdateServiceTest
  */
 class JournalUpdateServiceTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
     /**
      * @covers \FireflyIII\Services\Internal\Update\JournalUpdateService
      * @covers \FireflyIII\Services\Internal\Support\JournalServiceTrait
@@ -61,6 +71,7 @@ class JournalUpdateServiceTest extends TestCase
         $tagFactory->shouldReceive('setUser');
         $metaFactory->shouldReceive('setUser');
 
+        $metaFactory->shouldReceive('updateOrCreate');
 
         /** @var TransactionJournal $journal */
         $journal = $this->user()->transactionJournals()->where('transaction_type_id', 2)->first();
@@ -102,6 +113,7 @@ class JournalUpdateServiceTest extends TestCase
         $transactionFactory->shouldReceive('setUser');
         $tagFactory->shouldReceive('setUser');
         $metaFactory->shouldReceive('setUser');
+        $metaFactory->shouldReceive('updateOrCreate');
 
 
         /** @var TransactionJournal $journal */
@@ -135,17 +147,12 @@ class JournalUpdateServiceTest extends TestCase
         $service->shouldReceive('setUser');
         $service->shouldReceive('updateBudget')->withArgs([Mockery::any(), $budget->id])->twice();
 
-
-        do {
-            /** @var TransactionJournal $journal */
-            $journal = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 1)->first();
-            $count   = $journal->transactions()->count();
-        } while ($count !== 2);
+        $withdrawal = $this->getRandomWithdrawal();
 
         // call update service to update budget. Should call transaction service twice.
         /** @var JournalUpdateService $service */
         $service = app(JournalUpdateService::class);
-        $service->updateBudget($journal, $budget->id);
+        $service->updateBudget($withdrawal, $budget->id);
     }
 
     /**
@@ -158,16 +165,12 @@ class JournalUpdateServiceTest extends TestCase
         $service->shouldReceive('updateCategory')->withArgs([Mockery::any(), 'New category'])->twice();
 
 
-        do {
-            /** @var TransactionJournal $journal */
-            $journal = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 1)->first();
-            $count   = $journal->transactions()->count();
-        } while ($count !== 2);
+        $withdrawal = $this->getRandomWithdrawal();
 
         // call update service to update budget. Should call transaction service twice.
         /** @var JournalUpdateService $service */
         $service = app(JournalUpdateService::class);
-        $service->updateCategory($journal, 'New category');
+        $service->updateCategory($withdrawal, 'New category');
     }
 
 
@@ -194,6 +197,7 @@ class JournalUpdateServiceTest extends TestCase
         $transactionFactory->shouldReceive('createPair')->times(2);
         $tagFactory->shouldReceive('setUser');
         $metaFactory->shouldReceive('setUser');
+        $metaFactory->shouldReceive('updateOrCreate');
 
 
         /** @var TransactionJournal $journal */

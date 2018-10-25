@@ -24,7 +24,9 @@ namespace Tests\Feature\Controllers;
 
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Log;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -39,34 +41,40 @@ class DebugControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\DebugController::displayError
+     * @covers \FireflyIII\Http\Controllers\DebugController
      */
     public function testDisplayError(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
         $journalRepos->shouldReceive('firstNull')->andReturn(new TransactionJournal);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
 
         $this->be($this->user());
         $response = $this->get(route('error'));
         $response->assertStatus(500);
+        $response->assertSee('A very simple test error');
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\DebugController::flush
+     * @covers \FireflyIII\Http\Controllers\DebugController
      */
     public function testFlush(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $journalRepos->shouldReceive('firstNull')->andReturn(new TransactionJournal);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
 
         $this->be($this->user());
         $response = $this->get(route('flush'));
@@ -74,35 +82,41 @@ class DebugControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\DebugController::index
-     * @covers \FireflyIII\Http\Controllers\DebugController::__construct
-     * @covers \FireflyIII\Http\Controllers\DebugController::errorReporting
-     * @covers \FireflyIII\Http\Controllers\DebugController::collectPackages
+     * @covers \FireflyIII\Http\Controllers\DebugController
      */
     public function testIndex(): void
     {
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
+
         $this->be($this->user());
         $response = $this->get(route('debug'));
         $response->assertStatus(200);
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\DebugController::routes()
+     * @covers \FireflyIII\Http\Controllers\DebugController
      */
     public function testRoutes(): void
     {
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
+
         $this->be($this->user());
         $response = $this->get(route('routes'));
         $response->assertStatus(200);
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\DebugController::testFlash
+     * @covers \FireflyIII\Http\Controllers\DebugController
      */
     public function testTestFlash(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());

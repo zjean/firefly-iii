@@ -28,12 +28,21 @@ use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Support\Import\Placeholder\ColumnValue;
 use FireflyIII\Support\Import\Placeholder\ImportTransaction;
 use Tests\TestCase;
-
+use Log;
 /**
  * Class ImportTransactionTest
  */
 class ImportTransactionTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
     /**
      * Test what happens when you set the account-id using a ColumnValue.
      * Since this field can be mapped. Test with both the mapped and unmapped variant.
@@ -373,6 +382,7 @@ class ImportTransactionTest extends TestCase
             'account-number'        => 'accountNumber',
             'amount_debit'          => 'amountDebit',
             'amount_credit'         => 'amountCredit',
+            'amount_negated'        => 'amountNegated',
             'amount'                => 'amount',
             'amount_foreign'        => 'foreignAmount',
             'bill-name'             => 'billName',
@@ -460,6 +470,38 @@ class ImportTransactionTest extends TestCase
         $importTransaction->amountDebit = '1.01';
         try {
             $this->assertEquals('-1.01', $importTransaction->calculateAmount());
+        } catch (FireflyException $e) {
+            $this->assertTrue(false, $e->getMessage());
+        }
+    }
+    
+    /**
+     * Basic amount info. Should return something like '1.0'.
+     *
+     * @covers \FireflyIII\Support\Import\Placeholder\ImportTransaction
+     */
+    public function testCalculateAmountNegatedPositive(): void
+    {
+        $importTransaction               = new ImportTransaction;
+        $importTransaction->amountNegated = '1.56';
+        try {
+            $this->assertEquals('-1.56', $importTransaction->calculateAmount());
+        } catch (FireflyException $e) {
+            $this->assertTrue(false, $e->getMessage());
+        }
+    }
+    
+    /**
+     * Basic amount info. Should return something like '1.0'.
+     *
+     * @covers \FireflyIII\Support\Import\Placeholder\ImportTransaction
+     */
+    public function testCalculateAmountNegatedNegative(): void
+    {
+        $importTransaction               = new ImportTransaction;
+        $importTransaction->amountNegated = '-1.56';
+        try {
+            $this->assertEquals('1.56', $importTransaction->calculateAmount());
         } catch (FireflyException $e) {
             $this->assertTrue(false, $e->getMessage());
         }

@@ -45,6 +45,8 @@ class StageGetAccessHandler
     /**
      * Send a token request to YNAB. Return with access token (if all goes well).
      *
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
      * @throws FireflyException
      */
     public function run(): void
@@ -68,14 +70,14 @@ class StageGetAccessHandler
         }
         $statusCode = $res->getStatusCode();
         try {
-            $content    = trim($res->getBody()->getContents());
-        } catch(RuntimeException $e) {
+            $content = trim($res->getBody()->getContents());
+        } catch (RuntimeException $e) {
             Log::error($e->getMessage());
             Log::error($e->getTraceAsString());
             throw new FireflyException($e->getMessage());
         }
 
-        $json       = json_decode($content, true) ?? [];
+        $json = json_decode($content, true) ?? [];
         Log::debug(sprintf('Status code from YNAB is %d', $statusCode));
         Log::debug(sprintf('Body of result is %s', $content), $json);
 

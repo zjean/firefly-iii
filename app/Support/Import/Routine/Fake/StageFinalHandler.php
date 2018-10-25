@@ -47,7 +47,7 @@ class StageFinalHandler
         for ($i = 0; $i < 5; $i++) {
             $transaction = [
                 'type'               => 'withdrawal',
-                'date'               => Carbon::create()->format('Y-m-d'),
+                'date'               => Carbon::now()->format('Y-m-d'),
                 'tags'               => '',
                 'user'               => $this->importJob->user_id,
 
@@ -61,6 +61,7 @@ class StageFinalHandler
                 'piggy_bank_name'    => null,
                 'bill_id'            => null,
                 'bill_name'          => null,
+                'original-source'    => sprintf('fake-import-v%s', config('firefly.version')),
 
                 // transaction data:
                 'transactions'       => [

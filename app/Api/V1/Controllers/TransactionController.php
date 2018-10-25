@@ -25,8 +25,10 @@ declare(strict_types=1);
 namespace FireflyIII\Api\V1\Controllers;
 
 use FireflyIII\Api\V1\Requests\TransactionRequest;
+use FireflyIII\Events\StoredTransactionJournal;
+use FireflyIII\Events\UpdatedTransactionJournal;
 use FireflyIII\Exceptions\FireflyException;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Helpers\Filter\InternalTransferFilter;
 use FireflyIII\Helpers\Filter\NegativeAmountFilter;
 use FireflyIII\Helpers\Filter\PositiveAmountFilter;
@@ -108,8 +110,8 @@ class TransactionController extends Controller
 
         /** @var User $admin */
         $admin = auth()->user();
-        /** @var JournalCollectorInterface $collector */
-        $collector = app(JournalCollectorInterface::class);
+        /** @var TransactionCollectorInterface $collector */
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setUser($admin);
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         $collector->setAllAssetAccounts();
@@ -123,7 +125,7 @@ class TransactionController extends Controller
         }
         $collector->setLimit($pageSize)->setPage($this->parameters->get('page'));
         $collector->setTypes($types);
-        $paginator = $collector->getPaginatedJournals();
+        $paginator = $collector->getPaginatedTransactions();
         $paginator->setPath(route('api.v1.transactions.index') . $this->buildParams());
         $transactions = $paginator->getCollection();
 
@@ -155,7 +157,7 @@ class TransactionController extends Controller
         $manager->parseIncludes($include);
 
         // collect transactions using the journal collector
-        $collector = app(JournalCollectorInterface::class);
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setUser(auth()->user());
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         // filter on specific journals.
@@ -170,7 +172,7 @@ class TransactionController extends Controller
             $collector->addFilter(NegativeAmountFilter::class);
         }
 
-        $transactions = $collector->getJournals();
+        $transactions = $collector->getTransactions();
         $resource     = new FractalCollection($transactions, new TransactionTransformer($this->parameters), 'transactions');
 
         return response()->json($manager->createData($resource)->toArray())->header('Content-Type', 'application/vnd.api+json');
@@ -192,6 +194,8 @@ class TransactionController extends Controller
         $data['user'] = auth()->user()->id;
         $journal      = $repository->store($data);
 
+        event(new StoredTransactionJournal($journal, 0));
+
         $manager = new Manager();
         $baseUrl = $request->getSchemeAndHttpHost() . '/api/v1';
         $manager->setSerializer(new JsonApiSerializer($baseUrl));
@@ -201,7 +205,7 @@ class TransactionController extends Controller
         $manager->parseIncludes($include);
 
         // collect transactions using the journal collector
-        $collector = app(JournalCollectorInterface::class);
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setUser(auth()->user());
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         // filter on specific journals.
@@ -216,7 +220,7 @@ class TransactionController extends Controller
             $collector->addFilter(NegativeAmountFilter::class);
         }
 
-        $transactions = $collector->getJournals();
+        $transactions = $collector->getTransactions();
         $resource     = new FractalCollection($transactions, new TransactionTransformer($this->parameters), 'transactions');
 
         return response()->json($manager->createData($resource)->toArray())->header('Content-Type', 'application/vnd.api+json');
@@ -241,13 +245,15 @@ class TransactionController extends Controller
         $baseUrl      = $request->getSchemeAndHttpHost() . '/api/v1';
         $manager->setSerializer(new JsonApiSerializer($baseUrl));
 
+        event(new UpdatedTransactionJournal($journal));
+
         // add include parameter:
         $include = $request->get('include') ?? '';
         $manager->parseIncludes($include);
 
         // needs a lot of extra data to match the journal collector. Or just expand that one.
         // collect transactions using the journal collector
-        $collector = app(JournalCollectorInterface::class);
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setUser(auth()->user());
         $collector->withOpposingAccount()->withCategoryInformation()->withBudgetInformation();
         // filter on specific journals.
@@ -262,7 +268,7 @@ class TransactionController extends Controller
             $collector->addFilter(NegativeAmountFilter::class);
         }
 
-        $transactions = $collector->getJournals();
+        $transactions = $collector->getTransactions();
         $resource     = new FractalCollection($transactions, new TransactionTransformer($this->parameters), 'transactions');
 
         return response()->json($manager->createData($resource)->toArray())->header('Content-Type', 'application/vnd.api+json');
@@ -284,6 +290,7 @@ class TransactionController extends Controller
             'withdrawal'      => [TransactionType::WITHDRAWAL,],
             'withdrawals'     => [TransactionType::WITHDRAWAL,],
             'expense'         => [TransactionType::WITHDRAWAL,],
+            'expenses'        => [TransactionType::WITHDRAWAL,],
             'income'          => [TransactionType::DEPOSIT,],
             'deposit'         => [TransactionType::DEPOSIT,],
             'deposits'        => [TransactionType::DEPOSIT,],

@@ -22,7 +22,8 @@ declare(strict_types=1);
 
 namespace FireflyIII\TransactionRules;
 
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
+use FireflyIII\Helpers\Filter\InternalTransferFilter;
 use FireflyIII\Models\Rule;
 use FireflyIII\Models\RuleTrigger;
 use FireflyIII\Models\Transaction;
@@ -48,10 +49,17 @@ class TransactionMatcher
     private $range = 200;
     /** @var Rule The rule to apply */
     private $rule;
+    /** @var bool */
+    private $strict;
     /** @var array Types that can be matched using this matcher */
     private $transactionTypes = [TransactionType::DEPOSIT, TransactionType::WITHDRAWAL, TransactionType::TRANSFER];
     /** @var array List of triggers to match */
     private $triggers = [];
+
+    public function __construct()
+    {
+        $this->strict = false;
+    }
 
     /**
      * This method will search the user's transaction journal (with an upper limit of $range) for
@@ -68,8 +76,10 @@ class TransactionMatcher
         }
 
         // Variables used within the loop
-        $processor = Processor::make($this->rule, false);
-        $result    = $this->runProcessor($processor);
+        /** @var Processor $processor */
+        $processor = app(Processor::class);
+        $processor->make($this->rule, false);
+        $result = $this->runProcessor($processor);
 
         // If the list of matchingTransactions is larger than the maximum number of results
         // (e.g. if a large percentage of the transactions match), truncate the list
@@ -93,8 +103,11 @@ class TransactionMatcher
         }
 
         // Variables used within the loop
-        $processor = Processor::makeFromStringArray($this->triggers);
-        $result    = $this->runProcessor($processor);
+        /** @var Processor $processor */
+        $processor = app(Processor::class);
+        $processor->makeFromStringArray($this->triggers);
+        $processor->setStrict($this->strict);
+        $result = $this->runProcessor($processor);
 
         // If the list of matchingTransactions is larger than the maximum number of results
         // (e.g. if a large percentage of the transactions match), truncate the list
@@ -176,6 +189,22 @@ class TransactionMatcher
     }
 
     /**
+     * @return bool
+     */
+    public function isStrict(): bool
+    {
+        return $this->strict;
+    }
+
+    /**
+     * @param bool $strict
+     */
+    public function setStrict(bool $strict): void
+    {
+        $this->strict = $strict;
+    }
+
+    /**
      * Set rule
      *
      * @param Rule $rule
@@ -195,15 +224,15 @@ class TransactionMatcher
             $allTriggers = $this->rule->ruleTriggers()->whereIn('trigger_type', $valid)->get();
             /** @var RuleTrigger $trigger */
             foreach ($allTriggers as $trigger) {
-                if ($trigger->trigger_type === 'amount_less') {
+                if ('amount_less' === $trigger->trigger_type) {
                     $this->maxAmount = $trigger->trigger_value;
                     Log::debug(sprintf('Set max amount to be %s', $trigger->trigger_value));
                 }
-                if ($trigger->trigger_type === 'amount_more') {
+                if ('amount_more' === $trigger->trigger_type) {
                     $this->minAmount = $trigger->trigger_value;
                     Log::debug(sprintf('Set min amount to be %s', $trigger->trigger_value));
                 }
-                if ($trigger->trigger_type === 'amount_exactly') {
+                if ('amount_exactly' === $trigger->trigger_type) {
                     $this->exactAmount = $trigger->trigger_value;
                     Log::debug(sprintf('Set exact amount to be %s', $trigger->trigger_value));
                 }
@@ -236,9 +265,10 @@ class TransactionMatcher
         $result    = new Collection();
         do {
             // Fetch a batch of transactions from the database
-            /** @var JournalCollectorInterface $collector */
-            $collector = app(JournalCollectorInterface::class);
+            /** @var TransactionCollectorInterface $collector */
+            $collector = app(TransactionCollectorInterface::class);
             $collector->setUser(auth()->user());
+            $collector->withOpposingAccount();
             $collector->setAllAssetAccounts()->setLimit($pageSize)->setPage($page)->setTypes($this->transactionTypes);
             if (null !== $this->maxAmount) {
                 Log::debug(sprintf('Amount must be less than %s', $this->maxAmount));
@@ -252,9 +282,9 @@ class TransactionMatcher
                 Log::debug(sprintf('Amount must be exactly %s', $this->exactAmount));
                 $collector->amountIs($this->exactAmount);
             }
+            $collector->removeFilter(InternalTransferFilter::class);
 
-
-            $set = $collector->getPaginatedJournals();
+            $set = $collector->getPaginatedTransactions();
             Log::debug(sprintf('Found %d journals to check. ', $set->count()));
 
             // Filter transactions that match the given triggers.

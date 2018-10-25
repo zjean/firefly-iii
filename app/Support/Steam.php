@@ -30,13 +30,14 @@ use FireflyIII\Models\Transaction;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Collection;
-use Log;
+use stdClass;
 
 /**
  * Class Steam.
  */
 class Steam
 {
+
     /**
      * @param \FireflyIII\Models\Account $account
      * @param \Carbon\Carbon             $date
@@ -162,6 +163,13 @@ class Steam
 
         $balances[$formatted] = $startBalance;
         $currencyId           = (int)$repository->getMetaValue($account, 'currency_id');
+
+        // use system default currency:
+        if (0 === $currencyId) {
+            $currency   = app('amount')->getDefaultCurrencyByUser($account->user);
+            $currencyId = $currency->id;
+        }
+
         $start->addDay();
 
         // query!
@@ -212,6 +220,38 @@ class Steam
     }
 
     /**
+     * @param \FireflyIII\Models\Account $account
+     * @param \Carbon\Carbon             $date
+     *
+     * @return string
+     */
+    public function balancePerCurrency(Account $account, Carbon $date): array
+    {
+
+        // abuse chart properties:
+        $cache = new CacheProperties;
+        $cache->addProperty($account->id);
+        $cache->addProperty('balance-per-currency');
+        $cache->addProperty($date);
+        if ($cache->has()) {
+            return $cache->get(); // @codeCoverageIgnore
+        }
+        $query    = $account->transactions()
+                            ->leftJoin('transaction_journals', 'transaction_journals.id', '=', 'transactions.transaction_journal_id')
+                            ->where('transaction_journals.date', '<=', $date->format('Y-m-d 23:59:59'))
+                            ->groupBy('transactions.transaction_currency_id');
+        $balances = $query->get(['transactions.transaction_currency_id', DB::raw('SUM(transactions.amount) as sum_for_currency')]);
+        $return   = [];
+        /** @var stdClass $entry */
+        foreach ($balances as $entry) {
+            $return[(int)$entry->transaction_currency_id] = $entry->sum_for_currency;
+        }
+        $cache->store($return);
+
+        return $return;
+    }
+
+    /**
      * This method always ignores the virtual balance.
      *
      * @param \Illuminate\Support\Collection $accounts
@@ -241,6 +281,100 @@ class Steam
         $cache->store($result);
 
         return $result;
+    }
+
+    /**
+     * Same as above, but also groups per currency.
+     *
+     * @param \Illuminate\Support\Collection $accounts
+     * @param \Carbon\Carbon                 $date
+     *
+     * @return array
+     */
+    public function balancesPerCurrencyByAccounts(Collection $accounts, Carbon $date): array
+    {
+        $ids = $accounts->pluck('id')->toArray();
+        // cache this property.
+        $cache = new CacheProperties;
+        $cache->addProperty($ids);
+        $cache->addProperty('balances-per-currency');
+        $cache->addProperty($date);
+        if ($cache->has()) {
+            return $cache->get(); // @codeCoverageIgnore
+        }
+
+        // need to do this per account.
+        $result = [];
+        /** @var Account $account */
+        foreach ($accounts as $account) {
+            $result[$account->id] = $this->balancePerCurrency($account, $date);
+        }
+
+        $cache->store($result);
+
+        return $result;
+    }
+
+    /**
+     * Remove weird chars from strings.
+     *
+     * @param string $string
+     *
+     * @return string
+     */
+    public function cleanString(string $string): string
+    {
+        $search  = [
+            "\u{0001}", // start of heading
+            "\u{0002}", // start of text
+            "\u{0003}", // end of text
+            "\u{0004}", // end of transmission
+            "\u{0005}", // enquiry
+            "\u{0006}", // ACK
+            "\u{0007}", // BEL
+            "\u{0008}", // backspace
+            "\u{000E}", // shift out
+            "\u{000F}", // shift in
+            "\u{0010}", // data link escape
+            "\u{0011}", // DC1
+            "\u{0012}", // DC2
+            "\u{0013}", // DC3
+            "\u{0014}", // DC4
+            "\u{0015}", // NAK
+            "\u{0016}", // SYN
+            "\u{0017}", // ETB
+            "\u{0018}", // CAN
+            "\u{0019}", // EM
+            "\u{001A}", // SUB
+            "\u{001B}", // escape
+            "\u{001C}", // file separator
+            "\u{001D}", // group separator
+            "\u{001E}", // record separator
+            "\u{001F}", // unit separator
+            "\u{007F}", // DEL
+            "\u{00A0}", // non-breaking space
+            "\u{1680}", // ogham space mark
+            "\u{180E}", // mongolian vowel separator
+            "\u{2000}", // en quad
+            "\u{2001}", // em quad
+            "\u{2002}", // en space
+            "\u{2003}", // em space
+            "\u{2004}", // three-per-em space
+            "\u{2005}", // four-per-em space
+            "\u{2006}", // six-per-em space
+            "\u{2007}", // figure space
+            "\u{2008}", // punctuation space
+            "\u{2009}", // thin space
+            "\u{200A}", // hair space
+            "\u{200B}", // zero width space
+            "\u{202F}", // narrow no-break space
+            "\u{3000}", // ideographic space
+            "\u{FEFF}", // zero width no -break space
+        ];
+        $replace = "\x20"; // plain old normal space
+        $string  = str_replace($search, $replace, $string);
+
+        return trim($string);
     }
 
     /**
@@ -367,7 +501,6 @@ class Steam
             $value = Crypt::decrypt($value);
         } catch (DecryptException $e) {
             // do not care.
-            Log::debug(sprintf('Not interesting: %s', $e->getMessage()));
         }
 
         return $value;

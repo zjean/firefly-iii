@@ -40,6 +40,16 @@ use Log;
  */
 class TransactionFactory
 {
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
+
     use TransactionServiceTrait;
 
     /** @var User */
@@ -59,10 +69,10 @@ class TransactionFactory
         $currencyId = isset($data['currency']) ? $data['currency']->id : $currencyId;
         if ('' === $data['amount']) {
             Log::error('Empty string in data.', $data);
-            throw new FireflyException('Amount is an empty string, which Firefly III cannot handle. Apologies.'); // @codeCoverageIgnore
+            throw new FireflyException('Amount is an empty string, which Firefly III cannot handle. Apologies.');
         }
         if (null === $currencyId) {
-            throw new FireflyException('Cannot store transaction without currency information.'); // @codeCoverageIgnore
+            throw new FireflyException('Cannot store transaction without currency information.');
         }
         $data['foreign_amount'] = '' === (string)$data['foreign_amount'] ? null : $data['foreign_amount'];
         Log::debug(sprintf('Create transaction for account #%d ("%s") with amount %s', $data['account']->id, $data['account']->name, $data['amount']));
@@ -98,6 +108,7 @@ class TransactionFactory
     {
         Log::debug('Start of TransactionFactory::createPair()', $data);
         // all this data is the same for both transactions:
+        Log::debug('Searching for currency info.');
         $currency    = $this->findCurrency($data['currency_id'], $data['currency_code']);
         $description = $journal->description === $data['description'] ? null : $data['description'];
 
@@ -109,8 +120,8 @@ class TransactionFactory
         Log::debug(sprintf('Expect source destination to be of type "%s"', $destinationType));
 
         // find source and destination account:
-        $sourceAccount      = $this->findAccount($sourceType, $data['source_id'], $data['source_name']);
-        $destinationAccount = $this->findAccount($destinationType, $data['destination_id'], $data['destination_name']);
+        $sourceAccount      = $this->findAccount($sourceType, (int)$data['source_id'], $data['source_name']);
+        $destinationAccount = $this->findAccount($destinationType, (int)$data['destination_id'], $data['destination_name']);
 
         if (null === $sourceAccount || null === $destinationAccount) {
             $debugData                = $data;
@@ -121,13 +132,9 @@ class TransactionFactory
         }
 
         Log::debug(sprintf('Source type is "%s", destination type is "%s"', $sourceAccount->accountType->type, $destinationAccount->accountType->type));
-        // throw big fat error when source type === dest type and it's not a transfer or reconciliation.
-        if ($sourceAccount->accountType->type === $destinationAccount->accountType->type && $journal->transactionType->type !== TransactionType::TRANSFER) {
-            throw new FireflyException(sprintf('Source and destination account cannot be both of the type "%s"', $destinationAccount->accountType->type));
-        }
-        if ($sourceAccount->accountType->type !== AccountType::ASSET && $destinationAccount->accountType->type !== AccountType::ASSET) {
-            throw new FireflyException('At least one of the accounts must be an asset account.');
-        }
+
+        // based on the source type, destination type and transaction type, the system can start throwing FireflyExceptions.
+        $this->validateTransaction($sourceAccount->accountType->type, $destinationAccount->accountType->type, $journal->transactionType->type);
 
         $source = $this->create(
             [
@@ -154,10 +161,11 @@ class TransactionFactory
             ]
         );
         if (null === $source || null === $dest) {
-            throw new FireflyException('Could not create transactions.');
+            throw new FireflyException('Could not create transactions.'); // @codeCoverageIgnore
         }
 
         // set foreign currency
+        Log::debug('Trying to find foreign currency information.');
         $foreign = $this->findCurrency($data['foreign_currency_id'], $data['foreign_currency_code']);
         $this->setForeignCurrency($source, $foreign);
         $this->setForeignCurrency($dest, $foreign);
@@ -192,6 +200,31 @@ class TransactionFactory
     public function setUser(User $user): void
     {
         $this->user = $user;
+    }
+
+    /**
+     * @param string $sourceType
+     * @param string $destinationType
+     * @param string $transactionType
+     *
+     * @throws FireflyException
+     */
+    private function validateTransaction(string $sourceType, string $destinationType, string $transactionType): void
+    {
+        // throw big fat error when source type === dest type and it's not a transfer or reconciliation.
+        if ($sourceType === $destinationType && $transactionType !== TransactionType::TRANSFER) {
+            throw new FireflyException(sprintf('Source and destination account cannot be both of the type "%s"', $destinationType));
+        }
+        // source must be in this list AND dest must be in this list:
+        $list = [AccountType::DEFAULT, AccountType::ASSET, AccountType::CREDITCARD, AccountType::CASH, AccountType::DEBT, AccountType::MORTGAGE,
+                 AccountType::LOAN, AccountType::MORTGAGE];
+        if (
+            !\in_array($sourceType, $list, true)
+            && !\in_array($destinationType, $list, true)) {
+            throw new FireflyException(sprintf('At least one of the accounts must be an asset account (%s, %s).', $sourceType, $destinationType));
+        }
+        // either of these must be asset or default account.
+
     }
 
 

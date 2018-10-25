@@ -22,13 +22,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Controllers\Json;
 
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Bill;
 use FireflyIII\Models\Budget;
 use FireflyIII\Models\Category;
 use FireflyIII\Models\Tag;
+use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
@@ -47,19 +48,17 @@ use Tests\TestCase;
  */
 class AutoCompleteControllerTest extends TestCase
 {
-
-
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController::allAccounts
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
      */
     public function testAllAccounts(): void
     {
@@ -68,11 +67,31 @@ class AutoCompleteControllerTest extends TestCase
         $collection   = new Collection([$accountA]);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $accountRepos->shouldReceive('getAccountsByType')
-                     ->withArgs([[AccountType::REVENUE, AccountType::EXPENSE, AccountType::BENEFICIARY, AccountType::DEFAULT, AccountType::ASSET]])
+                     ->withArgs([[AccountType::REVENUE, AccountType::EXPENSE, AccountType::BENEFICIARY, AccountType::DEFAULT, AccountType::ASSET, AccountType::LOAN,
+                                  AccountType::DEBT, AccountType::MORTGAGE]])
                      ->andReturn($collection);
 
         $this->be($this->user());
-        $response = $this->get(route('json.all-accounts'));
+        $response = $this->get(route('json.autocomplete',['all-accounts']));
+        $response->assertStatus(200);
+        $response->assertExactJson([$accountA->name]);
+
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
+     */
+    public function testAssetAccounts(): void
+    {
+        // mock stuff
+        $accountA     = factory(Account::class)->make();
+        $collection   = new Collection([$accountA]);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $accountRepos->shouldReceive('getAccountsByType')
+                     ->withArgs([[AccountType::ASSET, AccountType::DEFAULT]])->andReturn($collection);
+
+        $this->be($this->user());
+        $response = $this->get(route('json.autocomplete',['asset-accounts']));
         $response->assertStatus(200);
         $response->assertExactJson([$accountA->name]);
 
@@ -83,13 +102,36 @@ class AutoCompleteControllerTest extends TestCase
      */
     public function testAllTransactionJournals(): void
     {
-        $collector = $this->mock(JournalCollectorInterface::class);
+        $transaction = new Transaction();
+        $transaction->description = 'hi there';
+        $collection = new Collection([$transaction]);
+
+        $collector = $this->mock(TransactionCollectorInterface::class);
         $collector->shouldReceive('setLimit')->withArgs([250])->andReturnSelf();
         $collector->shouldReceive('setPage')->withArgs([1])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection);
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('json.all-transaction-journals'));
+        $response->assertStatus(200);
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
+     */
+    public function testAllTransactionJournalsSearch(): void
+    {
+        $transaction = new Transaction();
+        $transaction->description = 'hi there';
+        $collection = new Collection([$transaction]);
+
+        $collector = $this->mock(TransactionCollectorInterface::class);
+        $collector->shouldReceive('setLimit')->withArgs([250])->andReturnSelf();
+        $collector->shouldReceive('setPage')->withArgs([1])->andReturnSelf();
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
+
+        $this->be($this->user());
+        $response = $this->get(route('json.all-transaction-journals').'?search=hi');
         $response->assertStatus(200);
     }
 
@@ -104,25 +146,23 @@ class AutoCompleteControllerTest extends TestCase
         $repository->shouldReceive('getActiveBills')->andReturn($bills);
 
         $this->be($this->user());
-        $response = $this->get(route('json.bills'));
+        $response = $this->get(route('json.autocomplete',['bills']));
         $response->assertStatus(200);
     }
-
 
     /**
      * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
      */
-    public function testCurrencyNames(): void
+    public function testBillsSearch(): void
     {
-        $repository = $this->mock(CurrencyRepositoryInterface::class);
+        $repository = $this->mock(BillRepositoryInterface::class);
+        $bills      = factory(Bill::class, 10)->make();
 
-        $currency = TransactionCurrency::find(1);
-        $repository->shouldReceive('get')->andReturn(new Collection([$currency]))->once();
+        $repository->shouldReceive('getActiveBills')->andReturn($bills);
 
         $this->be($this->user());
-        $response = $this->get(route('json.currency-names'));
+        $response = $this->get(route('json.autocomplete',['bills']).'?search=1234');
         $response->assertStatus(200);
-        $response->assertExactJson(['Euro']);
     }
 
     /**
@@ -137,7 +177,7 @@ class AutoCompleteControllerTest extends TestCase
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $categoryRepos->shouldReceive('getBudgets')->andReturn(new Collection([$budget]));
         $this->be($this->user());
-        $response = $this->get(route('json.budgets'));
+        $response = $this->get(route('json.autocomplete',['budgets']));
         $response->assertStatus(200);
         $response->assertExactJson([$budget->name]);
     }
@@ -154,9 +194,25 @@ class AutoCompleteControllerTest extends TestCase
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $categoryRepos->shouldReceive('getCategories')->andReturn(new Collection([$category]));
         $this->be($this->user());
-        $response = $this->get(route('json.categories'));
+        $response = $this->get(route('json.autocomplete',['categories']));
         $response->assertStatus(200);
         $response->assertExactJson([$category->name]);
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
+     */
+    public function testCurrencyNames(): void
+    {
+        $repository = $this->mock(CurrencyRepositoryInterface::class);
+
+        $currency = TransactionCurrency::find(1);
+        $repository->shouldReceive('get')->andReturn(new Collection([$currency]))->once();
+
+        $this->be($this->user());
+        $response = $this->get(route('json.autocomplete',['currency-names']));
+        $response->assertStatus(200);
+        $response->assertExactJson(['Euro']);
     }
 
     /**
@@ -176,23 +232,23 @@ class AutoCompleteControllerTest extends TestCase
         $accountRepos->shouldReceive('getAccountsByType')->withArgs([[AccountType::EXPENSE, AccountType::BENEFICIARY]])->once()->andReturn($collection);
 
         $this->be($this->user());
-        $response = $this->get(route('json.expense-accounts'));
+        $response = $this->get(route('json.autocomplete',['expense-accounts']));
         $response->assertStatus(200);
         $response->assertExactJson([$accountA->name]);
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController::journalsWithId
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
      */
     public function testJournalsWithId(): void
     {
         $journal             = $this->user()->transactionJournals()->where('id', '!=', 1)->first();
         $journal->journal_id = $journal->id;
         $collection          = new Collection([$journal]);
-        $collector           = $this->mock(JournalCollectorInterface::class);
+        $collector           = $this->mock(TransactionCollectorInterface::class);
         $collector->shouldReceive('setLimit')->withArgs([400])->andReturnSelf();
         $collector->shouldReceive('setPage')->withArgs([1])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn($collection);
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('json.journals-with-id', [1]));
@@ -201,7 +257,26 @@ class AutoCompleteControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController::revenueAccounts
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
+     */
+    public function testJournalsWithIdSearch(): void
+    {
+        $journal             = $this->user()->transactionJournals()->where('id', '!=', 1)->first();
+        $journal->journal_id = $journal->id;
+        $collection          = new Collection([$journal]);
+        $collector           = $this->mock(TransactionCollectorInterface::class);
+        $collector->shouldReceive('setLimit')->withArgs([400])->andReturnSelf();
+        $collector->shouldReceive('setPage')->withArgs([1])->andReturnSelf();
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
+
+        $this->be($this->user());
+        $response = $this->get(route('json.journals-with-id', [1]).'?search=a' );
+        $response->assertStatus(200);
+        $response->assertExactJson([['id' => $journal->id, 'name' => $journal->id . ': ' . $journal->description]]);
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
      */
     public function testRevenueAccounts(): void
     {
@@ -217,13 +292,13 @@ class AutoCompleteControllerTest extends TestCase
         $accountRepos->shouldReceive('getAccountsByType')->withArgs([[AccountType::REVENUE]])->once()->andReturn($collection);
 
         $this->be($this->user());
-        $response = $this->get(route('json.revenue-accounts'));
+        $response = $this->get(route('json.autocomplete',['revenue-accounts']));
         $response->assertStatus(200);
         $response->assertExactJson([$accountA->name]);
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController::tags
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
      */
     public function testTags(): void
     {
@@ -235,33 +310,61 @@ class AutoCompleteControllerTest extends TestCase
         $tagRepos->shouldReceive('get')->andReturn(new Collection([$tag]))->once();
 
         $this->be($this->user());
-        $response = $this->get(route('json.tags'));
+        $response = $this->get(route('json.autocomplete', ['tags']));
         $response->assertStatus(200);
         $response->assertExactJson([$tag->tag]);
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController::transactionJournals
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
      */
     public function testTransactionJournals(): void
     {
+        $transaction = new Transaction();
+        $transaction->description = 'hi there';
+        $collection = new Collection([$transaction]);
+
         // mock stuff
-        $collector    = $this->mock(JournalCollectorInterface::class);
+        $collector    = $this->mock(TransactionCollectorInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $collector->shouldReceive('setTypes')->andReturnSelf();
         $collector->shouldReceive('setLimit')->andReturnSelf();
         $collector->shouldReceive('setPage')->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection);
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('json.transaction-journals', ['deposit']));
         $response->assertStatus(200);
-        $response->assertExactJson([]);
+        $response->assertExactJson(['hi there']);
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController::transactionTypes
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
+     */
+    public function testTransactionJournalsSearch(): void
+    {
+        $transaction = new Transaction();
+        $transaction->description = 'hi there';
+        $collection = new Collection([$transaction]);
+
+        // mock stuff
+        $collector    = $this->mock(TransactionCollectorInterface::class);
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
+        $collector->shouldReceive('setTypes')->andReturnSelf();
+        $collector->shouldReceive('setLimit')->andReturnSelf();
+        $collector->shouldReceive('setPage')->andReturnSelf();
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
+
+        $this->be($this->user());
+        $response = $this->get(route('json.transaction-journals', ['deposit']).'?search=hi');
+        $response->assertStatus(200);
+        $response->assertExactJson(['hi there']);
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Controllers\Json\AutoCompleteController
      */
     public function testTransactionTypes(): void
     {
@@ -271,7 +374,7 @@ class AutoCompleteControllerTest extends TestCase
         $journalRepos->shouldReceive('getTransactionTypes')->once()->andReturn(new Collection);
 
         $this->be($this->user());
-        $response = $this->get(route('json.transaction-types', ['deposit']));
+        $response = $this->get(route('json.autocomplete',['transaction_types']));
         $response->assertStatus(200);
         $response->assertExactJson([]);
     }

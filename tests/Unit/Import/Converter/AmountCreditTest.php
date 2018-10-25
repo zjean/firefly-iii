@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Import\Converter;
 
 use FireflyIII\Import\Converter\AmountCredit;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -31,7 +32,17 @@ use Tests\TestCase;
 class AmountCreditTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Import\Converter\AmountCredit::convert()
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+
+    /**
+     * @covers \FireflyIII\Import\Converter\AmountCredit
      */
     public function testConvert(): void
     {
@@ -169,12 +180,12 @@ class AmountCreditTest extends TestCase
         foreach ($values as $value => $expected) {
             $converter = new AmountCredit;
             $result    = $converter->convert($value);
-           //$this->assertEquals($expected, $result, sprintf('The original value was %s, expected was %s', $value, $expected));
+            $this->assertEquals($expected, $result, sprintf('The original value was %s, expected was %s', $value, $expected));
         }
     }
 
     /**
-     * @covers \FireflyIII\Import\Converter\AmountCredit::convert()
+     * @covers \FireflyIII\Import\Converter\AmountCredit
      */
     public function testConvertNull(): void
     {

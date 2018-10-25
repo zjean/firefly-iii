@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Controllers\Report;
 
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
@@ -42,18 +42,15 @@ class ExpenseControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::__construct
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::budget
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::combineAccounts
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::spentByBudget
+     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController
      */
     public function testBudget(): void
     {
@@ -82,15 +79,14 @@ class ExpenseControllerTest extends TestCase
         $collection                              = new Collection([$transA, $transB]);
 
         // mock collector for spentByBudget (complex)
-        $collector = $this->mock(JournalCollectorInterface::class);
+        $collector = $this->mock(TransactionCollectorInterface::class);
         // dont care about any calls, just return a default set of fake transactions:
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('setTypes')->andReturnSelf();
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setOpposingAccounts')->andReturnSelf();
         $collector->shouldReceive('withBudgetInformation')->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn($collection);
-        //$collector->shouldReceive('')->andReturnSelf();
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
 
         $this->be($this->user());
@@ -99,9 +95,7 @@ class ExpenseControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::category
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::spentByCategory
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::earnedByCategory
+     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController
      */
     public function testCategory(): void
     {
@@ -140,14 +134,14 @@ class ExpenseControllerTest extends TestCase
         $secondCollection                          = new Collection([$transC]);
 
         // mock collector for spentByCategory and earnedByCategory (complex)
-        $collector = $this->mock(JournalCollectorInterface::class);
+        $collector = $this->mock(TransactionCollectorInterface::class);
         // dont care about any calls, just return a default set of fake transactions:
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('setTypes')->andReturnSelf();
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setOpposingAccounts')->andReturnSelf();
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn($collection, $secondCollection);
+        $collector->shouldReceive('getTransactions')->andReturn($collection, $secondCollection);
         //$collector->shouldReceive('')->andReturnSelf();
 
         $this->be($this->user());
@@ -156,9 +150,7 @@ class ExpenseControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::spent
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::spentInPeriod
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::earnedInPeriod
+     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController
      */
     public function testSpent(): void
     {
@@ -187,14 +179,13 @@ class ExpenseControllerTest extends TestCase
         $collection                              = new Collection([$transA, $transB]);
 
         // mock collector for spentInPeriod and earnedInPeriod (complex)
-        $collector = $this->mock(JournalCollectorInterface::class);
+        $collector = $this->mock(TransactionCollectorInterface::class);
         // dont care about any calls, just return a default set of fake transactions:
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('setTypes')->andReturnSelf();
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setOpposingAccounts')->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn($collection);
-        //$collector->shouldReceive('')->andReturnSelf();
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('report-data.expense.spent', ['1', $expense->id, '20170101', '20170131']));
@@ -202,7 +193,7 @@ class ExpenseControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::topExpense
+     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController
      */
     public function testTopExpense(): void
     {
@@ -233,14 +224,13 @@ class ExpenseControllerTest extends TestCase
         $collection                              = new Collection([$transA, $transB]);
 
         // mock collector for topExpense (complex)
-        $collector = $this->mock(JournalCollectorInterface::class);
+        $collector = $this->mock(TransactionCollectorInterface::class);
         // dont care about any calls, just return a default set of fake transactions:
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('setTypes')->andReturnSelf();
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setOpposingAccounts')->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn($collection);
-        //$collector->shouldReceive('')->andReturnSelf();
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('report-data.expense.expenses', ['1', $expense->id, '20170101', '20170131']));
@@ -248,7 +238,7 @@ class ExpenseControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController::topIncome
+     * @covers \FireflyIII\Http\Controllers\Report\ExpenseController
      */
     public function testTopIncome(): void
     {
@@ -256,6 +246,36 @@ class ExpenseControllerTest extends TestCase
         $revenue    = $this->user()->accounts()->where('account_type_id', 5)->first();
         $repository = $this->mock(AccountRepositoryInterface::class);
         $repository->shouldReceive('findByName')->once()->withArgs([$expense->name, [AccountType::REVENUE]])->andReturn($revenue);
+
+        // fake collection:
+        $transA                                  = new Transaction;
+        $transA->transaction_currency_id         = 1;
+        $transA->transaction_category_name       = 'Category';
+        $transA->transaction_category_id         = 1;
+        $transA->transaction_currency_symbol     = 'A';
+        $transA->transaction_currency_dp         = 2;
+        $transA->transaction_amount              = '100';
+        $transA->opposing_account_id             = $expense->id;
+        $transB                                  = new Transaction;
+        $transB->transaction_currency_id         = 2;
+        $transB->transaction_category_name       = null;
+        $transB->transaction_category_id         = 0;
+        $transB->transaction_journal_budget_name = 'Category2';
+        $transB->transaction_journal_budget_id   = 2;
+        $transB->transaction_currency_symbol     = 'A';
+        $transB->transaction_currency_dp         = 2;
+        $transB->transaction_amount              = '100';
+        $transB->opposing_account_id             = $expense->id;
+        $collection                              = new Collection([$transA, $transB]);
+
+        $collector = $this->mock(TransactionCollectorInterface::class);
+        $collector->shouldReceive('setRange')->andReturnSelf();
+        $collector->shouldReceive('setTypes')->andReturnSelf();
+        $collector->shouldReceive('setAccounts')->andReturnSelf();
+        $collector->shouldReceive('setOpposingAccounts')->andReturnSelf();
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
+        //$collector->shouldReceive('')->andReturnSelf();
+
 
         $this->be($this->user());
         $response = $this->get(route('report-data.expense.income', ['1', $expense->id, '20170101', '20170131']));

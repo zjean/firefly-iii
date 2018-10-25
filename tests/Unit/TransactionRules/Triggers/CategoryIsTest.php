@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\TransactionRules\Triggers;
 
-use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Triggers\CategoryIs;
 use Tests\TestCase;
 
@@ -32,72 +31,60 @@ use Tests\TestCase;
 class CategoryIsTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs
      */
     public function testTriggeredJournal(): void
     {
-        do {
-            $journal      = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $transactions = $journal->transactions()->count();
-        } while ($transactions !== 2);
-
-        $category = $journal->user->categories()->first();
-        $journal->categories()->detach();
-        $journal->categories()->save($category);
-        $this->assertEquals(1, $journal->categories()->count());
+        $withdrawal = $this->getRandomWithdrawal();
+        $category   = $withdrawal->user->categories()->first();
+        $withdrawal->categories()->detach();
+        $withdrawal->categories()->save($category);
+        $this->assertEquals(1, $withdrawal->categories()->count());
 
         $trigger = CategoryIs::makeFromStrings($category->name, false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertTrue($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs
      */
     public function testTriggeredNotJournal(): void
     {
-        do {
-            $journal      = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $transactions = $journal->transactions()->count();
-        } while ($transactions !== 2);
-
-        $category      = $journal->user->categories()->first();
-        $otherCategory = $journal->user->categories()->where('id', '!=', $category->id)->first();
-        $journal->categories()->detach();
-        $journal->categories()->save($category);
-        $this->assertEquals(1, $journal->categories()->count());
+        $withdrawal    = $this->getRandomWithdrawal();
+        $category      = $withdrawal->user->categories()->first();
+        $otherCategory = $withdrawal->user->categories()->where('id', '!=', $category->id)->first();
+        $withdrawal->categories()->detach();
+        $withdrawal->categories()->save($category);
+        $this->assertEquals(1, $withdrawal->categories()->count());
 
         $trigger = CategoryIs::makeFromStrings($otherCategory->name, false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertFalse($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs
      */
     public function testTriggeredTransaction(): void
     {
-        do {
-            $journal      = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $transactions = $journal->transactions()->count();
-        } while ($transactions !== 2);
+        $withdrawal  = $this->getRandomWithdrawal();
+        $transaction = $withdrawal->transactions()->first();
+        $category    = $withdrawal->user->categories()->first();
 
-        $transaction = $journal->transactions()->first();
-        $category    = $journal->user->categories()->first();
-
-        $journal->categories()->detach();
+        $withdrawal->categories()->detach();
         $transaction->categories()->detach();
         $transaction->categories()->save($category);
-        $this->assertEquals(0, $journal->categories()->count());
+        $this->assertEquals(0, $withdrawal->categories()->count());
         $this->assertEquals(1, $transaction->categories()->count());
 
         $trigger = CategoryIs::makeFromStrings($category->name, false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertTrue($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs
      */
     public function testWillMatchEverythingNotNull(): void
     {
@@ -107,7 +94,7 @@ class CategoryIsTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\CategoryIs
      */
     public function testWillMatchEverythingNull(): void
     {

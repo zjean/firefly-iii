@@ -28,6 +28,7 @@ use FireflyIII\Support\Import\Placeholder\ColumnValue;
 use FireflyIII\Support\Import\Placeholder\ImportTransaction;
 use FireflyIII\Support\Import\Routine\File\ImportableCreator;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class ImportableCreatorTest
@@ -35,11 +36,20 @@ use Tests\TestCase;
 class ImportableCreatorTest extends TestCase
 {
     /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+    /**
      * @covers \FireflyIII\Support\Import\Routine\File\ImportableCreator
      */
     public function testConvertSets(): void
     {
-        $columnValue =new ColumnValue();
+        $columnValue = new ColumnValue();
         $columnValue->setOriginalRole('account-name');
         $columnValue->setRole('account-id');
         $columnValue->setValue('Checking Account');
@@ -47,13 +57,13 @@ class ImportableCreatorTest extends TestCase
 
         $input = [
             [
-                $columnValue
-            ]
+                $columnValue,
+            ],
         ];
 
 
         $creator = new ImportableCreator;
-        $result = $creator->convertSets($input);
+        $result  = $creator->convertSets($input);
 
         $this->assertCount(1, $result);
         $this->assertInstanceOf(ImportTransaction::class, $result[0]);

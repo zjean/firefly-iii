@@ -86,7 +86,7 @@ class EditController extends Controller
         $budgets     = app('expandedform')->makeSelectListWithEmpty($this->budgets->getActiveBudgets());
 
         /** @var RecurrenceRepetition $repetition */
-        $repetition            = $recurrence->recurrenceRepetitions()->first();
+        $repetition     = $recurrence->recurrenceRepetitions()->first();
         $currentRepType = $repetition->repetition_type;
         if ('' !== $repetition->repetition_moment) {
             $currentRepType .= ',' . $repetition->repetition_moment;
@@ -105,10 +105,10 @@ class EditController extends Controller
             'times'      => (string)trans('firefly.repeat_times'),
         ];
         if (null !== $recurrence->repeat_until) {
-            $repetitionEnd = 'until_date';
+            $repetitionEnd = 'until_date'; // @codeCoverageIgnore
         }
         if ($recurrence->repetitions > 0) {
-            $repetitionEnd = 'times';
+            $repetitionEnd = 'times'; // @codeCoverageIgnore
         }
 
         $weekendResponses = [

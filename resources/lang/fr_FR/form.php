@@ -50,8 +50,9 @@ return [
     'source_account'              => 'Compte d\'origine',
     'destination_account'         => 'Compte destinataire',
     'journal_destination_id'      => 'Compte d’actif (destination)',
-    'asset_destination_account'   => 'Compte d’actif (destination)',
-    'asset_source_account'        => 'Compte d’actif (source)',
+    'asset_destination_account'   => 'Compte destinataire',
+    'include_net_worth'           => 'Inclure dans l\'avoir net',
+    'asset_source_account'        => 'Compte d\'origine',
     'journal_description'         => 'Description',
     'note'                        => 'Notes',
     'split_journal'               => 'Ventiler cette opération',
@@ -84,6 +85,9 @@ return [
     'verification'                => 'Vérification',
     'api_key'                     => 'Clé API',
     'remember_me'                 => 'Se souvenir de moi',
+    'liability_type_id'           => 'Type de passif',
+    'interest'                    => 'Intérêt',
+    'interest_period'             => 'Période d’intérêt',
 
     'source_account_asset'        => 'Compte source (compte d\'actif)',
     'destination_account_expense' => 'Compte de destination (compte de dépenses)',
@@ -118,7 +122,7 @@ return [
     'date_format'                 => 'Format de la date',
     'specifix'                    => 'Banque - ou déposer des corrections spécifiques',
     'attachments[]'               => 'Pièces jointes',
-    'store_new_withdrawal'        => 'Enregistrer un nouveau retrait',
+    'store_new_withdrawal'        => 'Enregistrer une nouvelle dépense',
     'store_new_deposit'           => 'Enregistrer un nouveau dépôt',
     'store_new_transfer'          => 'Enregistrer un nouveau transfert',
     'add_new_withdrawal'          => 'Ajouter un nouveau retrait',
@@ -237,6 +241,6 @@ return [
     'repetitions'             => 'Répétitions',
     'calendar'                => 'Calendrier',
     'weekend'                 => 'Week-end',
-    'client_secret'           => 'Client secret',
+    'client_secret'           => 'Clé secrète',
 
 ];

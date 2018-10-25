@@ -42,12 +42,12 @@
 
                         {# show source if withdrawal or transfer #}
                         {% if preFilled.what == 'withdrawal' or preFilled.what == 'transfer' %}
-                            {{ ExpandedForm.activeAssetAccountList('journal_source_id', preFilled.journal_source_id) }}
+                            {{ ExpandedForm.activeLongAccountList('journal_source_id', preFilled.journal_source_id) }}
                         {% endif %}
 
                         {# show destination account id, if deposit (is asset): #}
                         {% if preFilled.what == 'deposit' or preFilled.what == 'transfer' %}
-                            {{ ExpandedForm.activeAssetAccountList('journal_destination_id', preFilled.journal_destination_id) }}
+                            {{ ExpandedForm.activeLongAccountList('journal_destination_id', preFilled.journal_destination_id) }}
                         {% endif %}
 
                         {# show amount and some helper text when making splits: #}
@@ -264,7 +264,7 @@
                                                    value="{{ transaction.foreign_currency_id }}">
                                         {% endif %}
                                         <input type="hidden" name="transactions[{{ loop.index0 }}][transaction_currency_id]"
-                                               value="{{ transaction.transaction_currency_id }}">
+                                               value="{{ transaction.currency_id }}">
                                     </div>
                                     {# budget #}
                                     {% if preFilled.what == 'withdrawal' %}
@@ -328,7 +328,8 @@
         var originalForeignSum = {{ preFilled.journal_foreign_amount }};
         var what = "{{ preFilled.what }}";
     </script>
-    <script type="text/javascript" src="js/lib/bootstrap3-typeahead.min.js?v={{ FF_VERSION }}"></script>
+    <script type="text/javascript" src="js/lib/typeahead/typeahead.bundle.min.js?v={{ FF_VERSION }}"></script>
+    <script type="text/javascript" src="js/ff/common/autocomplete.js?v={{ FF_VERSION }}"></script>
     <script type="text/javascript" src="js/lib/bootstrap-tagsinput.min.js?v={{ FF_VERSION }}"></script>
     <script type="text/javascript" src="js/lib/jquery-ui.min.js?v={{ FF_VERSION }}"></script>
     <script type="text/javascript" src="js/lib/modernizr-custom.js?v={{ FF_VERSION }}"></script>

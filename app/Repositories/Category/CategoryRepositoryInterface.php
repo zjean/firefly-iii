@@ -51,6 +51,17 @@ interface CategoryRepositoryInterface
      */
     public function earnedInPeriod(Collection $categories, Collection $accounts, Carbon $start, Carbon $end): string;
 
+    /** @noinspection MoreThanThreeArgumentsInspection */
+    /**
+     * @param Collection $categories
+     * @param Collection $accounts
+     * @param Carbon     $start
+     * @param Carbon     $end
+     *
+     * @return Collection
+     */
+    public function earnedInPeriodCollection(Collection $categories, Collection $accounts, Carbon $start, Carbon $end): Collection;
+
     /**
      * Find a category.
      *
@@ -157,6 +168,42 @@ interface CategoryRepositoryInterface
      * @return string
      */
     public function spentInPeriod(Collection $categories, Collection $accounts, Carbon $start, Carbon $end): string;
+
+    /** @noinspection MoreThanThreeArgumentsInspection */
+    /**
+     * @param Collection $categories
+     * @param Collection $accounts
+     * @param Carbon     $start
+     * @param Carbon     $end
+     *
+     * @return Collection
+     */
+    public function spentInPeriodCollection(Collection $categories, Collection $accounts, Carbon $start, Carbon $end): Collection;
+
+    /** @noinspection MoreThanThreeArgumentsInspection */
+
+    /**
+     * A very cryptic method name that means:
+     *
+     * Get me the amount spent in this period, grouped per currency, where no category was set.
+     *
+     * @param Collection $accounts
+     * @param Carbon     $start
+     * @param Carbon     $end
+     *
+     * @return string
+     */
+    public function spentInPeriodPcWoCategory(Collection $accounts, Carbon $start, Carbon $end): array;
+
+    /**
+     * @param Collection $categories
+     * @param Collection $accounts
+     * @param Carbon     $start
+     * @param Carbon     $end
+     *
+     * @return array
+     */
+    public function spentInPeriodPerCurrency(Collection $categories, Collection $accounts, Carbon $start, Carbon $end): array;
 
     /**
      * @param Collection $accounts

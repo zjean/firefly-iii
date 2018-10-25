@@ -23,12 +23,13 @@ declare(strict_types=1);
 namespace FireflyIII\Repositories\ExportJob;
 
 use Carbon\Carbon;
+use Exception;
 use FireflyIII\Models\ExportJob;
 use FireflyIII\User;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Log;
-use Storage;
 
 /**
  * Class ExportJobRepository.
@@ -39,6 +40,16 @@ class ExportJobRepository implements ExportJobRepositoryInterface
     private $user;
 
     /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
+
+    /**
      * @param ExportJob $job
      * @param string    $status
      *
@@ -47,34 +58,40 @@ class ExportJobRepository implements ExportJobRepositoryInterface
     public function changeStatus(ExportJob $job, string $status): bool
     {
         Log::debug(sprintf('Change status of job #%d to "%s"', $job->id, $status));
-        $job->change($status);
+        $job->status = $status;
+        $job->save();
 
         return true;
     }
 
     /**
      * @return bool
-     * @throws \Exception
      */
     public function cleanup(): bool
     {
-        $dayAgo = Carbon::create()->subDay();
+        $dayAgo = Carbon::now()->subDay();
         $set    = ExportJob::where('created_at', '<', $dayAgo->format('Y-m-d H:i:s'))
                            ->whereIn('status', ['never_started', 'export_status_finished', 'export_downloaded'])
                            ->get();
+
+        $disk = Storage::disk('export');
+        $files = $disk->files();
 
         // loop set:
         /** @var ExportJob $entry */
         foreach ($set as $entry) {
             $key   = $entry->key;
-            $files = scandir(storage_path('export'), SCANDIR_SORT_NONE);
-            /** @var string $file */
+            /** @var array $file */
             foreach ($files as $file) {
-                if (0 === strpos($file, $key)) {
-                    unlink(storage_path('export') . DIRECTORY_SEPARATOR . $file);
+                if (0 === strpos($file['basename'], $key)) {
+                    $disk->delete($file['path']);
                 }
             }
-            $entry->delete();
+            try {
+                $entry->delete();
+            } catch (Exception $e) {
+                Log::debug(sprintf('Could not delete object: %s', $e->getMessage()));
+            }
         }
 
         return true;
@@ -142,8 +159,8 @@ class ExportJobRepository implements ExportJobRepositoryInterface
      */
     public function getContent(ExportJob $job): string
     {
-        $disk    = Storage::disk('export');
-        $file    = $job->key . '.zip';
+        $disk = Storage::disk('export');
+        $file = $job->key . '.zip';
 
         try {
             $content = $disk->get($file);

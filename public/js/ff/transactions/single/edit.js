@@ -37,16 +37,37 @@ $(document).ready(function () {
     });
     $('#ffInput_amount').on('change', convertForeignToNative);
 
-    // respond to transfer changes:
-    $('#ffInput_source_id').on('change', function () {
+    // respond to account changes:
+    $('#ffInput_source_id').on('change', function (e) {
+        console.log('Event: #ffInput_source_id::change');
+
+
+
         validateCurrencyForTransfer();
         // update the two source account currency ID fields (initial value):
         initCurrencyIdValues();
+
+        // call to selectsForeignCurrency
+        console.log('Extra call to selectsForeignCurrency()');
+        selectsForeignCurrency();
+
+        // update "source_account_currency".
+        updateSourceAccountCurrency();
+
     });
     $('#ffInput_destination_id').on('change', function () {
+        console.log('Event: #ffInput_destination_id::change');
         validateCurrencyForTransfer();
         // update the two source account currency ID fields (initial value):
         initCurrencyIdValues();
+
+        // call to selectsForeignCurrency
+        console.log('Extra call to selectsForeignCurrency()');
+        selectsForeignCurrency();
+
+        // update "destination_account_currency".
+        updateDestinationAccountCurrency();
+
     });
 
     // convert source currency to destination currency (slightly different routine for transfers)
@@ -58,9 +79,36 @@ $(document).ready(function () {
 });
 
 /**
+ * Updates the currency ID of the hidden source account field
+ * to match the selected account.
+ */
+function updateSourceAccountCurrency() {
+    var accountId = $('#ffInput_source_id').val();
+    var currency = parseInt(accountInfo[accountId].preferredCurrency);
+    console.log('Now in updateSourceAccountCurrency() for account #' + accountId);
+    console.log('Preferred currency for this account is #' + currency);
+    $('input[name="source_account_currency"]').val(currency);
+}
+
+/**
+ * Updates the currency ID of the hidden destination account field
+ * to match the selected account.
+ */
+function updateDestinationAccountCurrency() {
+    var accountId = $('#ffInput_destination_id').val();
+    var currency = parseInt(accountInfo[accountId].preferredCurrency);
+    console.log('Now in updateDestinationAccountCurrency() for account #' + accountId);
+    console.log('Preferred currency for this account is #' + currency);
+    $('input[name="destination_account_currency"]').val(currency);
+}
+
+
+
+/**
  * Fills two hidden variables with the correct currency ID.
  */
 function initCurrencyIdValues() {
+    console.log('in initCurrencyIdValues()');
     var currencyId;
     if (journal.transaction_type.type === "Withdrawal") {
         // update source from page load info:
@@ -148,9 +196,31 @@ function getAccountId() {
  * Set the auto-complete JSON things.
  */
 function setAutocompletes() {
-    $.getJSON('json/transaction-journals/' + what).done(function (data) {
-        $('input[name="description"]').typeahead({source: data, autoSelect: false});
-    });
+
+    // do description auto complete:
+    var journalNames = new Bloodhound({
+                                          datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                                          queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                          prefetch: {
+                                              url: 'json/transaction-journals/' + what,
+                                              filter: function (list) {
+                                                  return $.map(list, function (name) {
+                                                      return {name: name};
+                                                  });
+                                              }
+                                          },
+                                          remote: {
+                                              url: 'json/transaction-journals/' + what + '?search=%QUERY',
+                                              wildcard: '%QUERY',
+                                              filter: function (list) {
+                                                  return $.map(list, function (name) {
+                                                      return {name: name};
+                                                  });
+                                              }
+                                          }
+                                      });
+    journalNames.initialize();
+    $('input[name="description"]').typeahead({hint: true, highlight: true,}, {source: journalNames, displayKey: 'name', autoSelect: false});
 }
 
 /**

@@ -27,6 +27,7 @@ use FireflyIII\Import\Mapper\Tags;
 use FireflyIII\Models\Tag;
 use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use Illuminate\Support\Collection;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -35,7 +36,17 @@ use Tests\TestCase;
 class TagsTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Import\Mapper\Tags::getMap()
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+
+    /**
+     * @covers \FireflyIII\Import\Mapper\Tags
      */
     public function testGetMapBasic(): void
     {

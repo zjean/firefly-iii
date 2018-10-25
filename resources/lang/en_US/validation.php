@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 return [
     'iban'                           => 'This is not a valid IBAN.',
+    'zero_or_more'                   => 'The value cannot be negative.',
     'source_equals_destination'      => 'The source account equals the destination account.',
     'unique_account_number_for_user' => 'It looks like this account number is already in use.',
     'unique_iban_for_user'           => 'It looks like this IBAN is already in use.',
@@ -50,7 +51,7 @@ return [
     'at_least_one_action'            => 'Rule must have at least one action.',
     'base64'                         => 'This is not valid base64 encoded data.',
     'model_id_invalid'               => 'The given ID seems invalid for this model.',
-    'more'                           => ':attribute must be larger than :value.',
+    'more'                           => ':attribute must be larger than zero.',
     'less'                           => ':attribute must be less than 10,000,000',
     'active_url'                     => 'The :attribute is not a valid URL.',
     'after'                          => 'The :attribute must be a date after :date.',
@@ -87,6 +88,7 @@ return [
     'max.array'                      => 'The :attribute may not have more than :max items.',
     'mimes'                          => 'The :attribute must be a file of type: :values.',
     'min.numeric'                    => 'The :attribute must be at least :min.',
+    'lte.numeric'                    => 'The :attribute must be less than or equal :value.',
     'min.file'                       => 'The :attribute must be at least :min kilobytes.',
     'min.string'                     => 'The :attribute must be at least :min characters.',
     'min.array'                      => 'The :attribute must have at least :min items.',

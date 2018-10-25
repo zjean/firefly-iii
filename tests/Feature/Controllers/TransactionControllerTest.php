@@ -23,15 +23,17 @@ declare(strict_types=1);
 namespace Tests\Feature\Controllers;
 
 use Carbon\Carbon;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Helpers\Filter\InternalTransferFilter;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\LinkType\LinkTypeRepositoryInterface;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Log;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -46,10 +48,10 @@ class TransactionControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
 
@@ -65,11 +67,13 @@ class TransactionControllerTest extends TestCase
         $this->session(['start' => $date, 'end' => clone $date]);
 
         // mock stuff
-        $transfer = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
+        $transfer   = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $collector  = $this->mock(JournalCollectorInterface::class);
-        $repository->shouldReceive('firstNull')->twice()->andReturn($transfer);
+        $collector  = $this->mock(TransactionCollectorInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
 
+        $repository->shouldReceive('firstNull')->twice()->andReturn($transfer);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
         $collector->shouldReceive('setTypes')->andReturnSelf();
         $collector->shouldReceive('setLimit')->andReturnSelf();
         $collector->shouldReceive('setPage')->andReturnSelf();
@@ -80,8 +84,8 @@ class TransactionControllerTest extends TestCase
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10));
-        $collector->shouldReceive('getJournals')->andReturn(new Collection);
+        $collector->shouldReceive('getPaginatedTransactions')->andReturn(new LengthAwarePaginator([], 0, 10));
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection);
 
         $this->be($this->user());
         $response = $this->get(route('transactions.index', ['transfer']));
@@ -99,11 +103,13 @@ class TransactionControllerTest extends TestCase
         $this->session(['start' => $date, 'end' => clone $date]);
 
         // mock stuff
-        $transfer = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
+        $transfer   = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $collector  = $this->mock(JournalCollectorInterface::class);
-        $repository->shouldReceive('firstNull')->twice()->andReturn($transfer);
+        $collector  = $this->mock(TransactionCollectorInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
 
+        $repository->shouldReceive('firstNull')->twice()->andReturn($transfer);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
         $collector->shouldReceive('setTypes')->andReturnSelf();
         $collector->shouldReceive('setLimit')->andReturnSelf();
         $collector->shouldReceive('setPage')->andReturnSelf();
@@ -114,8 +120,8 @@ class TransactionControllerTest extends TestCase
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10));
-        $collector->shouldReceive('getJournals')->andReturn(new Collection);
+        $collector->shouldReceive('getPaginatedTransactions')->andReturn(new LengthAwarePaginator([], 0, 10));
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection);
 
         $this->be($this->user());
         $response = $this->get(route('transactions.index.all', ['transfer']));
@@ -142,8 +148,10 @@ class TransactionControllerTest extends TestCase
 
         // mock stuff
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $collector  = $this->mock(JournalCollectorInterface::class);
-        $transfer = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
+        $collector  = $this->mock(TransactionCollectorInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+        $transfer   = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
 
@@ -157,8 +165,8 @@ class TransactionControllerTest extends TestCase
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10));
-        $collector->shouldReceive('getJournals')->andReturn($collection);
+        $collector->shouldReceive('getPaginatedTransactions')->andReturn(new LengthAwarePaginator([], 0, 10));
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('transactions.index', ['transfer', '2016-01-01']));
@@ -185,8 +193,10 @@ class TransactionControllerTest extends TestCase
 
         // mock stuff
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $collector  = $this->mock(JournalCollectorInterface::class);
-        $transfer = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
+        $collector  = $this->mock(TransactionCollectorInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+        $transfer   = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
 
@@ -200,11 +210,11 @@ class TransactionControllerTest extends TestCase
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10));
-        $collector->shouldReceive('getJournals')->andReturn($collection);
+        $collector->shouldReceive('getPaginatedTransactions')->andReturn(new LengthAwarePaginator([], 0, 10));
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
-        $response = $this->get(route('transactions.index', ['transfer', '2016-01-01','2015-12-31']));
+        $response = $this->get(route('transactions.index', ['transfer', '2016-01-01', '2015-12-31']));
         $response->assertStatus(200);
         // has bread crumb
         $response->assertSee('<ol class="breadcrumb">');
@@ -228,8 +238,10 @@ class TransactionControllerTest extends TestCase
 
         // mock stuff
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $collector  = $this->mock(JournalCollectorInterface::class);
-        $transfer = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
+        $collector  = $this->mock(TransactionCollectorInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+        $transfer   = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
 
@@ -243,8 +255,8 @@ class TransactionControllerTest extends TestCase
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10));
-        $collector->shouldReceive('getJournals')->andReturn($collection);
+        $collector->shouldReceive('getPaginatedTransactions')->andReturn(new LengthAwarePaginator([], 0, 10));
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('transactions.index', ['deposit']));
@@ -271,8 +283,10 @@ class TransactionControllerTest extends TestCase
 
         // mock stuff
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $collector  = $this->mock(JournalCollectorInterface::class);
-        $transfer = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
+        $collector  = $this->mock(TransactionCollectorInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+        $transfer   = $this->user()->transactionJournals()->inRandomOrder()->where('transaction_type_id', 3)->first();
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
         $repository->shouldReceive('firstNull')->once()->andReturn($transfer);
 
@@ -286,8 +300,8 @@ class TransactionControllerTest extends TestCase
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('withOpposingAccount')->andReturnSelf();
         $collector->shouldReceive('removeFilter')->withArgs([InternalTransferFilter::class])->andReturnSelf();
-        $collector->shouldReceive('getPaginatedJournals')->andReturn(new LengthAwarePaginator([], 0, 10));
-        $collector->shouldReceive('getJournals')->andReturn($collection);
+        $collector->shouldReceive('getPaginatedTransactions')->andReturn(new LengthAwarePaginator([], 0, 10));
+        $collector->shouldReceive('getTransactions')->andReturn($collection);
 
         $this->be($this->user());
         $response = $this->get(route('transactions.index', ['withdrawal']));
@@ -303,8 +317,9 @@ class TransactionControllerTest extends TestCase
     {
         $data       = ['transactions' => [1, 2]];
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $repository->shouldReceive('firstNull')->times(1)->andReturn(new TransactionJournal);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
 
+        $repository->shouldReceive('firstNull')->times(1)->andReturn(new TransactionJournal);
         $repository->shouldReceive('findTransaction')->andReturn(new Transaction)->twice();
         $repository->shouldReceive('reconcile')->twice();
 
@@ -322,6 +337,7 @@ class TransactionControllerTest extends TestCase
         $journal       = factory(TransactionJournal::class)->make();
         $journal->date = new Carbon('2016-01-01');
         $repository    = $this->mock(JournalRepositoryInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
         $repository->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $repository->shouldReceive('findNull')->once()->andReturn($journal);
         $repository->shouldReceive('setOrder')->once()->andReturn(true);
@@ -343,9 +359,11 @@ class TransactionControllerTest extends TestCase
     {
         // mock stuff
         $linkRepos = $this->mock(LinkTypeRepositoryInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+
         $linkRepos->shouldReceive('get')->andReturn(new Collection);
         $linkRepos->shouldReceive('getLinks')->andReturn(new Collection);
-
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
 
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $journalRepos->shouldReceive('getPiggyBankEvents')->andReturn(new Collection);
@@ -368,6 +386,7 @@ class TransactionControllerTest extends TestCase
     public function testShowOpeningBalance(): void
     {
         $linkRepos = $this->mock(LinkTypeRepositoryInterface::class);
+        $userRepos = $this->mock(UserRepositoryInterface::class);
         $linkRepos->shouldReceive('get')->andReturn(new Collection);
         $linkRepos->shouldReceive('getLinks')->andReturn(new Collection);
 

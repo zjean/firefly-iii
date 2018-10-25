@@ -23,14 +23,14 @@ declare(strict_types=1);
 namespace FireflyIII\Helpers\Attachments;
 
 use Crypt;
+use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Models\Attachment;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Log;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -64,7 +64,12 @@ class AttachmentHelper implements AttachmentHelperInterface
         $this->messages      = new MessageBag;
         $this->attachments   = new Collection;
         $this->uploadDisk    = Storage::disk('upload');
+
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
     }
+
 
     /**
      * Returns the content of an attachment.
@@ -80,7 +85,7 @@ class AttachmentHelper implements AttachmentHelperInterface
 
         try {
             $content = Crypt::decrypt($this->uploadDisk->get(sprintf('at-%d.data', $attachment->id)));
-        } catch (DecryptException|FileNotFoundException $e) {
+        } catch (DecryptException $e) {
             Log::error(sprintf('Could not decrypt data of attachment #%d: %s', $attachment->id, $e->getMessage()));
             $content = '';
         }
@@ -89,7 +94,7 @@ class AttachmentHelper implements AttachmentHelperInterface
     }
 
     /**
-     * Returns the file location for an attachment,
+     * Returns the file path relative to upload disk for an attachment,
      *
      * @param Attachment $attachment
      *
@@ -97,8 +102,7 @@ class AttachmentHelper implements AttachmentHelperInterface
      */
     public function getAttachmentLocation(Attachment $attachment): string
     {
-        $path = sprintf('%s%sat-%d.data', storage_path('upload'), DIRECTORY_SEPARATOR, (int)$attachment->id);
-
+        $path = sprintf('%sat-%d.data', DIRECTORY_SEPARATOR, (int)$attachment->id);
         return $path;
     }
 
@@ -145,9 +149,11 @@ class AttachmentHelper implements AttachmentHelperInterface
     {
         $resource = tmpfile();
         if (false === $resource) {
+            // @codeCoverageIgnoreStart
             Log::error('Cannot create temp-file for file upload.');
 
             return false;
+            // @codeCoverageIgnoreEnd
         }
         $path = stream_get_meta_data($resource)['uri'];
         fwrite($resource, $content);
@@ -176,13 +182,17 @@ class AttachmentHelper implements AttachmentHelperInterface
     /**
      * Save attachments that get uploaded with models, through the app.
      *
-     * @param Model      $model
+     * @param object     $model
      * @param array|null $files
      *
      * @return bool
+     * @throws \Illuminate\Contracts\Encryption\EncryptException
      */
-    public function saveAttachmentsForModel(Model $model, ?array $files): bool
+    public function saveAttachmentsForModel(object $model, ?array $files): bool
     {
+        if(!($model instanceof Model)) {
+            return false; // @codeCoverageIgnore
+        }
         Log::debug(sprintf('Now in saveAttachmentsForModel for model %s', \get_class($model)));
         if (\is_array($files)) {
             Log::debug('$files is an array.');
@@ -235,6 +245,7 @@ class AttachmentHelper implements AttachmentHelperInterface
      *
      * @return Attachment|null
      * @throws \Illuminate\Contracts\Encryption\EncryptException
+     * @throws FireflyException
      */
     protected function processFile(UploadedFile $file, Model $model): ?Attachment
     {
@@ -256,6 +267,11 @@ class AttachmentHelper implements AttachmentHelperInterface
 
             $fileObject = $file->openFile('r');
             $fileObject->rewind();
+
+            if(0 === $file->getSize()) {
+                throw new FireflyException('Cannot upload empty or non-existent file.'); // @codeCoverageIgnore
+            }
+
             $content   = $fileObject->fread($file->getSize());
             $encrypted = Crypt::encrypt($content);
             Log::debug(sprintf('Full file length is %d and upload size is %d.', \strlen($content), $file->getSize()));
@@ -342,9 +358,12 @@ class AttachmentHelper implements AttachmentHelperInterface
         if (!$this->validMime($file)) {
             $result = false;
         }
+        // @codeCoverageIgnoreStart
+        // can't seem to reach this point.
         if (true === $result && !$this->validSize($file)) {
             $result = false;
         }
+        // @codeCoverageIgnoreEnd
         if (true === $result && $this->hasFile($file, $model)) {
             $result = false;
         }

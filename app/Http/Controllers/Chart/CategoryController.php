@@ -27,9 +27,12 @@ use FireflyIII\Generator\Chart\Basic\GeneratorInterface;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Category;
+use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
+use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
+use FireflyIII\Support\Http\Controllers\DateCalculation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
@@ -38,6 +41,7 @@ use Illuminate\Support\Collection;
  */
 class CategoryController extends Controller
 {
+    use DateCalculation;
     /** @var GeneratorInterface Chart generation methods. */
     protected $generator;
 
@@ -54,6 +58,8 @@ class CategoryController extends Controller
 
     /**
      * Show an overview for a category for all time, per month/week/year.
+     *
+     * TODO this chart is not multi-currency aware.
      *
      * @param CategoryRepositoryInterface $repository
      * @param AccountRepositoryInterface  $accountRepository
@@ -79,29 +85,50 @@ class CategoryController extends Controller
         $accounts  = $accountRepository->getAccountsByType([AccountType::DEFAULT, AccountType::ASSET]);
         $chartData = [
             [
-                'label'   => (string)trans('firefly.spent'),
-                'entries' => [], 'type' => 'bar',
+                'label'           => (string)trans('firefly.spent'),
+                'entries'         => [], 'type' => 'bar',
+                'backgroundColor' => 'rgba(219, 68, 55, 0.5)', // red
             ],
             [
-                'label'   => (string)trans('firefly.earned'),
-                'entries' => [], 'type' => 'bar',
+                'label'           => (string)trans('firefly.earned'),
+                'entries'         => [], 'type' => 'bar',
+                'backgroundColor' => 'rgba(0, 141, 76, 0.5)', // green
             ],
             [
                 'label'   => (string)trans('firefly.sum'),
                 'entries' => [], 'type' => 'line', 'fill' => false,
             ],
         ];
-
-        while ($start <= $end) {
-            $currentEnd                      = app('navigation')->endOfPeriod($start, $range);
-            $spent                           = $repository->spentInPeriod(new Collection([$category]), $accounts, $start, $currentEnd);
-            $earned                          = $repository->earnedInPeriod(new Collection([$category]), $accounts, $start, $currentEnd);
-            $sum                             = bcadd($spent, $earned);
-            $label                           = app('navigation')->periodShow($start, $range);
-            $chartData[0]['entries'][$label] = round(bcmul($spent, '-1'), 12);
-            $chartData[1]['entries'][$label] = round($earned, 12);
-            $chartData[2]['entries'][$label] = round($sum, 12);
-            $start                           = app('navigation')->addPeriod($start, $range, 0);
+        $step      = $this->calculateStep($start, $end);
+        $current = clone $start;
+        switch ($step) {
+            case '1D':
+                while ($current <= $end) {
+                    $spent                           = $repository->spentInPeriod(new Collection([$category]), $accounts, $current, $current);
+                    $earned                          = $repository->earnedInPeriod(new Collection([$category]), $accounts, $current, $current);
+                    $sum                             = bcadd($spent, $earned);
+                    $label                           = app('navigation')->periodShow($current, $step);
+                    $chartData[0]['entries'][$label] = round(bcmul($spent, '-1'), 12);
+                    $chartData[1]['entries'][$label] = round($earned, 12);
+                    $chartData[2]['entries'][$label] = round($sum, 12);
+                    $current->addDay();
+                }
+                break;
+            case '1W':
+            case '1M':
+            case '1Y':
+                while ($current <= $end) {
+                    $currentEnd                      = app('navigation')->endOfPeriod($current, $range);
+                    $spent                           = $repository->spentInPeriod(new Collection([$category]), $accounts, $current, $currentEnd);
+                    $earned                          = $repository->earnedInPeriod(new Collection([$category]), $accounts, $current, $currentEnd);
+                    $sum                             = bcadd($spent, $earned);
+                    $label                           = app('navigation')->periodShow($current, $step);
+                    $chartData[0]['entries'][$label] = round(bcmul($spent, '-1'), 12);
+                    $chartData[1]['entries'][$label] = round($earned, 12);
+                    $chartData[2]['entries'][$label] = round($sum, 12);
+                    $current= app('navigation')->addPeriod($current, $step, 0);
+                }
+                break;
         }
 
         $data = $this->generator->multiSet($chartData);
@@ -131,32 +158,79 @@ class CategoryController extends Controller
         if ($cache->has()) {
             return response()->json($cache->get()); // @codeCoverageIgnore
         }
+
+        // currency repos:
+        /** @var CurrencyRepositoryInterface $currencyRepository */
+        $currencyRepository = app(CurrencyRepositoryInterface::class);
+        $currencies         = [];
+
+
         $chartData  = [];
+        $tempData   = [];
         $categories = $repository->getCategories();
         $accounts   = $accountRepository->getAccountsByType([AccountType::ASSET, AccountType::DEFAULT]);
+
         /** @var Category $category */
         foreach ($categories as $category) {
-            $spent = $repository->spentInPeriod(new Collection([$category]), $accounts, $start, $end);
-            if (bccomp($spent, '0') === -1) {
-                $chartData[$category->name] = bcmul($spent, '-1');
+            $spentArray = $repository->spentInPeriodPerCurrency(new Collection([$category]), $accounts, $start, $end);
+            foreach ($spentArray as $currencyId => $spent) {
+                if (bccomp($spent, '0') === -1) {
+                    $currencies[$currencyId] = $currencies[$currencyId] ?? $currencyRepository->findNull($currencyId);
+                    $tempData[]              = [
+                        'name'        => $category->name,
+                        'spent'       => bcmul($spent, '-1'),
+                        'spent_float' => (float)bcmul($spent, '-1'),
+                        'currency_id' => $currencyId,
+                    ];
+                }
             }
         }
+        // no category per currency:
+        $noCategory = $repository->spentInPeriodPcWoCategory(new Collection, $start, $end);
+        foreach ($noCategory as $currencyId => $spent) {
+            $currencies[$currencyId] = $currencies[$currencyId] ?? $currencyRepository->findNull($currencyId);
+            $tempData[]              = [
+                'name'        => trans('firefly.no_category'),
+                'spent'       => bcmul($spent, '-1'),
+                'spent_float' => (float)bcmul($spent, '-1'),
+                'currency_id' => $currencyId,
+            ];
+        }
 
-        $chartData[(string)trans('firefly.no_category')] = bcmul($repository->spentInPeriodWithoutCategory(new Collection, $start, $end), '-1');
+        // sort temp array by amount.
+        $amounts = array_column($tempData, 'spent_float');
+        array_multisort($amounts, SORT_DESC, $tempData);
 
-        // sort
-        arsort($chartData);
-
-        $data = $this->generator->singleSet((string)trans('firefly.spent'), $chartData);
+        // loop all found currencies and build the data array for the chart.
+        /**
+         * @var int                 $currencyId
+         * @var TransactionCurrency $currency
+         */
+        foreach ($currencies as $currencyId => $currency) {
+            $dataSet                = [
+                'label'           => (string)trans('firefly.spent'),
+                'type'            => 'bar',
+                'currency_symbol' => $currency->symbol,
+                'entries'         => $this->expandNames($tempData),
+            ];
+            $chartData[$currencyId] = $dataSet;
+        }
+        // loop temp data and place data in correct array:
+        foreach ($tempData as $entry) {
+            $currencyId                               = $entry['currency_id'];
+            $name                                     = $entry['name'];
+            $chartData[$currencyId]['entries'][$name] = $entry['spent'];
+        }
+        $data = $this->generator->multiSet($chartData);
         $cache->store($data);
 
         return response()->json($data);
     }
 
-
-    /** @noinspection MoreThanThreeArgumentsInspection */
     /**
      * Chart report.
+     *
+     * TODO this chart is not multi-currency aware.
      *
      * @param Category   $category
      * @param Collection $accounts
@@ -184,14 +258,16 @@ class CategoryController extends Controller
         $periods    = app('navigation')->listOfPeriods($start, $end);
         $chartData  = [
             [
-                'label'   => (string)trans('firefly.spent'),
-                'entries' => [],
-                'type'    => 'bar',
+                'label'           => (string)trans('firefly.spent'),
+                'entries'         => [],
+                'type'            => 'bar',
+                'backgroundColor' => 'rgba(219, 68, 55, 0.5)', // red
             ],
             [
-                'label'   => (string)trans('firefly.earned'),
-                'entries' => [],
-                'type'    => 'bar',
+                'label'           => (string)trans('firefly.earned'),
+                'entries'         => [],
+                'type'            => 'bar',
+                'backgroundColor' => 'rgba(0, 141, 76, 0.5)', // green
             ],
             [
                 'label'   => (string)trans('firefly.sum'),
@@ -218,8 +294,12 @@ class CategoryController extends Controller
     }
 
 
+    /** @noinspection MoreThanThreeArgumentsInspection */
+
     /**
      * Chart for period for transactions without a category.
+     *
+     * TODO this chart is not multi-currency aware.
      *
      * @param Collection $accounts
      * @param Carbon     $start
@@ -245,14 +325,16 @@ class CategoryController extends Controller
         $periods    = app('navigation')->listOfPeriods($start, $end);
         $chartData  = [
             [
-                'label'   => (string)trans('firefly.spent'),
-                'entries' => [],
-                'type'    => 'bar',
+                'label'           => (string)trans('firefly.spent'),
+                'entries'         => [],
+                'type'            => 'bar',
+                'backgroundColor' => 'rgba(219, 68, 55, 0.5)', // red
             ],
             [
-                'label'   => (string)trans('firefly.earned'),
-                'entries' => [],
-                'type'    => 'bar',
+                'label'           => (string)trans('firefly.earned'),
+                'entries'         => [],
+                'type'            => 'bar',
+                'backgroundColor' => 'rgba(0, 141, 76, 0.5)', // green
             ],
             [
                 'label'   => (string)trans('firefly.sum'),
@@ -280,6 +362,8 @@ class CategoryController extends Controller
     /**
      * Chart for a specific period.
      *
+     * TODO this chart is not multi-currency aware.
+     *
      * @param Category                    $category
      * @param                             $date
      *
@@ -295,9 +379,9 @@ class CategoryController extends Controller
         return response()->json($data);
     }
 
-
     /**
      * Chart for a specific period (start and end).
+     *
      *
      * @param Category $category
      * @param Carbon   $start
@@ -307,7 +391,7 @@ class CategoryController extends Controller
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
-    private function makePeriodChart(Category $category, Carbon $start, Carbon $end): array
+    protected function makePeriodChart(Category $category, Carbon $start, Carbon $end): array // chart helper method.
     {
         $cache = new CacheProperties;
         $cache->addProperty($start);
@@ -328,14 +412,16 @@ class CategoryController extends Controller
         // chart data
         $chartData = [
             [
-                'label'   => (string)trans('firefly.spent'),
-                'entries' => [],
-                'type'    => 'bar',
+                'label'           => (string)trans('firefly.spent'),
+                'entries'         => [],
+                'type'            => 'bar',
+                'backgroundColor' => 'rgba(219, 68, 55, 0.5)', // red
             ],
             [
-                'label'   => (string)trans('firefly.earned'),
-                'entries' => [],
-                'type'    => 'bar',
+                'label'           => (string)trans('firefly.earned'),
+                'entries'         => [],
+                'type'            => 'bar',
+                'backgroundColor' => 'rgba(0, 141, 76, 0.5)', // green
             ],
             [
                 'label'   => (string)trans('firefly.sum'),
@@ -362,5 +448,22 @@ class CategoryController extends Controller
         $cache->store($data);
 
         return $data;
+    }
+
+    /**
+     * Small helper function for the revenue and expense account charts.
+     *
+     * @param array $names
+     *
+     * @return array
+     */
+    private function expandNames(array $names): array
+    {
+        $result = [];
+        foreach ($names as $entry) {
+            $result[$entry['name']] = 0;
+        }
+
+        return $result;
     }
 }

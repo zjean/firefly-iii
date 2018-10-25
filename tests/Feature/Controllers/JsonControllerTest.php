@@ -39,15 +39,14 @@ class JsonControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\JsonController::action
-     * @covers \FireflyIII\Http\Controllers\JsonController::__construct
+     * @covers \FireflyIII\Http\Controllers\JsonController
      */
     public function testAction(): void
     {
@@ -61,7 +60,7 @@ class JsonControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\JsonController::trigger
+     * @covers \FireflyIII\Http\Controllers\JsonController
      */
     public function testTrigger(): void
     {

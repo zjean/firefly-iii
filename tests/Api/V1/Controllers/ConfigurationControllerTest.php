@@ -25,8 +25,10 @@ namespace Tests\Api\V1\Controllers;
 
 use FireflyConfig;
 use FireflyIII\Models\Configuration;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Laravel\Passport\Passport;
 use Log;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -42,7 +44,7 @@ class ConfigurationControllerTest extends TestCase
     {
         parent::setUp();
         Passport::actingAs($this->user());
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
@@ -52,6 +54,9 @@ class ConfigurationControllerTest extends TestCase
      */
     public function testIndex(): void
     {
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+
         $demoConfig       = new Configuration;
         $demoConfig->name = 'is_demo_site';
         $demoConfig->data = false;
@@ -96,6 +101,9 @@ class ConfigurationControllerTest extends TestCase
      */
     public function testIndexNotOwner(): void
     {
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(false);
+
         Passport::actingAs($this->emptyUser());
         $response = $this->get('/api/v1/configuration');
         $response->assertStatus(500);
@@ -109,7 +117,9 @@ class ConfigurationControllerTest extends TestCase
      */
     public function testUpdate(): void
     {
-        $data     = [
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+        $data      = [
             'name'  => 'permission_update_check',
             'value' => 1,
 
@@ -135,7 +145,60 @@ class ConfigurationControllerTest extends TestCase
         FireflyConfig::shouldReceive('get')->withArgs(['permission_update_check'])->andReturn($permConfig)->once();
         FireflyConfig::shouldReceive('get')->withArgs(['last_update_check'])->andReturn($lastConfig)->once();
         FireflyConfig::shouldReceive('get')->withArgs(['single_user_mode'])->andReturn($singleConfig)->once();
-        FireflyConfig::shouldReceive('set')->once()->withArgs(['permission_update_check',1]);
+        FireflyConfig::shouldReceive('set')->once()->withArgs(['permission_update_check', 1]);
+
+
+        $expected = [
+            'data' => [
+                'is_demo_site'            => false,
+                'permission_update_check' => -1,
+                'last_update_check'       => 123456789,
+                'single_user_mode'        => true,
+            ],
+        ];
+
+        $response = $this->post('/api/v1/configuration', $data);
+        $response->assertStatus(200);
+        $response->assertExactJson($expected);
+    }
+
+    /**
+     * Set configuration variables.
+     *
+     * @covers \FireflyIII\Api\V1\Controllers\ConfigurationController
+     */
+    public function testUpdateBoolean(): void
+    {
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+
+        $data = [
+            'name'  => 'single_user_mode',
+            'value' => 'true',
+
+        ];
+
+        $demoConfig       = new Configuration;
+        $demoConfig->name = 'is_demo_site';
+        $demoConfig->data = false;
+
+        $permConfig       = new Configuration;
+        $permConfig->name = 'permission_update_check';
+        $permConfig->data = -1;
+
+        $lastConfig       = new Configuration;
+        $lastConfig->name = 'last_update_check';
+        $lastConfig->data = 123456789;
+
+        $singleConfig       = new Configuration;
+        $singleConfig->name = 'single_user_mode';
+        $singleConfig->data = true;
+
+        FireflyConfig::shouldReceive('get')->withArgs(['is_demo_site'])->andReturn($demoConfig)->once();
+        FireflyConfig::shouldReceive('get')->withArgs(['permission_update_check'])->andReturn($permConfig)->once();
+        FireflyConfig::shouldReceive('get')->withArgs(['last_update_check'])->andReturn($lastConfig)->once();
+        FireflyConfig::shouldReceive('get')->withArgs(['single_user_mode'])->andReturn($singleConfig)->once();
+        FireflyConfig::shouldReceive('set')->once()->withArgs(['single_user_mode', true]);
 
 
         $expected = [
@@ -159,6 +222,8 @@ class ConfigurationControllerTest extends TestCase
      */
     public function testUpdateInvalid(): void
     {
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
         $data     = [
             'name'  => 'last_update_check',
             'value' => 'true',
@@ -175,6 +240,9 @@ class ConfigurationControllerTest extends TestCase
      */
     public function testUpdateNotOwner(): void
     {
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(false);
+
         Passport::actingAs($this->emptyUser());
         $response = $this->post('/api/v1/configuration');
         $response->assertStatus(500);

@@ -30,12 +30,22 @@ use FireflyIII\Models\Transaction;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Services\Internal\Update\TransactionUpdateService;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class TransactionUpdateServiceTest
  */
 class TransactionUpdateServiceTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
     /**
      * @covers \FireflyIII\Services\Internal\Update\TransactionUpdateService
      */
@@ -159,7 +169,7 @@ class TransactionUpdateServiceTest extends TestCase
     {
         /** @var Transaction $source */
         $source = $this->user()->transactions()->where('amount', '>', 0)->inRandomOrder()->first();
-        $data = [
+        $data   = [
             'currency_id'           => 1,
             'currency_code'         => null,
             'description'           => 'Some new description',
@@ -187,7 +197,6 @@ class TransactionUpdateServiceTest extends TestCase
         $result = $service->update($source, $data);
 
 
-
         $this->assertEquals($source->id, $result->id);
         $this->assertEquals($result->description, $data['description']);
         $this->assertEquals($data['foreign_amount'], $result->foreign_amount);
@@ -202,7 +211,7 @@ class TransactionUpdateServiceTest extends TestCase
     {
         /** @var Transaction $source */
         $source = $this->user()->transactions()->where('amount', '<', 0)->inRandomOrder()->first();
-        $data = [
+        $data   = [
             'currency_id'           => 1,
             'currency_code'         => null,
             'description'           => 'Some new description',

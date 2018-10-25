@@ -29,6 +29,8 @@ use Illuminate\Console\Command;
 
 /**
  * Class EncryptFile.
+ *
+ * @codeCoverageIgnore
  */
 class EncryptFile extends Command
 {
@@ -37,7 +39,7 @@ class EncryptFile extends Command
      *
      * @var string
      */
-    protected $description = 'Encrypts a file and places it in the storage/upload directory.';
+    protected $description = 'Encrypts a file and places it in the upload disk.';
 
     /**
      * The name and signature of the console command.

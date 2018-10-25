@@ -26,9 +26,9 @@ use Exception;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Import\Routine\RoutineInterface;
-use FireflyIII\Import\Storage\ImportArrayStorage;
 use FireflyIII\Models\ImportJob;
 use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
+use FireflyIII\Support\Http\Controllers\CreateStuff;
 use Illuminate\Http\JsonResponse;
 use Log;
 
@@ -37,6 +37,7 @@ use Log;
  */
 class JobStatusController extends Controller
 {
+    use CreateStuff;
     /** @var ImportJobRepositoryInterface The import job repository */
     private $repository;
 
@@ -46,6 +47,8 @@ class JobStatusController extends Controller
     public function __construct()
     {
         parent::__construct();
+        // set time limit to zero to prevent timeouts.
+        set_time_limit(0);
 
         $this->middleware(
             function ($request, $next) {
@@ -224,22 +227,5 @@ class JobStatusController extends Controller
         return response()->json(['status' => 'OK', 'message' => 'storage_finished']);
     }
 
-    /**
-     * Store the transactions.
-     *
-     * @param ImportJob $importJob
-     *
-     * @throws FireflyException
-     */
-    private function storeTransactions(ImportJob $importJob): void
-    {
-        /** @var ImportArrayStorage $storage */
-        $storage = app(ImportArrayStorage::class);
-        $storage->setImportJob($importJob);
-        try {
-            $storage->store();
-        } catch (FireflyException|Exception $e) {
-            throw new FireflyException($e->getMessage());
-        }
-    }
+
 }

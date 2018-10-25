@@ -26,8 +26,10 @@ use FireflyIII\Models\Attachment;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Attachment\AttachmentRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Illuminate\Support\Collection;
 use Log;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -42,20 +44,24 @@ class AttachmentControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::delete
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testDelete(): void
     {
         // mock stuff
         $attachRepository = $this->mock(AttachmentRepositoryInterface::class);
         $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $userRepos        = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->andReturn(true)->atLeast()->once();
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $this->be($this->user());
         $response = $this->get(route('attachments.delete', [1]));
@@ -65,13 +71,15 @@ class AttachmentControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::destroy
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testDestroy(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $repository   = $this->mock(AttachmentRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $repository->shouldReceive('destroy')->andReturn(true);
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
 
@@ -83,13 +91,15 @@ class AttachmentControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::download
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testDownload(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $repository   = $this->mock(AttachmentRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $repository->shouldReceive('exists')->once()->andReturn(true);
         $repository->shouldReceive('getContent')->once()->andReturn('This is attachment number one.');
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
@@ -102,14 +112,15 @@ class AttachmentControllerTest extends TestCase
     }
 
     /**
-     * @covers                   \FireflyIII\Http\Controllers\AttachmentController::download
-     * @expectedExceptionMessage Could not find the indicated attachment
+     * @covers                   \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testDownloadFail(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $repository   = $this->mock(AttachmentRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $repository->shouldReceive('exists')->once()->andReturn(false);
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
 
@@ -119,12 +130,16 @@ class AttachmentControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::edit
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testEdit(): void
     {
         $attachRepository = $this->mock(AttachmentRepositoryInterface::class);
         $journalRepos     = $this->mock(JournalRepositoryInterface::class);
+        $userRepos        = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->andReturn(true)->atLeast()->once();
+
         $attachRepository->shouldReceive('getNoteText')->andReturn('OK');
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $this->be($this->user());
@@ -139,7 +154,10 @@ class AttachmentControllerTest extends TestCase
      */
     public function testIndex()
     {
-        $repository   = $this->mock(AttachmentRepositoryInterface::class);
+        $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $userRepos  = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->andReturn(true)->atLeast()->once();
         $repository->shouldReceive('get')->andReturn(new Collection([Attachment::first()]))->once();
         $repository->shouldReceive('exists')->andReturn(true)->once();
 
@@ -152,13 +170,15 @@ class AttachmentControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::update
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testUpdate(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
         $repository   = $this->mock(AttachmentRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $repository->shouldReceive('update')->once();
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
 
@@ -176,16 +196,19 @@ class AttachmentControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::view
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::__construct
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testView(): void
     {
-        $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $repository   = $this->mock(AttachmentRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+
         $repository->shouldReceive('exists')->once()->andReturn(true);
         $repository->shouldReceive('getContent')->once()->andReturn('This is attachment number one.');
 
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $this->be($this->user());
         $response = $this->get(route('attachments.view', [3]));
@@ -193,15 +216,18 @@ class AttachmentControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::view
-     * @covers \FireflyIII\Http\Controllers\AttachmentController::__construct
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
+     * @covers \FireflyIII\Http\Controllers\AttachmentController
      */
     public function testViewFail(): void
     {
-        $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $repository   = $this->mock(AttachmentRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+
         $repository->shouldReceive('exists')->once()->andReturn(false);
 
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $this->be($this->user());
         $response = $this->get(route('attachments.view', [1]));

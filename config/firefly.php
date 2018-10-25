@@ -30,6 +30,9 @@ use FireflyIII\TransactionRules\Actions\AppendNotes;
 use FireflyIII\TransactionRules\Actions\ClearBudget;
 use FireflyIII\TransactionRules\Actions\ClearCategory;
 use FireflyIII\TransactionRules\Actions\ClearNotes;
+use FireflyIII\TransactionRules\Actions\ConvertToDeposit;
+use FireflyIII\TransactionRules\Actions\ConvertToTransfer;
+use FireflyIII\TransactionRules\Actions\ConvertToWithdrawal;
 use FireflyIII\TransactionRules\Actions\LinkToBill;
 use FireflyIII\TransactionRules\Actions\PrependDescription;
 use FireflyIII\TransactionRules\Actions\PrependNotes;
@@ -88,10 +91,11 @@ return [
         'is_demo_site'     => false,
     ],
     'encryption'               => null === env('USE_ENCRYPTION') || env('USE_ENCRYPTION') === true,
-    'version'                  => '4.7.5.3',
-    'api_version'              => '0.6',
-    'db_version'               => 4,
+    'version'                  => '4.7.7',
+    'api_version'              => '0.8',
+    'db_version'               => 5,
     'maxUploadSize'            => 15242880,
+    'login_provider'           => env('LOGIN_PROVIDER', 'eloquent'),
     'allowedMimes'             => [
         /* plain files */
         'text/plain',
@@ -176,10 +180,12 @@ return [
     ],
     'subTitlesByIdentifier'    =>
         [
-            'asset'   => 'Asset accounts',
-            'expense' => 'Expense accounts',
-            'revenue' => 'Revenue accounts',
-            'cash'    => 'Cash accounts',
+            'asset'       => 'Asset accounts',
+            'expense'     => 'Expense accounts',
+            'revenue'     => 'Revenue accounts',
+            'cash'        => 'Cash accounts',
+            'liabilities' => 'Liabilities',
+            'liability'   => 'Liabilities',
         ],
     'subIconsByIdentifier'     =>
         [
@@ -194,23 +200,27 @@ return [
             'Revenue account'     => 'fa-download',
             'import'              => 'fa-download',
             'Import account'      => 'fa-download',
+            'liabilities'         => 'fa-ticket',
         ],
     'accountTypesByIdentifier' =>
         [
-            'asset'   => ['Default account', 'Asset account'],
-            'expense' => ['Expense account', 'Beneficiary account'],
-            'revenue' => ['Revenue account'],
-            'import'  => ['Import account'],
+            'asset'       => ['Default account', 'Asset account'],
+            'expense'     => ['Expense account', 'Beneficiary account'],
+            'revenue'     => ['Revenue account'],
+            'import'      => ['Import account'],
+            'liabilities' => ['Loan', 'Debt', 'Credit card', 'Mortgage'],
         ],
     'accountTypeByIdentifier'  =>
         [
-            'asset'     => 'Asset account',
-            'expense'   => 'Expense account',
-            'revenue'   => 'Revenue account',
-            'opening'   => 'Initial balance account',
-            'initial'   => 'Initial balance account',
-            'import'    => 'Import account',
-            'reconcile' => 'Reconciliation account',
+            'asset'       => ['Asset account'],
+            'expense'     => ['Expense account'],
+            'revenue'     => ['Revenue account'],
+            'opening'     => ['Initial balance account'],
+            'initial'     => ['Initial balance account'],
+            'import'      => ['Import account'],
+            'reconcile'   => ['Reconciliation account'],
+            'liabilities' => ['Loan', 'Debt', 'Mortgage', 'Credit card'],
+            'liability'   => ['Loan', 'Debt', 'Mortgage', 'Credit card'],
         ],
     'shortNamesByFullName'     =>
         [
@@ -221,6 +231,10 @@ return [
             'Beneficiary account' => 'expense',
             'Revenue account'     => 'revenue',
             'Cash account'        => 'cash',
+            'Credit card'         => 'liabilities',
+            'Loan'                => 'liabilities',
+            'Debt'                => 'liabilities',
+            'Mortgage'            => 'liabilities',
         ],
     'languages'                => [
         // completed languages
@@ -228,13 +242,13 @@ return [
         'es_ES' => ['name_locale' => 'Español', 'name_english' => 'Spanish'],
         'de_DE' => ['name_locale' => 'Deutsch', 'name_english' => 'German'],
         'fr_FR' => ['name_locale' => 'Français', 'name_english' => 'French'],
-        'id_ID' => ['name_locale' => 'Bahasa Indonesia', 'name_english' => 'Indonesian'],
+        //'id_ID' => ['name_locale' => 'Bahasa Indonesia', 'name_english' => 'Indonesian'],
         'it_IT' => ['name_locale' => 'Italiano', 'name_english' => 'Italian'],
         'nl_NL' => ['name_locale' => 'Nederlands', 'name_english' => 'Dutch'],
         'pl_PL' => ['name_locale' => 'Polski', 'name_english' => 'Polish '],
-        'pt_BR' => ['name_locale' => 'Português do Brasil', 'name_english' => 'Portuguese (Brazil)'],
+        //'pt_BR' => ['name_locale' => 'Português do Brasil', 'name_english' => 'Portuguese (Brazil)'],
         'ru_RU' => ['name_locale' => 'Русский', 'name_english' => 'Russian'],
-        'tr_TR' => ['name_locale' => 'Türkçe', 'name_english' => 'Turkish'],
+        //'tr_TR' => ['name_locale' => 'Türkçe', 'name_english' => 'Turkish'],
     ],
     'transactionTypesByWhat'   => [
         'expenses'   => ['Withdrawal'],
@@ -267,7 +281,7 @@ return [
         'journalLink'       => \FireflyIII\Models\TransactionJournalLink::class,
         'currency'          => \FireflyIII\Models\TransactionCurrency::class,
         'piggyBank'         => \FireflyIII\Models\PiggyBank::class,
-        'preference'         => \FireflyIII\Models\Preference::class,
+        'preference'        => \FireflyIII\Models\Preference::class,
         'tj'                => \FireflyIII\Models\TransactionJournal::class,
         'tag'               => \FireflyIII\Models\Tag::class,
         'recurrence'        => \FireflyIII\Models\Recurrence::class,
@@ -299,6 +313,7 @@ return [
         'fromCurrencyCode'  => \FireflyIII\Support\Binder\CurrencyCode::class,
         'toCurrencyCode'    => \FireflyIII\Support\Binder\CurrencyCode::class,
         'unfinishedJournal' => \FireflyIII\Support\Binder\UnfinishedJournal::class,
+        'cliToken'          => \FireflyIII\Support\Binder\CLIToken::class,
 
 
     ],
@@ -356,24 +371,63 @@ return [
         'prepend_notes'           => PrependNotes::class,
         'clear_notes'             => ClearNotes::class,
         'link_to_bill'            => LinkToBill::class,
+        'convert_withdrawal'      => ConvertToWithdrawal::class,
+        'convert_deposit'         => ConvertToDeposit::class,
+        'convert_transfer'        => ConvertToTransfer::class,
     ],
-    'rule-actions-text'        => [
+    'context-rule-actions'     => [
         'set_category',
         'set_budget',
         'add_tag',
         'remove_tag',
-        'link_to_bill',
         'set_description',
         'append_description',
         'prepend_description',
+        'set_source_account',
+        'set_destination_account',
+        'set_notes',
+        'append_notes',
+        'prepend_notes',
+        'link_to_bill',
+        'convert_withdrawal',
+        'convert_deposit',
+        'convert_transfer',
     ],
-    'test-triggers'            => [
+    'context-rule-triggers'    => [
+        'from_account_starts',
+        'from_account_ends',
+        'from_account_is',
+        'from_account_contains',
+        'to_account_starts',
+        'to_account_ends',
+        'to_account_is',
+        'to_account_contains',
+        'amount_less',
+        'amount_exactly',
+        'amount_more',
+        'description_starts',
+        'description_ends',
+        'description_contains',
+        'description_is',
+        'transaction_type',
+        'category_is',
+        'budget_is',
+        'tag_is',
+        'currency_is',
+        'notes_contain',
+        'notes_start',
+        'notes_end',
+        'notes_are',
+    ],
+
+
+    'test-triggers'    => [
         'limit' => 10,
         'range' => 200,
     ],
-    'default_currency'         => 'EUR',
-    'default_language'         => 'en_US',
-    'search_modifiers'         => ['amount_is', 'amount', 'amount_max', 'amount_min', 'amount_less', 'amount_more', 'source', 'destination', 'category',
-                                   'budget', 'bill', 'type', 'date', 'date_before', 'date_after', 'on', 'before', 'after'],
+    'default_currency' => 'EUR',
+    'default_language' => 'en_US',
+    'search_modifiers' => ['amount_is', 'amount', 'amount_max', 'amount_min', 'amount_less', 'amount_more', 'source', 'destination', 'category',
+                           'budget', 'bill', 'type', 'date', 'date_before', 'date_after', 'on', 'before', 'after'],
     // tag notes has_attachments
 ];

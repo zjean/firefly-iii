@@ -25,10 +25,11 @@ namespace Tests\Unit\Middleware;
 
 use FireflyIII\Http\Middleware\Sandstorm;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
+use Mockery;
 use Route;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
-use Mockery;
+use Log;
 
 /**
  * Class RangeTest
@@ -36,7 +37,21 @@ use Mockery;
 class SandstormTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Http\Middleware\Sandstorm::handle
+     * Set up test
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+        Route::middleware(Sandstorm::class)->any(
+            '/_test/sandstorm', function () {
+            return view('test.test');
+        }
+        );
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Middleware\Sandstorm
      */
     public function testMiddlewareBasic(): void
     {
@@ -55,19 +70,5 @@ class SandstormTest extends TestCase
         $response->assertSee('sandstorm-anon: false');
 
         putenv('SANDSTORM=0');
-    }
-
-    /**
-     * Set up test
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Route::middleware(Sandstorm::class)->any(
-            '/_test/sandstorm', function () {
-            return view('test.test');
-        }
-        );
     }
 }

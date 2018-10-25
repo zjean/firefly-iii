@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers\Transaction;
 
+use FireflyIII\Events\UpdatedTransactionJournal;
 use FireflyIII\Exceptions\FireflyException;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Models\Account;
@@ -29,6 +30,7 @@ use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Models\TransactionType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use FireflyIII\Support\Http\Controllers\ModelInformation;
 use Illuminate\Http\Request;
 use Log;
 use View;
@@ -38,6 +40,8 @@ use View;
  */
 class ConvertController extends Controller
 {
+    use ModelInformation;
+
     /** @var JournalRepositoryInterface Journals and transactions overview */
     private $repository;
 
@@ -158,8 +162,13 @@ class ConvertController extends Controller
         $errors = $this->repository->convert($journal, $destinationType, $source, $destination);
 
         if ($errors->count() > 0) {
+            Log::error('Errors while converting: ', $errors->toArray());
             return redirect(route('transactions.convert.index', [strtolower($destinationType->type), $journal->id]))->withErrors($errors)->withInput();
         }
+
+        // Success? Fire rules!
+        event(new UpdatedTransactionJournal($journal));
+
 
         session()->flash('success', (string)trans('firefly.converted_to_' . $destinationType->type));
 
@@ -181,7 +190,8 @@ class ConvertController extends Controller
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    private function getDestinationAccount(TransactionJournal $journal, TransactionType $destinationType, array $data): Account
+    protected function getDestinationAccount(TransactionJournal $journal, TransactionType $destinationType, array $data
+    ): Account // helper for conversion. Get info from obj.
     {
         /** @var AccountRepositoryInterface $accountRepository */
         $accountRepository  = app(AccountRepositoryInterface::class);
@@ -242,7 +252,8 @@ class ConvertController extends Controller
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    private function getSourceAccount(TransactionJournal $journal, TransactionType $destinationType, array $data): Account
+    protected function getSourceAccount(TransactionJournal $journal, TransactionType $destinationType, array $data
+    ): Account // helper for conversion. Get info from obj.
     {
         /** @var AccountRepositoryInterface $accountRepository */
         $accountRepository  = app(AccountRepositoryInterface::class);

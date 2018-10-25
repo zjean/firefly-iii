@@ -35,6 +35,16 @@ use Log;
 class RecurrenceDestroyService
 {
     /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
+
+    /**
      * Delete recurrence.
      *
      * @param Recurrence $recurrence
@@ -67,6 +77,21 @@ class RecurrenceDestroyService
         } catch (Exception $e) { // @codeCoverageIgnore
             Log::info(sprintf('Could not delete recurrence: %s', $e->getMessage())); // @codeCoverageIgnore
         }
+    }
+
+    /**
+     * Delete recurrence by ID
+     *
+     * @param int $recurrenceId
+     */
+    public function destroyById(int $recurrenceId): void
+    {
+        $recurrence = Recurrence::find($recurrenceId);
+        if (null === $recurrence) {
+            return;
+        }
+        $this->destroy($recurrence);
+
     }
 
 }

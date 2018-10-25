@@ -25,15 +25,25 @@ namespace Tests\Unit\Import\MapperPreProcess;
 
 use FireflyIII\Import\MapperPreProcess\TagsComma;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class TagsCommaTest
  */
 class TagsCommaTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
 
     /**
-     * \FireflyIII\Import\MapperPreProcess\TagsComma::run
+     * \FireflyIII\Import\MapperPreProcess\TagsComma
      */
     public function testBasic(): void
     {

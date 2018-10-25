@@ -27,15 +27,23 @@ use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Actions\ClearCategory;
 use Tests\TestCase;
-
+use Log;
 /**
  * Class ClearCategoryTest
  */
 class ClearCategoryTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\TransactionRules\Actions\ClearCategory::__construct()
-     * @covers \FireflyIII\TransactionRules\Actions\ClearCategory::act()
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+    /**
+     * @covers \FireflyIII\TransactionRules\Actions\ClearCategory
      */
     public function testAct(): void
     {
@@ -56,7 +64,7 @@ class ClearCategoryTest extends TestCase
         $this->assertEquals(0, $journal->categories()->count());
 
         /** @var Transaction $transaction */
-        foreach($journal->transactions as $transaction) {
+        foreach ($journal->transactions as $transaction) {
             $this->assertEquals(0, $transaction->categories()->count());
         }
     }

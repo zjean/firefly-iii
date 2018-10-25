@@ -27,7 +27,7 @@
                     <table class="table table-striped">
                         <tr>
                             <td colspan="2">
-                                {{ trans('firefly.match_between_amounts', {low: object.data.amount_min|formatAmount, high: object.data.amount_max|formatAmount })|raw }}
+                                {{ trans('firefly.match_between_amounts', {low: formatAmountByCurrency(object.data.currency,object.data.amount_min), high: formatAmountByCurrency(object.data.currency,object.data.amount_max) })|raw }}
                                 {{ 'repeats'|_ }}
                                 {{ trans('firefly.repeat_freq_' ~object.data.repeat_freq) }}.
                             </td>
@@ -55,11 +55,11 @@
                         </tr>
                         <tr>
                             <td>{{ trans('firefly.average_bill_amount_year', {year: year}) }}</td>
-                            <td>{{ yearAverage|formatAmount }}</td>
+                            <td>{{ formatAmountByCurrency(object.data.currency,yearAverage) }}</td>
                         </tr>
                         <tr>
                             <td>{{ 'average_bill_amount_overall'|_ }}</td>
-                            <td>{{ overallAverage|formatAmount }}</td>
+                            <td>{{ formatAmountByCurrency(object.data.currency, overallAverage) }}</td>
                         </tr>
                     </table>
                 </div>
@@ -88,16 +88,16 @@
                     {% endif %}
                 </div>
                 <div class="box-footer">
-                    <a href="{{ route('bills.rescan',object.data.id) }}" class="btn btn-default">{{ 'rescan_old'|_ }}</a>
+                    <a id="billButtons" href="{{ route('bills.rescan',object.data.id) }}" class="btn btn-default">{{ 'rescan_old'|_ }}</a>
                 </div>
             </div>
-            {% if object.data.notes.data[0] %}
+            {% if object.data.notes %}
             <div class="box">
                 <div class="box-header with-border">
                     <h3 class="box-title">{{ 'notes'|_ }}</h3>
                 </div>
                 <div class="box-body table-responsive">
-                    {{ object.data.notes.data[0].markdown|raw }}
+                    {{ object.data.notes|markdown }}
                 </div>
             </div>
             {% endif %}
@@ -109,31 +109,29 @@
                     </div>
                     <div class="box-body table-responsive no-padding">
                         <table class="table table-hover">
-                            {% for att in bill.data.attachments.data %}
+                            {% for att in object.data.attachments.data %}
                                 <tr>
                                     <td>
                                         <div class="btn-group btn-group-xs">
-                                            <a href="{{ route('attachments.edit', att.data.id) }}" class="btn btn-default"><i class="fa fa-pencil"></i></a>
-                                            <a href="{{ route('attachments.delete', att.data.id) }}" class="btn btn-danger"><i class="fa fa-trash"></i></a>
+                                            <a href="{{ route('attachments.edit', att.id) }}" class="btn btn-default"><i class="fa fa-pencil"></i></a>
+                                            <a href="{{ route('attachments.delete', att.id) }}" class="btn btn-danger"><i class="fa fa-trash"></i></a>
+                                            <a href="{{ route('attachments.download', att.id) }}" class="btn btn-default"><i class="fa fa-download"></i></a>
                                         </div>
                                     </td>
                                     <td>
-                                        <i class="fa {{ att.data.mime|mimeIcon }}"></i>
-                                        <a href="{{ route('attachments.download', att.data.id) }}" title="{{ att.data.filename }}">
-                                            {% if att.data.title %}
-                                                {{ att.data.title }}
+                                        <i class="fa {{ att.mime|mimeIcon }}"></i>
+                                        <a href="{{ route('attachments.view', att.id) }}" title="{{ att.filename }}">
+                                            {% if att.title %}
+                                                {{ att.title }}
                                             {% else %}
-                                                {{ att.data.filename }}
+                                                {{ att.filename }}
                                             {% endif %}
                                         </a>
-                                        ({{ att.data.size|filesize }})
-                                        {% if att.data.description %}
+                                        ({{ att.size|filesize }})
+                                        {% if att.description %}
                                             <br/>
-                                            <em>{{ att.data.description }}</em>
+                                            <em>{{ att.description }}</em>
                                         {% endif %}
-                                    </td>
-                                    <td style="width:100px;">
-                                        <img src="{{ route('attachments.preview', att.data.id) }}"/>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -164,7 +162,7 @@
                     <h3 class="box-title">{{ 'connected_journals'|_ }}</h3>
                 </div>
                 <div class="box-body">
-                    {% include 'list.journals' %}
+                    {% include 'list.transactions' with {showCategories: true, showBudgets: true} %}
                 </div>
             </div>
         </div>
@@ -174,6 +172,7 @@
 
 {% block scripts %}
     <script type="text/javascript">
+        var billCurrencySymbol = "{{ object.data.currency.symbol }}";
         var billUri = '{{ route('chart.bill.single', [object.data.id]) }}';
     </script>
     <script type="text/javascript" src="js/lib/Chart.bundle.min.js?v={{ FF_VERSION }}"></script>

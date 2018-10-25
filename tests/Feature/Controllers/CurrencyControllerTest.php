@@ -29,8 +29,9 @@ use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Illuminate\Support\Collection;
 use Log;
-use Tests\TestCase;
 use Mockery;
+use Tests\TestCase;
+
 /**
  * Class CurrencyControllerTest
  *
@@ -44,14 +45,14 @@ class CurrencyControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::create
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testCannotCreate(): void
     {
@@ -70,7 +71,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::delete
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testCannotDelete(): void
     {
@@ -90,7 +91,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::destroy
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testCannotDestroy(): void
     {
@@ -111,7 +112,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::create
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testCreate(): void
     {
@@ -131,7 +132,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::defaultCurrency
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testDefaultCurrency(): void
     {
@@ -149,7 +150,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::delete
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testDelete(): void
     {
@@ -170,7 +171,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::destroy
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testDestroy(): void
     {
@@ -192,7 +193,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::edit
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testEdit(): void
     {
@@ -212,8 +213,8 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::index
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::__construct
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testIndex(): void
     {
@@ -237,8 +238,8 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::index
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::__construct
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      */
     public function testIndexNoRights(): void
     {
@@ -261,7 +262,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::store
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      * @covers \FireflyIII\Http\Requests\CurrencyFormRequest
      */
     public function testStore(): void
@@ -289,7 +290,35 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::store
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
+     * @covers \FireflyIII\Http\Requests\CurrencyFormRequest
+     */
+    public function testStoreError(): void
+    {
+        // mock stuff
+        $repository   = $this->mock(CurrencyRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+
+        $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
+        $repository->shouldReceive('store')->andReturnNull();
+        $userRepos->shouldReceive('hasRole')->once()->andReturn(true);
+
+        $this->session(['currencies.create.uri' => 'http://localhost']);
+        $data = [
+            'name'           => 'XX',
+            'code'           => 'XXX',
+            'symbol'         => 'x',
+            'decimal_places' => 2,
+        ];
+        $this->be($this->user());
+        $response = $this->post(route('currencies.store'), $data);
+        $response->assertStatus(302);
+        $response->assertSessionHas('error', 'Could not store the new currency.');
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      * @covers \FireflyIII\Http\Requests\CurrencyFormRequest
      */
     public function testStoreNoRights(): void
@@ -317,7 +346,7 @@ class CurrencyControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\CurrencyController::update
+     * @covers \FireflyIII\Http\Controllers\CurrencyController
      * @covers \FireflyIII\Http\Requests\CurrencyFormRequest
      */
     public function testUpdate(): void

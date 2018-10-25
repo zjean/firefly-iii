@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Import\Converter;
 
 use FireflyIII\Import\Converter\Amount;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -31,8 +32,17 @@ use Tests\TestCase;
 class AmountTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Import\Converter\Amount::convert()
-     * @covers \FireflyIII\Import\Converter\Amount::stripAmount()
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+
+    /**
+     * @covers \FireflyIII\Import\Converter\Amount
      */
     public function testConvert(): void
     {
@@ -173,7 +183,7 @@ class AmountTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Import\Converter\Amount::convert()
+     * @covers \FireflyIII\Import\Converter\Amount
      */
     public function testConvertNull(): void
     {

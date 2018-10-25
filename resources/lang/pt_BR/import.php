@@ -37,6 +37,7 @@ return [
     // index page:
     'general_index_title'                 => 'Import a file',
     'general_index_intro'                 => 'Welcome to Firefly III\'s import routine. There are a few ways of importing data into Firefly III, displayed here as buttons.',
+
     // import provider strings (index):
     'button_fake'                         => 'Fake an import',
     'button_file'                         => 'Import a file',
@@ -84,6 +85,7 @@ return [
     'prereq_ynab_title'                   => 'Prerequisites for an import from YNAB',
     'prereq_ynab_text'                    => 'In order to be able to download transactions from YNAB, please create a new application on your <a href="https://app.youneedabudget.com/settings/developer">Developer Settings Page</a> and enter the client ID and secret on this page.',
     'prereq_ynab_redirect'                => 'To complete the configuration, enter the following URL at the <a href="https://app.youneedabudget.com/settings/developer">Developer Settings Page</a> under the "Redirect URI(s)".',
+    'callback_not_tls'                    => 'Firefly III has detected the following callback URI. It seems your server is not set up to accept TLS-connections (https). YNAB will not accept this URI. You may continue with the import (because Firefly III could be wrong) but please keep this in mind.',
     // prerequisites success messages:
     'prerequisites_saved_for_fake'        => 'Fake API key stored successfully!',
     'prerequisites_saved_for_spectre'     => 'App ID and secret stored!',
@@ -109,6 +111,7 @@ return [
     'job_config_file_upload_type_help'    => 'Select the type of file you will upload',
     'job_config_file_upload_submit'       => 'Upload files',
     'import_file_type_csv'                => 'CSV (valores separados por vírgula)',
+    'import_file_type_ofx'                => 'OFX',
     'file_not_utf8'                       => 'The file you have uploaded is not encoded as UTF-8 or ASCII. Firefly III cannot handle such files. Please use Notepad++ or Sublime to convert your file to UTF-8.',
     'job_config_uc_title'                 => 'Import setup (2/4) - Basic file setup',
     'job_config_uc_text'                  => 'To be able to import your file correctly, please validate the options below.',
@@ -122,6 +125,7 @@ return [
     'job_config_uc_specifics_txt'         => 'Some banks deliver badly formatted files. Firefly III can fix those automatically. If your bank delivers such files but it\'s not listed here, please open an issue on GitHub.',
     'job_config_uc_submit'                => 'Continue',
     'invalid_import_account'              => 'You have selected an invalid account to import into.',
+    'import_liability_select'             => 'Liability',
     // job configuration for Spectre:
     'job_config_spectre_login_title'      => 'Choose your login',
     'job_config_spectre_login_text'       => 'Firefly III has found :count existing login(s) in your Spectre account. Which one would you like to use to import from?',
@@ -171,6 +175,9 @@ return [
     'job_config_ynab_no_budgets'           => 'There are no budgets available to be imported from.',
     'ynab_no_mapping'                      => 'It seems you have not selected any accounts to import from.',
     'job_config_ynab_bad_currency'         => 'You cannot import from the following budget(s), because you do not have accounts with the same currency as these budgets.',
+    'job_config_ynab_accounts_title'       => 'Select accounts',
+    'job_config_ynab_accounts_text'        => 'You have the following accounts available in this budget. Please select from which accounts you want to import, and where the transactions should be stored.',
+
 
     // keys from "extra" array:
     'spectre_extra_key_iban'               => 'IBAN',
@@ -259,6 +266,7 @@ return [
     'column_amount_foreign'                => 'Montante (em moeda estrangeira)',
     'column_amount_debit'                  => 'Montante (coluna de débito)',
     'column_amount_credit'                 => 'Montante (coluna de crédito)',
+    'column_amount_negated'                => 'Amount (negated column)',
     'column_amount-comma-separated'        => 'Montante (vírgula como separador decimal)',
     'column_bill-id'                       => 'ID da fatura (correspondente FF3)',
     'column_bill-name'                     => 'Nome da Fatura',

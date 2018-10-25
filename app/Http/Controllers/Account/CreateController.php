@@ -29,6 +29,7 @@ use FireflyIII\Http\Requests\AccountFormRequest;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use Illuminate\Http\Request;
+use Log;
 
 /**
  *
@@ -78,8 +79,32 @@ class CreateController extends Controller
             $roles[$role] = (string)trans('firefly.account_role_' . $role);
         }
 
+        // types of liability:
+        $debt           = $this->repository->getAccountTypeByType(AccountType::DEBT);
+        $loan           = $this->repository->getAccountTypeByType(AccountType::LOAN);
+        $mortgage       = $this->repository->getAccountTypeByType(AccountType::MORTGAGE);
+        $liabilityTypes = [
+            $debt->id       => (string)trans('firefly.account_type_' . AccountType::DEBT),
+            $loan->id       => (string)trans('firefly.account_type_' . AccountType::LOAN),
+            $mortgage->id   => (string)trans('firefly.account_type_' . AccountType::MORTGAGE),
+        ];
+        asort($liabilityTypes);
+
+        // interest calculation periods:
+        $interestPeriods = [
+            'daily'   => (string)trans('firefly.interest_calc_daily'),
+            'monthly' => (string)trans('firefly.interest_calc_monthly'),
+            'yearly'  => (string)trans('firefly.interest_calc_yearly'),
+        ];
+
         // pre fill some data
-        $request->session()->flash('preFilled', ['currency_id' => $defaultCurrency->id]);
+        $hasOldInput = null !== $request->old('_token');
+        $request->session()->flash(
+            'preFilled', [
+                           'currency_id'       => $defaultCurrency->id,
+                           'include_net_worth' => $hasOldInput ? (bool)$request->old('include_net_worth') : true,
+                       ]
+        );
 
         // put previous url in session if not redirect from store (not "create another").
         if (true !== session('accounts.create.fromStore')) {
@@ -87,7 +112,7 @@ class CreateController extends Controller
         }
         $request->session()->forget('accounts.create.fromStore');
 
-        return view('accounts.create', compact('subTitleIcon', 'what', 'subTitle', 'roles'));
+        return view('accounts.create', compact('subTitleIcon', 'what', 'interestPeriods', 'subTitle', 'roles', 'liabilityTypes'));
     }
 
 
@@ -100,10 +125,13 @@ class CreateController extends Controller
      */
     public function store(AccountFormRequest $request)
     {
+
         $data    = $request->getAccountData();
         $account = $this->repository->store($data);
         $request->session()->flash('success', (string)trans('firefly.stored_new_account', ['name' => $account->name]));
         app('preferences')->mark();
+
+
 
         // update preferences if necessary:
         $frontPage = app('preferences')->get('frontPageAccounts', [])->data;

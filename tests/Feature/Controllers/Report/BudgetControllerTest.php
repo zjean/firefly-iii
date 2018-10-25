@@ -40,15 +40,15 @@ class BudgetControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\BudgetController::general
+     * @covers \FireflyIII\Http\Controllers\Report\BudgetController
      */
     public function testGeneral(): void
     {
@@ -62,8 +62,7 @@ class BudgetControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\BudgetController::period
-     * @covers \FireflyIII\Http\Controllers\Report\BudgetController::filterBudgetPeriodReport
+     * @covers \FireflyIII\Http\Controllers\Report\BudgetController
      */
     public function testPeriod(): void
     {

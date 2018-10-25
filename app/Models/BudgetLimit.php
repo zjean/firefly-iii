@@ -39,6 +39,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @property string $amount
  * @property int    $budget_id
  * @property string spent
+ * @property int $transaction_currency_id
  */
 class BudgetLimit extends Model
 {
@@ -48,19 +49,23 @@ class BudgetLimit extends Model
      * @var array
      */
     protected $casts
-                        = [
+        = [
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'start_date' => 'date',
             'end_date'   => 'date',
         ];
+
+    /** @var array Fields that can be filled */
     protected $fillable = ['budget_id', 'start_date', 'end_date', 'amount'];
 
     /**
+     * Route binder. Converts the key in the URL to the specified object (or throw 404).
+     *
      * @param string $value
      *
      * @return mixed
-     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     * @throws NotFoundHttpException
      */
     public static function routeBinder(string $value): BudgetLimit
     {
@@ -84,5 +89,14 @@ class BudgetLimit extends Model
     public function budget(): BelongsTo
     {
         return $this->belongsTo(Budget::class);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     * @return BelongsTo
+     */
+    public function transactionCurrency(): BelongsTo
+    {
+        return $this->belongsTo(TransactionCurrency::class);
     }
 }

@@ -27,6 +27,7 @@ use FireflyIII\Helpers\Attachments\AttachmentHelperInterface;
 use FireflyIII\Models\Attachment;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Attachment\AttachmentRepositoryInterface;
+use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use Laravel\Passport\Passport;
 use Log;
@@ -45,7 +46,7 @@ class AttachmentControllerTest extends TestCase
     {
         parent::setUp();
         Passport::actingAs($this->user());
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
@@ -57,6 +58,7 @@ class AttachmentControllerTest extends TestCase
     {
         // mock stuff:
         $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
         // mock calls:
         $repository->shouldReceive('setUser')->once();
         $repository->shouldReceive('destroy')->once()->andReturn(true);
@@ -78,6 +80,8 @@ class AttachmentControllerTest extends TestCase
     {
         // mock stuff:
         $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
         $content    = 'Attachment content ' . random_int(100, 1000);
         // mock calls:
         $repository->shouldReceive('setUser')->once();
@@ -99,12 +103,13 @@ class AttachmentControllerTest extends TestCase
      * Download attachment but file doesn't exist.
      *
      * @covers                   \FireflyIII\Api\V1\Controllers\AttachmentController
-     * @expectedExceptionMessage Some error message
      */
     public function testDownloadNotExisting(): void
     {
         // mock stuff:
         $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
         $content    = 'Attachment content ' . random_int(100, 1000);
         // mock calls:
         $repository->shouldReceive('setUser')->once();
@@ -129,6 +134,8 @@ class AttachmentControllerTest extends TestCase
     {
         // mock stuff:
         $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
         // mock calls:
         $repository->shouldReceive('setUser')->once();
 
@@ -166,10 +173,13 @@ class AttachmentControllerTest extends TestCase
 
         // mock stuff:
         $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
 
         // mock calls:
-        $repository->shouldReceive('setUser')->once();
+        $repository->shouldReceive('setUser');
         $repository->shouldReceive('get')->once()->andReturn($attachments);
+        $repository->shouldReceive('getNoteText')->andReturn('Hi There');
 
         // test API
         $response = $this->get('/api/v1/attachments');
@@ -192,13 +202,15 @@ class AttachmentControllerTest extends TestCase
 
         // mock stuff:
         $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
 
         // mock calls:
-        $repository->shouldReceive('setUser')->once();
+        $repository->shouldReceive('setUser');
+        $repository->shouldReceive('getNoteText')->andReturn('Hi There');
 
         // test API
         $response = $this->get('/api/v1/attachments/' . $attachment->id);
-        $response->assertStatus(200);
         $response->assertStatus(200);
         $response->assertJson(['data' => ['type' => 'attachments', 'links' => true],]);
         $response->assertSee($attachment->filename); // attachment file name
@@ -210,6 +222,7 @@ class AttachmentControllerTest extends TestCase
      * Store a new attachment.
      *
      * @covers \FireflyIII\Api\V1\Controllers\AttachmentController
+     * @covers \FireflyIII\Api\V1\Requests\AttachmentRequest
      */
     public function testStore(): void
     {
@@ -219,11 +232,13 @@ class AttachmentControllerTest extends TestCase
         // mock stuff:
         $repository   = $this->mock(AttachmentRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
 
         // mock calls:
-        $repository->shouldReceive('setUser')->once();
+        $repository->shouldReceive('setUser')->atLeast()->once();
         $repository->shouldReceive('store')->once()->andReturn($attachment);
-
+        $repository->shouldReceive('getNoteText')->andReturn('Hi There');
         $journalRepos->shouldReceive('setUser')->once();
         $journalRepos->shouldReceive('findNull')->once()->andReturn($this->user()->transactionJournals()->find(1));
 
@@ -254,14 +269,16 @@ class AttachmentControllerTest extends TestCase
     {
         // mock repositories
         $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
 
         /** @var Attachment $attachment */
         $attachment = $this->user()->attachments()->first();
 
         // mock calls:
-        $repository->shouldReceive('setUser');
+        $repository->shouldReceive('setUser')->atLeast()->once();
         $repository->shouldReceive('update')->once()->andReturn($attachment);
-
+        $repository->shouldReceive('getNoteText')->andReturn('Hi There');
         // data to submit
         $data = [
             'filename'    => $attachment->filename,
@@ -287,6 +304,11 @@ class AttachmentControllerTest extends TestCase
      */
     public function testUpload(): void
     {
+        $repository = $this->mock(AttachmentRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+        $repository->shouldReceive('setUser')->once();
+
+
         /** @var Attachment $attachment */
         $attachment = $this->user()->attachments()->first();
         $content    = 'Hello there';

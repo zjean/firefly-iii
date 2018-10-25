@@ -24,7 +24,7 @@ namespace Tests\Feature\Controllers\Chart;
 
 use Carbon\Carbon;
 use FireflyIII\Generator\Chart\Basic\GeneratorInterface;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\Category;
@@ -37,6 +37,7 @@ use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use Illuminate\Support\Collection;
 use Log;
+use Mockery;
 use Preferences;
 use Steam;
 use Tests\TestCase;
@@ -49,29 +50,46 @@ class AccountControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
      * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
-     * @covers       \FireflyIII\Generator\Chart\Basic\GeneratorInterface
      * @dataProvider dateRangeProvider
      *
      * @param string $range
      */
     public function testExpenseAccounts(string $range): void
     {
-        $account       = factory(Account::class)->make();
         $generator     = $this->mock(GeneratorInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
         $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
 
-        $accountRepos->shouldReceive('getAccountsByType')->withArgs([[AccountType::EXPENSE, AccountType::BENEFICIARY]])->andReturn(new Collection([$account]));
-        $generator->shouldReceive('singleSet')->andReturn([]);
-        Steam::shouldReceive('balancesByAccounts')->twice()->andReturn([]);
+
+        // grab two expense accounts from the current user.
+        $accounts = $this->user()->accounts()->where('account_type_id', 4)->take(2)->get();
+
+        $firstId  = $accounts->first()->id;
+        $secondId = $accounts->first()->id;
+        // for each a set of balances:
+        $start = [$firstId => [1 => '123.45', 2 => '200.01',], $secondId => [1 => '123.45', 2 => '200.01',],];
+        $end   = [$firstId => [1 => '121.45', 2 => '234.01',], $secondId => [1 => '121.45', 2 => '234.01',],];
+
+        // return them when collected:
+        $accountRepos->shouldReceive('getAccountsByType')->withArgs([[AccountType::EXPENSE, AccountType::BENEFICIARY]])->andReturn($accounts);
+
+        // and return start and end balances:
+        Steam::shouldReceive('balancesPerCurrencyByAccounts')->twice()->andReturn($start, $end);
+
+        // currency should be looking for the currency ID's:
+        $currencyRepos->shouldReceive('findNull')->withArgs([1])->once()->andReturn(TransactionCurrency::find(1));
+        $currencyRepos->shouldReceive('findNull')->withArgs([2])->once()->andReturn(TransactionCurrency::find(2));
+
+        $generator->shouldReceive('multiSet')->andReturn([])->once();
+
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);
@@ -87,17 +105,20 @@ class AccountControllerTest extends TestCase
      */
     public function testExpenseBudget(string $range): void
     {
-        $generator   = $this->mock(GeneratorInterface::class);
-        $collector   = $this->mock(JournalCollectorInterface::class);
-        $budgetRepos = $this->mock(BudgetRepositoryInterface::class);
+        $generator     = $this->mock(GeneratorInterface::class);
+        $collector     = $this->mock(TransactionCollectorInterface::class);
+        $budgetRepos   = $this->mock(BudgetRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
         $transaction = factory(Transaction::class)->make();
 
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('withBudgetInformation')->andReturnSelf();
         $collector->shouldReceive('setTypes')->withArgs([[TransactionType::WITHDRAWAL]])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection([$transaction]));
-        $generator->shouldReceive('pieChart')->andReturn([]);
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection([$transaction]));
+        $generator->shouldReceive('multiCurrencyPieChart')->andReturn([]);
         $budgetRepos->shouldReceive('getBudgets')->andReturn(new Collection);
 
         $this->be($this->user());
@@ -115,17 +136,18 @@ class AccountControllerTest extends TestCase
     public function testExpenseBudgetAll(string $range): void
     {
         $generator    = $this->mock(GeneratorInterface::class);
-        $collector    = $this->mock(JournalCollectorInterface::class);
+        $collector    = $this->mock(TransactionCollectorInterface::class);
         $budgetRepos  = $this->mock(BudgetRepositoryInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
         $transaction  = factory(Transaction::class)->make();
 
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('withBudgetInformation')->andReturnSelf();
         $collector->shouldReceive('setTypes')->withArgs([[TransactionType::WITHDRAWAL]])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection([$transaction]));
-        $generator->shouldReceive('pieChart')->andReturn([]);
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection([$transaction]));
+        $generator->shouldReceive('multiCurrencyPieChart')->andReturn([]);
         $budgetRepos->shouldReceive('getBudgets')->andReturn(new Collection);
         $accountRepos->shouldReceive('oldestJournalDate')->andReturn(Carbon::createFromTimestamp(time())->startOfMonth());
 
@@ -146,15 +168,18 @@ class AccountControllerTest extends TestCase
         $transaction   = factory(Transaction::class)->make();
         $category      = factory(Category::class)->make();
         $generator     = $this->mock(GeneratorInterface::class);
-        $collector     = $this->mock(JournalCollectorInterface::class);
+        $collector     = $this->mock(TransactionCollectorInterface::class);
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
 
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('setTypes')->withArgs([[TransactionType::WITHDRAWAL]])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection([$transaction]));
-        $generator->shouldReceive('pieChart')->andReturn([]);
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection([$transaction]));
+        $generator->shouldReceive('multiCurrencyPieChart')->andReturn([]);
         $categoryRepos->shouldReceive('getCategories')->andReturn(new Collection([$category]));
 
         $this->be($this->user());
@@ -174,16 +199,18 @@ class AccountControllerTest extends TestCase
         $transaction   = factory(Transaction::class)->make();
         $category      = factory(Category::class)->make();
         $generator     = $this->mock(GeneratorInterface::class);
-        $collector     = $this->mock(JournalCollectorInterface::class);
+        $collector     = $this->mock(TransactionCollectorInterface::class);
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
 
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('setTypes')->withArgs([[TransactionType::WITHDRAWAL]])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection([$transaction]));
-        $generator->shouldReceive('pieChart')->andReturn([]);
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection([$transaction]));
+        $generator->shouldReceive('multiCurrencyPieChart')->andReturn([]);
         $categoryRepos->shouldReceive('getCategories')->andReturn(new Collection([$category]));
         $accountRepos->shouldReceive('oldestJournalDate')->andReturn(Carbon::createFromTimestamp(time())->startOfMonth());
 
@@ -195,7 +222,6 @@ class AccountControllerTest extends TestCase
 
     /**
      * @covers       \FireflyIII\Http\Controllers\Chart\AccountController
-     * @covers       \FireflyIII\Generator\Chart\Basic\GeneratorInterface
      * @dataProvider dateRangeProvider
      *
      * @param string $range
@@ -232,15 +258,18 @@ class AccountControllerTest extends TestCase
         $transaction   = factory(Transaction::class)->make();
         $account       = factory(Account::class)->make();
         $generator     = $this->mock(GeneratorInterface::class);
-        $collector     = $this->mock(JournalCollectorInterface::class);
+        $collector     = $this->mock(TransactionCollectorInterface::class);
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+
 
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('setTypes')->withArgs([[TransactionType::DEPOSIT]])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection([$transaction]));
-        $generator->shouldReceive('pieChart')->andReturn([]);
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection([$transaction]));
+        $generator->shouldReceive('multiCurrencyPieChart')->andReturn([]);
         $categoryRepos->shouldReceive('getCategories')->andReturn(new Collection([$account]));
 
         $this->be($this->user());
@@ -260,16 +289,17 @@ class AccountControllerTest extends TestCase
         $transaction   = factory(Transaction::class)->make();
         $account       = factory(Account::class)->make();
         $generator     = $this->mock(GeneratorInterface::class);
-        $collector     = $this->mock(JournalCollectorInterface::class);
+        $collector     = $this->mock(TransactionCollectorInterface::class);
         $categoryRepos = $this->mock(CategoryRepositoryInterface::class);
         $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
 
         $collector->shouldReceive('setAccounts')->andReturnSelf();
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('withCategoryInformation')->andReturnSelf();
         $collector->shouldReceive('setTypes')->withArgs([[TransactionType::DEPOSIT]])->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection([$transaction]));
-        $generator->shouldReceive('pieChart')->andReturn([]);
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection([$transaction]));
+        $generator->shouldReceive('multiCurrencyPieChart')->andReturn([]);
         $categoryRepos->shouldReceive('getCategories')->andReturn(new Collection([$account]));
         $accountRepos->shouldReceive('oldestJournalDate')->andReturn(Carbon::createFromTimestamp(time())->startOfMonth());
 
@@ -289,6 +319,7 @@ class AccountControllerTest extends TestCase
     {
         $generator    = $this->mock(GeneratorInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
 
         $accountRepos->shouldReceive('oldestJournalDate')->andReturn(new Carbon);
         Steam::shouldReceive('balanceInRange')->andReturn(['2012-01-01' => '0']);
@@ -306,8 +337,14 @@ class AccountControllerTest extends TestCase
     public function testReport(): void
     {
         $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
-        $currencyRepos->shouldReceive('findNull')->andReturn(TransactionCurrency::find(1), null);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
         $generator = $this->mock(GeneratorInterface::class);
+
+        $accountRepos->shouldReceive('getMetaValue')->withArgs([Mockery::any(),'currency_id'])->andReturn('1')->atLeast()->once();
+
+        $currencyRepos->shouldReceive('findNull')->andReturn(TransactionCurrency::find(1), null);
+
         $generator->shouldReceive('multiSet')->andReturn([]);
         Steam::shouldReceive('balanceInRange')->andReturn(['2012-01-01' => '0']);
 
@@ -324,13 +361,30 @@ class AccountControllerTest extends TestCase
      */
     public function testRevenueAccounts(string $range): void
     {
-        $account      = factory(Account::class)->make();
-        $generator    = $this->mock(GeneratorInterface::class);
-        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+        $generator     = $this->mock(GeneratorInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
 
-        $accountRepos->shouldReceive('getAccountsByType')->withArgs([[AccountType::REVENUE]])->andReturn(new Collection([$account]));
-        $generator->shouldReceive('singleSet')->andReturn([]);
-        Steam::shouldReceive('balancesByAccounts')->twice()->andReturn([]);
+        // grab two expense accounts from the current user.
+        $accounts = $this->user()->accounts()->where('account_type_id', 5)->take(2)->get();
+
+        $firstId  = $accounts->first()->id;
+        $secondId = $accounts->first()->id;
+        // for each a set of balances:
+        $start = [$firstId => [1 => '123.45', 2 => '200.01',], $secondId => [1 => '123.45', 2 => '200.01',],];
+        $end   = [$firstId => [1 => '121.45', 2 => '234.01',], $secondId => [1 => '121.45', 2 => '234.01',],];
+
+        // return them when collected:
+        $accountRepos->shouldReceive('getAccountsByType')->withArgs([[AccountType::REVENUE]])->andReturn($accounts);
+
+        // and return start and end balances:
+        Steam::shouldReceive('balancesPerCurrencyByAccounts')->twice()->andReturn($start, $end);
+
+        // currency should be looking for the currency ID's:
+        $currencyRepos->shouldReceive('findNull')->withArgs([1])->once()->andReturn(TransactionCurrency::find(1));
+        $currencyRepos->shouldReceive('findNull')->withArgs([2])->once()->andReturn(TransactionCurrency::find(2));
+
+        $generator->shouldReceive('multiSet')->andReturn([])->once();
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);

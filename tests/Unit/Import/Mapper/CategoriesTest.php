@@ -27,6 +27,7 @@ use FireflyIII\Import\Mapper\Categories;
 use FireflyIII\Models\Category;
 use FireflyIII\Repositories\Category\CategoryRepositoryInterface;
 use Illuminate\Support\Collection;
+use Log;
 use Tests\TestCase;
 
 /**
@@ -35,7 +36,17 @@ use Tests\TestCase;
 class CategoriesTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Import\Mapper\Categories::getMap()
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+
+    /**
+     * @covers \FireflyIII\Import\Mapper\Categories
      */
     public function testGetMapBasic(): void
     {

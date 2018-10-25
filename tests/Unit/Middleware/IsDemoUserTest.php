@@ -28,6 +28,7 @@ use FireflyIII\Http\Middleware\StartFireflySession;
 use Route;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class IsDemoUserTest
@@ -35,20 +36,25 @@ use Tests\TestCase;
 class IsDemoUserTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Http\Middleware\IsDemoUser
+     * Set up test
      */
-    public function testMiddlewareAuthenticated(): void
+    public function setUp(): void
     {
-        $this->be($this->user());
-        $response = $this->get('/_test/is-demo');
-        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+        Route::middleware([StartFireflySession::class, IsDemoUser::class])->any(
+            '/_test/is-demo', function () {
+            return 'OK';
+        }
+        );
     }
 
     /**
      * @covers \FireflyIII\Http\Middleware\IsDemoUser
      */
-    public function testMiddlewareNotAuthenticated(): void
+    public function testMiddlewareAuthenticated(): void
     {
+        $this->be($this->user());
         $response = $this->get('/_test/is-demo');
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
     }
@@ -65,16 +71,11 @@ class IsDemoUserTest extends TestCase
     }
 
     /**
-     * Set up test
+     * @covers \FireflyIII\Http\Middleware\IsDemoUser
      */
-    protected function setUp()
+    public function testMiddlewareNotAuthenticated(): void
     {
-        parent::setUp();
-
-        Route::middleware([StartFireflySession::class, IsDemoUser::class])->any(
-            '/_test/is-demo', function () {
-            return 'OK';
-        }
-        );
+        $response = $this->get('/_test/is-demo');
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
     }
 }

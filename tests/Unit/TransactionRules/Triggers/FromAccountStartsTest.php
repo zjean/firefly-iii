@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace Tests\Unit\TransactionRules\Triggers;
 
 use FireflyIII\Models\TransactionJournal;
+use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\TransactionRules\Triggers\FromAccountStarts;
 use Illuminate\Support\Collection;
@@ -40,16 +41,16 @@ class FromAccountStartsTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts
      */
     public function testTriggered(): void
     {
         $repository = $this->mock(JournalRepositoryInterface::class);
-
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
         /** @var TransactionJournal $journal */
         $journal    = $this->user()->transactionJournals()->inRandomOrder()->first();
         $account    = $this->user()->accounts()->inRandomOrder()->first();
@@ -62,11 +63,12 @@ class FromAccountStartsTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts
      */
     public function testTriggeredLonger(): void
     {
         $repository = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
 
         /** @var TransactionJournal $journal */
         $journal    = $this->user()->transactionJournals()->inRandomOrder()->first();
@@ -80,11 +82,12 @@ class FromAccountStartsTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts
      */
     public function testTriggeredNot(): void
     {
         $repository = $this->mock(JournalRepositoryInterface::class);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
 
         /** @var TransactionJournal $journal */
         $journal    = $this->user()->transactionJournals()->inRandomOrder()->first();
@@ -98,35 +101,41 @@ class FromAccountStartsTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts
      */
     public function testWillMatchEverythingEmpty(): void
     {
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $value  = '';
-        $result = FromAccountStarts::willMatchEverything($value);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $value      = '';
+        $result     = FromAccountStarts::willMatchEverything($value);
         $this->assertTrue($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts
      */
     public function testWillMatchEverythingNotNull(): void
     {
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $value  = 'x';
-        $result = FromAccountStarts::willMatchEverything($value);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $value      = 'x';
+        $result     = FromAccountStarts::willMatchEverything($value);
         $this->assertFalse($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\FromAccountStarts
      */
     public function testWillMatchEverythingNull(): void
     {
         $repository = $this->mock(JournalRepositoryInterface::class);
-        $value  = null;
-        $result = FromAccountStarts::willMatchEverything($value);
+        $accountRepos = $this->mock(AccountRepositoryInterface::class);
+
+        $value      = null;
+        $result     = FromAccountStarts::willMatchEverything($value);
         $this->assertTrue($result);
     }
 }

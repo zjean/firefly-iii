@@ -38,15 +38,15 @@ class OperationsControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\OperationsController::expenses
+     * @covers \FireflyIII\Http\Controllers\Report\OperationsController
      */
     public function testExpenses(): void
     {
@@ -68,7 +68,7 @@ class OperationsControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\OperationsController::income
+     * @covers \FireflyIII\Http\Controllers\Report\OperationsController
      */
     public function testIncome(): void
     {
@@ -81,7 +81,7 @@ class OperationsControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Report\OperationsController::operations
+     * @covers \FireflyIII\Http\Controllers\Report\OperationsController
      */
     public function testOperations(): void
     {

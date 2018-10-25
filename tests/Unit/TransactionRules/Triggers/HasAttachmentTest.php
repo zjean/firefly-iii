@@ -25,51 +25,51 @@ namespace Tests\Unit\TransactionRules\Triggers;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Triggers\HasAttachment;
 use Tests\TestCase;
-
+use DB;
 /**
  * Class HasAttachmentTest
  */
 class HasAttachmentTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment
      */
     public function testTriggered(): void
     {
-        do {
-            $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $count = $journal->attachments()->count();
-        } while($count !== 0);
-        
-        $attachment = $journal->user->attachments()->first();
-        $journal->attachments()->save($attachment);
-        $this->assertEquals(1, $journal->attachments()->count());
+        $withdrawal = $this->getRandomWithdrawal();
+
+        $attachment = $withdrawal->user->attachments()->first();
+        $withdrawal->attachments()->save($attachment);
+        $this->assertGreaterThanOrEqual(1, $withdrawal->attachments()->count());
 
         $trigger = HasAttachment::makeFromStrings('1', false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertTrue($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment::triggered
+     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment
      */
     public function testTriggeredFalse(): void
     {
-        do {
-            // this is kind of cheating but OK.
-            $journal = TransactionJournal::inRandomOrder()->whereNull('deleted_at')->first();
-            $count = $journal->attachments()->count();
-        } while($count !== 0);
+        $withdrawal = $this->getRandomWithdrawal();
+        $attachment = $withdrawal->user->attachments()->first();
+        $withdrawal->attachments()->save($attachment);
 
-        $this->assertEquals(0, $journal->attachments()->count());
+        DB::table('attachments')
+            ->where('attachable_type', TransactionJournal::class)
+            ->where('attachable_id', $withdrawal->id)->delete();
+
+        $withdrawal->attachments()->saveMany([]);
+        $this->assertEquals(0, $withdrawal->attachments()->count());
 
         $trigger = HasAttachment::makeFromStrings('1', false);
-        $result  = $trigger->triggered($journal);
+        $result  = $trigger->triggered($withdrawal);
         $this->assertFalse($result);
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment
      */
     public function testWillMatchEverything(): void
     {
@@ -79,7 +79,7 @@ class HasAttachmentTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment::willMatchEverything
+     * @covers \FireflyIII\TransactionRules\Triggers\HasAttachment
      */
     public function testWillMatchEverythingTrue(): void
     {

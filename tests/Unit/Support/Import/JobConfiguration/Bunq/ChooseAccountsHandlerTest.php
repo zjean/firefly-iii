@@ -37,12 +37,21 @@ use FireflyIII\Support\Import\JobConfiguration\Bunq\ChooseAccountsHandler;
 use Illuminate\Support\Collection;
 use Mockery;
 use Tests\TestCase;
-
+use Log;
 /**
  * Class ChooseAccountsHandlerTest
  */
 class ChooseAccountsHandlerTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
     /**
      * @covers \FireflyIII\Support\Import\JobConfiguration\Bunq\ChooseAccountsHandler
      */
@@ -138,6 +147,7 @@ class ChooseAccountsHandlerTest extends TestCase
         ];
         $expected                  = $config;
         $expected['mapping'][1234] = 456;
+        $expected['bunq-iban']     = [];
 
         // mock stuff
         $repository    = $this->mock(ImportJobRepositoryInterface::class);
@@ -148,7 +158,7 @@ class ChooseAccountsHandlerTest extends TestCase
         $repository->shouldReceive('setUser')->once();
         $accountRepos->shouldReceive('setUser')->once();
         $currencyRepos->shouldReceive('setUser')->once();
-        $repository->shouldReceive('getConfiguration')->andReturn($config)->times(2);
+        $repository->shouldReceive('getConfiguration')->andReturn($config)->times(3);
         $repository->shouldReceive('setConfiguration')->withArgs([Mockery::any(), $expected])->once();
         $accountRepos->shouldReceive('findNull')->withArgs([456])->andReturn(new Account)->once();
 
@@ -192,6 +202,7 @@ class ChooseAccountsHandlerTest extends TestCase
         ];
         $expected               = $config;
         $expected['mapping'][0] = 456;
+        $expected['bunq-iban']  = [];
 
         // mock stuff
         $repository    = $this->mock(ImportJobRepositoryInterface::class);
@@ -202,7 +213,7 @@ class ChooseAccountsHandlerTest extends TestCase
         $repository->shouldReceive('setUser')->once();
         $accountRepos->shouldReceive('setUser')->once();
         $currencyRepos->shouldReceive('setUser')->once();
-        $repository->shouldReceive('getConfiguration')->andReturn($config)->times(2);
+        $repository->shouldReceive('getConfiguration')->andReturn($config)->times(3);
         $repository->shouldReceive('setConfiguration')->withArgs([Mockery::any(), $expected])->once();
         $accountRepos->shouldReceive('findNull')->withArgs([456])->andReturn(new Account)->once();
 
@@ -246,6 +257,7 @@ class ChooseAccountsHandlerTest extends TestCase
         ];
         $expected                  = $config;
         $expected['mapping'][1234] = 0;
+        $expected['bunq-iban']     = [];
 
         // mock stuff
         $repository    = $this->mock(ImportJobRepositoryInterface::class);
@@ -256,7 +268,7 @@ class ChooseAccountsHandlerTest extends TestCase
         $repository->shouldReceive('setUser')->once();
         $accountRepos->shouldReceive('setUser')->once();
         $currencyRepos->shouldReceive('setUser')->once();
-        $repository->shouldReceive('getConfiguration')->andReturn($config)->times(2);
+        $repository->shouldReceive('getConfiguration')->andReturn($config)->times(3);
         $repository->shouldReceive('setConfiguration')->withArgs([Mockery::any(), $expected])->once();
         $accountRepos->shouldReceive('findNull')->withArgs([456])->andReturnNull()->once();
 
@@ -287,11 +299,10 @@ class ChooseAccountsHandlerTest extends TestCase
         // data:
         $data   = ['account_mapping' => [], 'apply_rules' => true,];
         $config = [
-            'accounts' => [
+            'accounts'    => [
                 0 => ['id' => 1234, 'name' => 'bunq'],
             ],
-            'apply-rules'     => true,
-
+            'apply-rules' => true,
         ];
 
         // mock stuff

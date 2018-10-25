@@ -2,6 +2,121 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.7.7] - 2018-10-01
+
+This version of Firefly III requires PHP 7.2. I've already started using several features from 7.2. Please make sure you upgrade.
+
+### Added
+- [Issue 954](https://github.com/firefly-iii/firefly-iii/issues/954) Some additional view chart ranges
+- [Issue 1710](https://github.com/firefly-iii/firefly-iii/issues/1710) Added a new currency ([hamuz](https://github.com/hamuz)) 
+- Transactions will now store (in the database) how they were created.
+
+### Changed
+- [Issue 907](https://github.com/firefly-iii/firefly-iii/issues/907) Better and more options on the transaction list.
+- [Issue 1450](https://github.com/firefly-iii/firefly-iii/issues/1450) Add a rule to change the type of a transaction automagically
+- [Issue 1701](https://github.com/firefly-iii/firefly-iii/issues/1701) Fix reference to PHP executable ([hertzg](https://github.com/hertzg))
+- Budget limits have currency information, for future expansion.
+- Some charts and pages can handle multiple currencies better.
+- New GA code for those who use it.
+
+### Removed
+- The credit card liability type has been removed.
+
+### Fixed
+- [Issue 896](https://github.com/firefly-iii/firefly-iii/issues/896) Better redirection when coming from deleted objects.
+- [Issue 1519](https://github.com/firefly-iii/firefly-iii/issues/1519) Fix autocomplete tags
+- [Issue 1607](https://github.com/firefly-iii/firefly-iii/issues/1607) Some fixes for the bunq api calls
+- [Issue 1650](https://github.com/firefly-iii/firefly-iii/issues/1650) Add a negated amount column for CSV imports ([hamuz](https://github.com/hamuz))
+- [Issue 1658](https://github.com/firefly-iii/firefly-iii/issues/1658) Make font heavy again.
+- [Issue 1660](https://github.com/firefly-iii/firefly-iii/issues/1660) Add a negated amount column for CSV imports ([hamuz](https://github.com/hamuz))
+- [Issue 1667](https://github.com/firefly-iii/firefly-iii/issues/1667) Fix pie charts
+- [Issue 1668](https://github.com/firefly-iii/firefly-iii/issues/1668) YNAB iso_code fix
+- [Issue 1670](https://github.com/firefly-iii/firefly-iii/issues/1670) Fix piggy bank API error
+- [Issue 1671](https://github.com/firefly-iii/firefly-iii/issues/1671) More options for liability accounts.
+- [Issue 1673](https://github.com/firefly-iii/firefly-iii/issues/1673) Fix reconciliation issues.
+- [Issue 1675](https://github.com/firefly-iii/firefly-iii/issues/1675) Wrong sum in tag report.
+- [Issue 1679](https://github.com/firefly-iii/firefly-iii/issues/1679) Change type of a transaction wouldn't trigger rules.
+- [Issue 1682](https://github.com/firefly-iii/firefly-iii/issues/1682) Add liability accounts to transaction conversion
+- [Issue 1683](https://github.com/firefly-iii/firefly-iii/issues/1683) See matching transaction showed transfers twice.
+- [Issue 1685](https://github.com/firefly-iii/firefly-iii/issues/1685) fix autocomplete for rules
+- [Issue 1690](https://github.com/firefly-iii/firefly-iii/issues/1690) Missing highlighted button in intro popup
+- [Issue 1691](https://github.com/firefly-iii/firefly-iii/issues/1691) No mention of liabilities in demo text
+- [Issue 1695](https://github.com/firefly-iii/firefly-iii/issues/1695) Small fixes in bills pages.
+- [Issue 1708](https://github.com/firefly-iii/firefly-iii/issues/1708) Fix by [mathieupost](https://github.com/mathieupost) for bunq
+- [Issue 1709](https://github.com/firefly-iii/firefly-iii/issues/1709) Fix oauth buttons 
+- [Issue 1712](https://github.com/firefly-iii/firefly-iii/issues/1712) Double slash fix by [hamuz](https://github.com/hamuz)
+- [Issue 1719](https://github.com/firefly-iii/firefly-iii/issues/1719) Add missing accounts to API
+- [Issue 1720](https://github.com/firefly-iii/firefly-iii/issues/1720) Fix validation for transaction type.
+- [Issue 1723](https://github.com/firefly-iii/firefly-iii/issues/1723) API broken for currency exchange rates.
+- [Issue 1728](https://github.com/firefly-iii/firefly-iii/issues/1728) Fix problem with transaction factory.
+- [Issue 1729](https://github.com/firefly-iii/firefly-iii/issues/1729) Fix bulk transaction editor
+- [Issue 1731](https://github.com/firefly-iii/firefly-iii/issues/1731) API failure for budget limits.
+
+### Security
+- Secure headers now allow Mapbox and the 2FA QR code.
+
+## [4.7.6.2] - 2018-09-03
+### Fixed
+- Docker file builds again.
+- Fix CSS of OAuth2 authorization view.
+
+## [4.7.6.1] - 2018-09-02
+### Fixed
+- An issue where I switched variables from the Docker `.env` file to the normal `.env` file and vice versa -- breaking both.
+- [Issue 1649](https://github.com/firefly-iii/firefly-iii/issues/1649) 2FA QR code would not show up due to very strict security policy headers
+- Docker build gave a cURL error whenever it runs PHP commands.
+
+## [4.7.6] - 2018-09-02
+### Added
+- [Issue 145](https://github.com/firefly-iii/firefly-iii/issues/145) You can now download transactions from YNAB.
+- [Issue 306](https://github.com/firefly-iii/firefly-iii/issues/306) You can now add liabilities to Firefly III.
+- [Issue 740](https://github.com/firefly-iii/firefly-iii/issues/740) Various charts are now currency aware.
+- [Issue 833](https://github.com/firefly-iii/firefly-iii/issues/833) Bills can use non-default currencies.
+- [Issue 1578](https://github.com/firefly-iii/firefly-iii/issues/1578) Firefly III will notify you if the cron job hasn't fired.
+- [Issue 1623](https://github.com/firefly-iii/firefly-iii/issues/1623) New transactions will link back from the success message.
+- [Issue 1624](https://github.com/firefly-iii/firefly-iii/issues/1624) transactions will link to the object.
+- You can call the cron job over the web now (see docs).
+- You don't need to call the cron job every minute any more.
+- Various charts are now red/green to signify income and expenses.
+- Option to add or remove accounts from the net worth calculations.
+
+### Deprecated
+- This will be the last release on PHP 7.1. Future versions will require PHP 7.2.
+
+### Fixed
+- [Issue 1460](https://github.com/firefly-iii/firefly-iii/issues/1460) Downloading transactions from bunq should go more smoothly.
+- [Issue 1464](https://github.com/firefly-iii/firefly-iii/issues/1464) Fixed the docker file to work on Raspberry Pi's.
+- [Issue 1540](https://github.com/firefly-iii/firefly-iii/issues/1540) The Docker file now has a working cron job for recurring transactions.
+- [Issue 1564](https://github.com/firefly-iii/firefly-iii/issues/1564) Fix double transfers when importing from bunq.
+- [Issue 1575](https://github.com/firefly-iii/firefly-iii/issues/1575) Some views would give a XSRF token warning
+- [Issue 1576](https://github.com/firefly-iii/firefly-iii/issues/1576) Fix assigning budgets
+- [Issue 1580](https://github.com/firefly-iii/firefly-iii/issues/1580) Missing string for translation
+- [Issue 1581](https://github.com/firefly-iii/firefly-iii/issues/1581) Expand help text
+- [Issue 1584](https://github.com/firefly-iii/firefly-iii/issues/1584) Link to administration is back.
+- [Issue 1586](https://github.com/firefly-iii/firefly-iii/issues/1586) Date fields in import were mislabeled.
+- [Issue 1593](https://github.com/firefly-iii/firefly-iii/issues/1593) Link types are translatable.
+- [Issue 1594](https://github.com/firefly-iii/firefly-iii/issues/1594) Very long breadcrumbs are weird.
+- [Issue 1598](https://github.com/firefly-iii/firefly-iii/issues/1598) Fix budget calculations.
+- [Issue 1597](https://github.com/firefly-iii/firefly-iii/issues/1597) Piggy banks are always inactive.
+- [Issue 1605](https://github.com/firefly-iii/firefly-iii/issues/1605) System will ignore foreign currency setting if user doesn't indicate the amount.
+- [Issue 1608](https://github.com/firefly-iii/firefly-iii/issues/1608) Spelling error in command line import.
+- [Issue 1609](https://github.com/firefly-iii/firefly-iii/issues/1609) Link to budgets page was absolute.
+- [Issue 1615](https://github.com/firefly-iii/firefly-iii/issues/1615) Fix currency bug in transactions.
+- [Issue 1616](https://github.com/firefly-iii/firefly-iii/issues/1616) Fix null pointer exception in pie charts.
+- [Issue 1617](https://github.com/firefly-iii/firefly-iii/issues/1617) Fix for complex tag names in URL's.
+- [Issue 1620](https://github.com/firefly-iii/firefly-iii/issues/1620) Fixed index reference in API.
+- [Issue 1639](https://github.com/firefly-iii/firefly-iii/issues/1639) Firefly III trusts the Heroku load balancer, fixing deployment on Heroku.
+- [Issue 1642](https://github.com/firefly-iii/firefly-iii/issues/1642) Fix issue with split journals.
+- [Issue 1643](https://github.com/firefly-iii/firefly-iii/issues/1643) Fix reconciliation issue.
+- Users can no longer give income a budget.
+- Fix bug in Spectre import.
+- Heroku would not make you owner.
+- The rule "tester" will now also take the "strict"-checkbox into account.
+ 
+### Security
+- Add `.htaccess` files to all public directories.
+- New secure headers will make Firefly III slightly more secure.
+
 ## [4.7.5.3] - 2017-07-28
 ### Added
 - Many updated French translations thanks to [@bubka](https://crowdin.com/profile/bubka).

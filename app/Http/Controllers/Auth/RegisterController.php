@@ -25,12 +25,12 @@ namespace FireflyIII\Http\Controllers\Auth;
 
 use FireflyConfig;
 use FireflyIII\Http\Controllers\Controller;
+use FireflyIII\Support\Http\Controllers\CreateStuff;
+use FireflyIII\Support\Http\Controllers\RequestInformation;
 use FireflyIII\User;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 /**
  * Class RegisterController
@@ -43,7 +43,7 @@ use Illuminate\Support\Facades\Validator;
  */
 class RegisterController extends Controller
 {
-    use RegistersUsers;
+    use RegistersUsers, RequestInformation, CreateStuff;
 
     /**
      * Where to redirect users after registration.
@@ -71,9 +71,19 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         // is allowed to?
-        $singleUserMode = FireflyConfig::get('single_user_mode', config('firefly.configuration.single_user_mode'))->data;
-        $userCount      = User::count();
-        if (true === $singleUserMode && $userCount > 0) {
+        $allowRegistration = true;
+        $loginProvider     = envNonEmpty('LOGIN_PROVIDER','eloquent');
+        $singleUserMode    = FireflyConfig::get('single_user_mode', config('firefly.configuration.single_user_mode'))->data;
+        $userCount         = User::count();
+        if (true === $singleUserMode && $userCount > 0 && 'eloquent' === $loginProvider) {
+            $allowRegistration = false;
+        }
+
+        if ('eloquent' !== $loginProvider) {
+            $allowRegistration = false;
+        }
+
+        if (false === $allowRegistration) {
             $message = 'Registration is currently not available.';
 
             return view('error', compact('message'));
@@ -82,7 +92,7 @@ class RegisterController extends Controller
         /** @noinspection PhpUndefinedMethodInspection */
         $this->validator($request->all())->validate();
 
-        event(new Registered($user = $this->create($request->all())));
+        event(new Registered($user = $this->createUser($request->all())));
 
         $this->guard()->login($user);
 
@@ -102,13 +112,25 @@ class RegisterController extends Controller
      */
     public function showRegistrationForm(Request $request)
     {
-        // is demo site?
-        $isDemoSite = FireflyConfig::get('is_demo_site', config('firefly.configuration.is_demo_site'))->data;
+        $allowRegistration = true;
+        $loginProvider     = envNonEmpty('LOGIN_PROVIDER','eloquent');
+        $isDemoSite        = FireflyConfig::get('is_demo_site', config('firefly.configuration.is_demo_site'))->data;
+        $singleUserMode    = FireflyConfig::get('single_user_mode', config('firefly.configuration.single_user_mode'))->data;
+        $userCount         = User::count();
 
-        // is allowed to?
-        $singleUserMode = FireflyConfig::get('single_user_mode', config('firefly.configuration.single_user_mode'))->data;
-        $userCount      = User::count();
-        if (true === $singleUserMode && $userCount > 0) {
+        if (true === $isDemoSite) {
+            $allowRegistration = false;
+        }
+
+        if (true === $singleUserMode && $userCount > 0 && 'eloquent' === $loginProvider) {
+            $allowRegistration = false;
+        }
+
+        if ('eloquent' !== $loginProvider) {
+            $allowRegistration = false;
+        }
+
+        if (false === $allowRegistration) {
             $message = 'Registration is currently not available.';
 
             return view('error', compact('message'));
@@ -119,38 +141,4 @@ class RegisterController extends Controller
         return view('auth.register', compact('isDemoSite', 'email'));
     }
 
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param array $data
-     *
-     * @return \FireflyIII\User
-     */
-    protected function create(array $data): User
-    {
-        return User::create(
-            [
-                'email'    => $data['email'],
-                'password' => bcrypt($data['password']),
-            ]
-        );
-    }
-
-    /**
-     * Get a validator for an incoming registration request.
-     *
-     * @param array $data
-     *
-     * @return ValidatorContract
-     */
-    protected function validator(array $data): ValidatorContract
-    {
-        return Validator::make(
-            $data,
-            [
-                'email'    => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|secure_password|confirmed',
-            ]
-        );
-    }
 }

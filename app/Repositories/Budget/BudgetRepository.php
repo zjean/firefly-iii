@@ -25,7 +25,7 @@ namespace FireflyIII\Repositories\Budget;
 use Carbon\Carbon;
 use Exception;
 use FireflyIII\Exceptions\FireflyException;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Models\AvailableBudget;
 use FireflyIII\Models\Budget;
@@ -53,6 +53,16 @@ class BudgetRepository implements BudgetRepositoryInterface
 {
     /** @var User */
     private $user;
+
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
 
     /**
      * A method that returns the amount of money budgeted per day for this budget,
@@ -97,6 +107,7 @@ class BudgetRepository implements BudgetRepositoryInterface
         } catch (Exception $e) {
             Log::debug(sprintf('Could not delete budget limit: %s', $e->getMessage()));
         }
+        Budget::where('order',0)->update(['order' => 100]);
 
         // do the clean up by hand because Sqlite can be tricky with this.
         $budgetLimits = BudgetLimit::orderBy('created_at', 'DESC')->get(['id', 'budget_id', 'start_date', 'end_date']);
@@ -279,11 +290,14 @@ class BudgetRepository implements BudgetRepositoryInterface
     public function getActiveBudgets(): Collection
     {
         /** @var Collection $set */
-        $set = $this->user->budgets()->where('active', 1)->get();
+        $set = $this->user->budgets()->where('active', 1)
+                          ->get();
 
         $set = $set->sortBy(
             function (Budget $budget) {
-                return strtolower($budget->name);
+                $str = str_pad((string)$budget->order, 4, '0', STR_PAD_LEFT) . strtolower($budget->name);
+
+                return $str;
             }
         );
 
@@ -305,6 +319,7 @@ class BudgetRepository implements BudgetRepositoryInterface
             $set = BudgetLimit::leftJoin('budgets', 'budgets.id', '=', 'budget_limits.budget_id')
                               ->with(['budget'])
                               ->where('budgets.user_id', $this->user->id)
+                              ->whereNull('budgets.deleted_at')
                               ->get(['budget_limits.*']);
 
             return $set;
@@ -313,6 +328,7 @@ class BudgetRepository implements BudgetRepositoryInterface
         if (null === $start xor null === $end) {
             $query = BudgetLimit::leftJoin('budgets', 'budgets.id', '=', 'budget_limits.budget_id')
                                 ->with(['budget'])
+                                ->whereNull('budgets.deleted_at')
                                 ->where('budgets.user_id', $this->user->id);
             if (null !== $end) {
                 // end date must be before $end.
@@ -330,6 +346,7 @@ class BudgetRepository implements BudgetRepositoryInterface
         $set = BudgetLimit::leftJoin('budgets', 'budgets.id', '=', 'budget_limits.budget_id')
                           ->with(['budget'])
                           ->where('budgets.user_id', $this->user->id)
+                          ->whereNull('budgets.deleted_at')
                           ->where(
                               function (Builder $q5) use ($start, $end) {
                                   $q5->where(
@@ -514,11 +531,11 @@ class BudgetRepository implements BudgetRepositoryInterface
         }
 
         // get all transactions:
-        /** @var JournalCollectorInterface $collector */
-        $collector = app(JournalCollectorInterface::class);
+        /** @var TransactionCollectorInterface $collector */
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setAccounts($accounts)->setRange($start, $end);
         $collector->setBudgets($budgets);
-        $transactions = $collector->getJournals();
+        $transactions = $collector->getTransactions();
 
         // loop transactions:
         /** @var Transaction $transaction */
@@ -541,7 +558,9 @@ class BudgetRepository implements BudgetRepositoryInterface
 
         $set = $set->sortBy(
             function (Budget $budget) {
-                return strtolower($budget->name);
+                $str = str_pad((string)$budget->order, 4, '0', STR_PAD_LEFT) . strtolower($budget->name);
+
+                return $str;
             }
         );
 
@@ -570,7 +589,9 @@ class BudgetRepository implements BudgetRepositoryInterface
 
         $set = $set->sortBy(
             function (Budget $budget) {
-                return strtolower($budget->name);
+                $str = str_pad((string)$budget->order, 4, '0', STR_PAD_LEFT) . strtolower($budget->name);
+
+                return $str;
             }
         );
 
@@ -587,12 +608,12 @@ class BudgetRepository implements BudgetRepositoryInterface
     public function getNoBudgetPeriodReport(Collection $accounts, Carbon $start, Carbon $end): array
     {
         $carbonFormat = Navigation::preferredCarbonFormat($start, $end);
-        /** @var JournalCollectorInterface $collector */
-        $collector = app(JournalCollectorInterface::class);
+        /** @var TransactionCollectorInterface $collector */
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setAccounts($accounts)->setRange($start, $end);
         $collector->setTypes([TransactionType::WITHDRAWAL]);
         $collector->withoutBudget();
-        $transactions = $collector->getJournals();
+        $transactions = $collector->getTransactions();
         $result       = [
             'entries' => [],
             'name'    => (string)trans('firefly.no_budget'),
@@ -640,6 +661,18 @@ class BudgetRepository implements BudgetRepositoryInterface
     }
 
     /**
+     * @param Budget $budget
+     * @param int    $order
+     */
+    public function setBudgetOrder(Budget $budget, int $order): void
+    {
+        $budget->order = $order;
+        $budget->save();
+    }
+
+    /** @noinspection MoreThanThreeArgumentsInspection */
+
+    /**
      * @param User $user
      */
     public function setUser(User $user): void
@@ -647,7 +680,6 @@ class BudgetRepository implements BudgetRepositoryInterface
         $this->user = $user;
     }
 
-    /** @noinspection MoreThanThreeArgumentsInspection */
     /**
      * @param Collection $budgets
      * @param Collection $accounts
@@ -658,8 +690,8 @@ class BudgetRepository implements BudgetRepositoryInterface
      */
     public function spentInPeriod(Collection $budgets, Collection $accounts, Carbon $start, Carbon $end): string
     {
-        /** @var JournalCollectorInterface $collector */
-        $collector = app(JournalCollectorInterface::class);
+        /** @var TransactionCollectorInterface $collector */
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setUser($this->user);
         $collector->setRange($start, $end)->setBudgets($budgets)->withBudgetInformation();
 
@@ -670,7 +702,7 @@ class BudgetRepository implements BudgetRepositoryInterface
             $collector->setAllAssetAccounts();
         }
 
-        $set = $collector->getJournals();
+        $set = $collector->getTransactions();
 
         return (string)$set->sum('transaction_amount');
     }
@@ -684,8 +716,8 @@ class BudgetRepository implements BudgetRepositoryInterface
      */
     public function spentInPeriodWoBudget(Collection $accounts, Carbon $start, Carbon $end): string
     {
-        /** @var JournalCollectorInterface $collector */
-        $collector = app(JournalCollectorInterface::class);
+        /** @var TransactionCollectorInterface $collector */
+        $collector = app(TransactionCollectorInterface::class);
         $collector->setUser($this->user);
         $collector->setRange($start, $end)->setTypes([TransactionType::WITHDRAWAL])->withoutBudget();
 
@@ -696,7 +728,7 @@ class BudgetRepository implements BudgetRepositoryInterface
             $collector->setAllAssetAccounts();
         }
 
-        $set = $collector->getJournals();
+        $set = $collector->getTransactions();
         $set = $set->filter(
             function (Transaction $transaction) {
                 if (bccomp($transaction->transaction_amount, '0') === -1) {
@@ -812,6 +844,8 @@ class BudgetRepository implements BudgetRepositoryInterface
 
     }
 
+    /** @noinspection MoreThanThreeArgumentsInspection */
+
     /**
      * @param BudgetLimit $budgetLimit
      * @param array       $data
@@ -835,7 +869,6 @@ class BudgetRepository implements BudgetRepositoryInterface
         return $budgetLimit;
     }
 
-    /** @noinspection MoreThanThreeArgumentsInspection */
     /**
      * @param Budget $budget
      * @param Carbon $start

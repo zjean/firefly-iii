@@ -40,6 +40,16 @@ class FixerIOv2 implements ExchangeRateInterface
     protected $user;
 
     /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
+
+    /**
      * @param TransactionCurrency $fromCurrency
      * @param TransactionCurrency $toCurrency
      * @param Carbon              $date
@@ -54,8 +64,10 @@ class FixerIOv2 implements ExchangeRateInterface
         $exchangeRate->user()->associate($this->user);
         $exchangeRate->fromCurrency()->associate($fromCurrency);
         $exchangeRate->toCurrency()->associate($toCurrency);
-        $exchangeRate->date = $date;
-        $exchangeRate->rate = $rate;
+        $exchangeRate->date       = $date;
+        $exchangeRate->rate       = $rate;
+        $exchangeRate->updated_at = new Carbon;
+        $exchangeRate->created_at = new Carbon;
 
         // get API key
         $apiKey = env('FIXER_API_KEY', '');
@@ -68,7 +80,7 @@ class FixerIOv2 implements ExchangeRateInterface
         }
 
         // build URI
-        $uri        = sprintf(
+        $uri = sprintf(
             'http://data.fixer.io/api/%s?access_key=%s&base=%s&symbols=%s',
             $date->format('Y-m-d'), $apiKey, $fromCurrency->code, $toCurrency->code
         );

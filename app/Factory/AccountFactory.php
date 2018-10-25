@@ -32,6 +32,7 @@ use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
 use FireflyIII\Services\Internal\Support\AccountServiceTrait;
 use FireflyIII\User;
+use Log;
 
 /**
  * Factory to create or return accounts.
@@ -40,9 +41,20 @@ use FireflyIII\User;
  */
 class AccountFactory
 {
-    use AccountServiceTrait;
     /** @var User */
     private $user;
+
+    use AccountServiceTrait;
+
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
 
     /**
      * @param array $data
@@ -80,8 +92,9 @@ class AccountFactory
                 'iban'            => $data['iban'],
             ];
 
-            // remove virtual balance when not an asset account:
-            if ($type->type !== AccountType::ASSET) {
+            // remove virtual balance when not an asset account or a liability
+            $canHaveVirtual = [AccountType::ASSET, AccountType::DEBT, AccountType::LOAN, AccountType::MORTGAGE, AccountType::CREDITCARD];
+            if (!\in_array($type->type, $canHaveVirtual, true)) {
                 $databaseData['virtual_balance'] = '0';
             }
 
@@ -93,7 +106,7 @@ class AccountFactory
             $return = Account::create($databaseData);
             $this->updateMetaData($return, $data);
 
-            if ($type->type === AccountType::ASSET) {
+            if (\in_array($type->type, $canHaveVirtual, true)) {
                 if ($this->validIBData($data)) {
                     $this->updateIB($return, $data);
                 }
@@ -130,6 +143,7 @@ class AccountFactory
     }
 
     /**
+     *
      * @param string $accountName
      * @param string $accountType
      *
@@ -138,17 +152,23 @@ class AccountFactory
      */
     public function findOrCreate(string $accountName, string $accountType): Account
     {
+        Log::debug(sprintf('Searching for "%s" of type "%s"', $accountName, $accountType));
         $type     = AccountType::whereType($accountType)->first();
         $accounts = $this->user->accounts()->where('account_type_id', $type->id)->get(['accounts.*']);
         $return   = null;
+
+        Log::debug(sprintf('Account type is #%d', $type->id));
+
         /** @var Account $object */
         foreach ($accounts as $object) {
             if ($object->name === $accountName) {
+                Log::debug(sprintf('Found account #%d "%s".', $object->id, $object->name));
                 $return = $object;
                 break;
             }
         }
         if (null === $return) {
+            Log::debug('Found nothing. Will create a new one.');
             $return = $this->create(
                 [
                     'user_id'         => $this->user->id,
@@ -188,9 +208,13 @@ class AccountFactory
             $result = AccountType::find($accountTypeId);
         }
         if (null === $result) {
-            /** @var string $type */
-            $type   = (string)config('firefly.accountTypeByIdentifier.' . $accountType);
-            $result = AccountType::whereType($type)->first();
+            Log::debug(sprintf('No account type found by ID, continue search for "%s".', $accountType));
+            /** @var array $types */
+            $types = config('firefly.accountTypeByIdentifier.' . $accountType) ?? [];
+            if (\count($types) > 0) {
+                Log::debug(sprintf('%d accounts in list from config', \count($types)), $types);
+                $result = AccountType::whereIn('type', $types)->first();
+            }
             if (null === $result && null !== $accountType) {
                 // try as full name:
                 $result = AccountType::whereType($accountType)->first();

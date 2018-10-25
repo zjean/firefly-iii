@@ -25,11 +25,13 @@ namespace FireflyIII\Helpers\Filter;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionType;
 use Illuminate\Support\Collection;
-
+use Log;
 /**
  * Class TransferFilter.
  *
  * This filter removes any transfers that are in the collection twice (from A to B and from B to A).
+ *
+ * @codeCoverageIgnore
  */
 class TransferFilter implements FilterInterface
 {
@@ -47,6 +49,7 @@ class TransferFilter implements FilterInterface
         /** @var Transaction $transaction */
         foreach ($set as $transaction) {
             if (TransactionType::TRANSFER !== $transaction->transaction_type_type) {
+                Log::debug(sprintf('Transaction #%d is not a transfer, add it.', $transaction->id));
                 $new->push($transaction);
                 continue;
             }
@@ -58,6 +61,7 @@ class TransferFilter implements FilterInterface
             sort($accountIds);
             sort($transactionIds);
             $key = $journalId . '-' . implode(',', $transactionIds) . '-' . implode(',', $accountIds) . '-' . $amount;
+            Log::debug(sprintf('Current transaction key is "%s"', $key));
             if (!isset($count[$key])) {
                 // not yet counted? add to new set and count it:
                 $new->push($transaction);

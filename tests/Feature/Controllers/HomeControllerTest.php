@@ -22,18 +22,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Controllers;
 
-use FireflyIII\Models\TransactionCurrency;
-use Mockery;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
+use FireflyIII\Models\TransactionCurrency;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
 use FireflyIII\Repositories\Currency\CurrencyRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Illuminate\Support\Collection;
 use Log;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -48,21 +49,22 @@ class HomeControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
 
     /**
-     * @covers \FireflyIII\Http\Controllers\HomeController::dateRange
-     * @covers \FireflyIII\Http\Controllers\HomeController::__construct
+     * @covers \FireflyIII\Http\Controllers\HomeController
      */
     public function testDateRange(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());
@@ -78,13 +80,14 @@ class HomeControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\HomeController::dateRange
-     * @covers \FireflyIII\Http\Controllers\HomeController::__construct
+     * @covers \FireflyIII\Http\Controllers\HomeController
      */
     public function testDateRangeCustom(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());
@@ -101,9 +104,9 @@ class HomeControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\HomeController::index
-     * @covers       \FireflyIII\Http\Controllers\HomeController::__construct
-     * @covers       \FireflyIII\Http\Controllers\Controller::__construct
+     * @covers       \FireflyIII\Http\Controllers\HomeController
+     * @covers       \FireflyIII\Http\Controllers\HomeController
+     * @covers       \FireflyIII\Http\Controllers\Controller
      * @dataProvider dateRangeProvider
      *
      * @param $range
@@ -111,12 +114,16 @@ class HomeControllerTest extends TestCase
     public function testIndex(string $range): void
     {
         // mock stuff
-        $account      = factory(Account::class)->make();
-        $collector    = $this->mock(JournalCollectorInterface::class);
-        $accountRepos = $this->mock(AccountRepositoryInterface::class);
-        $billRepos    = $this->mock(BillRepositoryInterface::class);
-        $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $account       = factory(Account::class)->make();
+        $collector     = $this->mock(TransactionCollectorInterface::class);
+        $accountRepos  = $this->mock(AccountRepositoryInterface::class);
+        $billRepos     = $this->mock(BillRepositoryInterface::class);
+        $journalRepos  = $this->mock(JournalRepositoryInterface::class);
         $currencyRepos = $this->mock(CurrencyRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $accountRepos->shouldReceive('count')->andReturn(1);
         $accountRepos->shouldReceive('getMetaValue')->withArgs([Mockery::any(), 'currency_id'])->andReturn('1');
@@ -129,7 +136,7 @@ class HomeControllerTest extends TestCase
         $collector->shouldReceive('setRange')->andReturnSelf();
         $collector->shouldReceive('setLimit')->andReturnSelf();
         $collector->shouldReceive('setPage')->andReturnSelf();
-        $collector->shouldReceive('getJournals')->andReturn(new Collection);
+        $collector->shouldReceive('getTransactions')->andReturn(new Collection);
 
         $this->be($this->user());
         $this->changeDateRange($this->user(), $range);
@@ -138,9 +145,9 @@ class HomeControllerTest extends TestCase
     }
 
     /**
-     * @covers       \FireflyIII\Http\Controllers\HomeController::index
-     * @covers       \FireflyIII\Http\Controllers\HomeController::__construct
-     * @covers       \FireflyIII\Http\Controllers\Controller::__construct
+     * @covers       \FireflyIII\Http\Controllers\HomeController
+     * @covers       \FireflyIII\Http\Controllers\HomeController
+     * @covers       \FireflyIII\Http\Controllers\Controller
      * @dataProvider dateRangeProvider
      *
      * @param $range
@@ -150,6 +157,8 @@ class HomeControllerTest extends TestCase
         // mock stuff
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $accountRepos->shouldReceive('count')->andReturn(0);
 

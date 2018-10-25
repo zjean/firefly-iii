@@ -27,11 +27,22 @@ namespace Tests\Unit\Support\Import\JobConfiguration\Bunq;
 use FireflyIII\Models\ImportJob;
 use FireflyIII\Repositories\ImportJob\ImportJobRepositoryInterface;
 use FireflyIII\Support\Import\JobConfiguration\Bunq\NewBunqJobHandler;
-use Mockery;
 use Tests\TestCase;
+use Log;
 
+/**
+ * Class NewBunqJobHandlerTest
+ */
 class NewBunqJobHandlerTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
     /**
      * @covers \FireflyIII\Support\Import\JobConfiguration\Bunq\NewBunqJobHandler
      */
@@ -54,8 +65,6 @@ class NewBunqJobHandlerTest extends TestCase
         $repository = $this->mock(ImportJobRepositoryInterface::class);
         // mock calls
         $repository->shouldReceive('setUser')->once();
-        //$repository->shouldReceive('getConfiguration')->andReturn([])->once();
-        //$repository->shouldReceive('setConfiguration')->withArgs([Mockery::any(), $expected])->once();
 
         $handler = new NewBunqJobHandler();
         $handler->setImportJob($job);

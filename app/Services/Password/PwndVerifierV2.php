@@ -34,6 +34,16 @@ use RuntimeException;
 class PwndVerifierV2 implements Verifier
 {
     /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
+
+    /**
      * Verify the given password against (some) service.
      *
      * @param string $password
@@ -67,7 +77,7 @@ class PwndVerifierV2 implements Verifier
         }
         try {
             $strpos = stripos($res->getBody()->getContents(), $rest);
-        } catch (RunTimeException $e) {
+        } catch (RuntimeException $e) {
             Log::error(sprintf('Could not get body from Pwnd result: %s', $e->getMessage()));
             $strpos = false;
         }

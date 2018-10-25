@@ -27,6 +27,7 @@ use FireflyIII\Models\Transaction;
 use FireflyIII\Models\TransactionJournal;
 use FireflyIII\TransactionRules\Actions\ClearBudget;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class ClearBudgetTest
@@ -34,8 +35,16 @@ use Tests\TestCase;
 class ClearBudgetTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\TransactionRules\Actions\ClearBudget::__construct()
-     * @covers \FireflyIII\TransactionRules\Actions\ClearBudget::act()
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+    /**
+     * @covers \FireflyIII\TransactionRules\Actions\ClearBudget
      */
     public function testAct(): void
     {
@@ -56,7 +65,7 @@ class ClearBudgetTest extends TestCase
         $this->assertEquals(0, $journal->budgets()->count());
 
         /** @var Transaction $transaction */
-        foreach($journal->transactions as $transaction) {
+        foreach ($journal->transactions as $transaction) {
             $this->assertEquals(0, $transaction->budgets()->count());
         }
 

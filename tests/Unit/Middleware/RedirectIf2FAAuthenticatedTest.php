@@ -29,14 +29,28 @@ use Preferences;
 use Route;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
-
+use Log;
 /**
  * Class RedirectIf2FAAuthenticatedTest
  */
 class RedirectIf2FAAuthenticatedTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Http\Middleware\RedirectIfTwoFactorAuthenticated::handle
+     * Set up test
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+        Route::middleware(RedirectIfTwoFactorAuthenticated::class)->any(
+            '/_test/authenticate', function () {
+            return 'OK';
+        }
+        );
+    }
+
+    /**
+     * @covers \FireflyIII\Http\Middleware\RedirectIfTwoFactorAuthenticated
      */
     public function testMiddleware(): void
     {
@@ -45,7 +59,7 @@ class RedirectIf2FAAuthenticatedTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Middleware\RedirectIfTwoFactorAuthenticated::handle
+     * @covers \FireflyIII\Http\Middleware\RedirectIfTwoFactorAuthenticated
      */
     public function testMiddlewareAuthenticated(): void
     {
@@ -69,26 +83,12 @@ class RedirectIf2FAAuthenticatedTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Middleware\RedirectIfTwoFactorAuthenticated::handle
+     * @covers \FireflyIII\Http\Middleware\RedirectIfTwoFactorAuthenticated
      */
     public function testMiddlewareLightAuth(): void
     {
         $this->be($this->user());
         $response = $this->get('/_test/authenticate');
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
-    }
-
-    /**
-     * Set up test
-     */
-    protected function setUp()
-    {
-        parent::setUp();
-
-        Route::middleware(RedirectIfTwoFactorAuthenticated::class)->any(
-            '/_test/authenticate', function () {
-            return 'OK';
-        }
-        );
     }
 }

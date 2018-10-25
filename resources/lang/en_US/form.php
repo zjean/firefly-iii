@@ -50,8 +50,9 @@ return [
     'source_account'              => 'Source account',
     'destination_account'         => 'Destination account',
     'journal_destination_id'      => 'Asset account (destination)',
-    'asset_destination_account'   => 'Asset account (destination)',
-    'asset_source_account'        => 'Asset account (source)',
+    'asset_destination_account'   => 'Destination account',
+    'include_net_worth'           => 'Include in net worth',
+    'asset_source_account'        => 'Source account',
     'journal_description'         => 'Description',
     'note'                        => 'Notes',
     'split_journal'               => 'Split this transaction',
@@ -84,6 +85,9 @@ return [
     'verification'                => 'Verification',
     'api_key'                     => 'API key',
     'remember_me'                 => 'Remember me',
+    'liability_type_id'           => 'Liability type',
+    'interest'                    => 'Interest',
+    'interest_period'             => 'Interest period',
 
     'source_account_asset'        => 'Source account (asset account)',
     'destination_account_expense' => 'Destination account (expense account)',
@@ -187,6 +191,7 @@ return [
     'password_confirmation' => 'Password (again)',
     'blocked'               => 'Is blocked?',
     'blocked_code'          => 'Reason for block',
+    'login_name'            => 'Login',
 
     // import
     'apply_rules'           => 'Apply rules',
@@ -218,6 +223,16 @@ return [
     'public_key'            => 'Public key',
     'country_code'          => 'Country code',
     'provider_code'         => 'Bank or data-provider',
+    'fints_url'             => 'FinTS API URL',
+    'fints_port'            => 'Port',
+    'fints_bank_code'       => 'Bank code',
+    'fints_username'        => 'Username',
+    'fints_password'        => 'PIN / Password',
+    'fints_account'         => 'FinTS account',
+    'local_account'         => 'Firefly III account',
+    'from_date'             => 'Date from',
+    'to_date'               => 'Date to',
+
 
     'due_date'                => 'Due date',
     'payment_date'            => 'Payment date',

@@ -22,7 +22,8 @@ declare(strict_types=1);
 
 namespace FireflyIII\Http\Controllers\Json;
 
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Exceptions\FireflyException;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Http\Controllers\Controller;
 use FireflyIII\Models\Account;
 use FireflyIII\Models\AccountType;
@@ -36,159 +37,155 @@ use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
 use FireflyIII\Repositories\Tag\TagRepositoryInterface;
 use FireflyIII\Support\CacheProperties;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 /**
  * Class AutoCompleteController.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class AutoCompleteController extends Controller
 {
 
     /**
-     * Returns a JSON list of all accounts.
-     *
-     * @param AccountRepositoryInterface $repository
-     *
-     * @return JsonResponse
-     */
-    public function allAccounts(AccountRepositoryInterface $repository): JsonResponse
-    {
-        $return = array_unique(
-            $repository->getAccountsByType(
-                [AccountType::REVENUE, AccountType::EXPENSE, AccountType::BENEFICIARY, AccountType::DEFAULT, AccountType::ASSET]
-            )->pluck('name')->toArray()
-        );
-        sort($return);
-
-        return response()->json($return);
-    }
-
-    /**
      * List of all journals.
      *
-     * @param JournalCollectorInterface $collector
+     * @param Request                       $request
+     * @param TransactionCollectorInterface $collector
      *
      * @return JsonResponse
      */
-    public function allTransactionJournals(JournalCollectorInterface $collector): JsonResponse
+    public function allTransactionJournals(Request $request, TransactionCollectorInterface $collector): JsonResponse
     {
+        $search = (string)$request->get('search');
+        $cache  = new CacheProperties;
+        $cache->addProperty('ac-all-journals');
+        // very unlikely a user will actually search for this string.
+        $key = '' === $search ? 'skjf0893j89fj2398hd89dh289h2398hr7isd8900828u209ujnxs88929282u' : $search;
+        $cache->addProperty($key);
+        if ($cache->has()) {
+            return response()->json($cache->get()); // @codeCoverageIgnore
+        }
+        // find everything:
         $collector->setLimit(250)->setPage(1);
-        $return = array_unique($collector->getJournals()->pluck('description')->toArray());
-        sort($return);
+        $return = array_values(array_unique($collector->getTransactions()->pluck('description')->toArray()));
+
+        if ('' !== $search) {
+            $return = array_values(
+                array_unique(
+                    array_filter(
+                        $return, function (string $value) use ($search) {
+                        return !(false === stripos($value, $search));
+                    }, ARRAY_FILTER_USE_BOTH
+                    )
+                )
+            );
+        }
+        $cache->store($return);
 
         return response()->json($return);
     }
 
     /**
-     * Returns a JSON list of all bills.
+     * @param Request $request
+     * @param string  $subject
      *
-     * @param BillRepositoryInterface $repository
-     *
+     * @throws FireflyException
      * @return JsonResponse
      */
-    public function bills(BillRepositoryInterface $repository): JsonResponse
+    public function autoComplete(Request $request, string $subject): JsonResponse
     {
-        $return = array_unique(
-            $repository->getActiveBills()->pluck('name')->toArray()
-        );
-        sort($return);
+        $search     = (string)$request->get('search');
+        $unfiltered = null;
+        $filtered   = null;
 
-        return response()->json($return);
+        // search for all accounts.
+        if ('all-accounts' === $subject) {
+            $unfiltered = $this->getAccounts(
+                [AccountType::REVENUE, AccountType::EXPENSE, AccountType::BENEFICIARY, AccountType::DEFAULT, AccountType::ASSET, AccountType::LOAN,
+                 AccountType::DEBT, AccountType::MORTGAGE]
+            );
+        }
+
+        // search for expense accounts.
+        if ('expense-accounts' === $subject) {
+            $unfiltered = $this->getAccounts([AccountType::EXPENSE, AccountType::BENEFICIARY]);
+        }
+
+        // search for revenue accounts.
+        if ('revenue-accounts' === $subject) {
+            $unfiltered = $this->getAccounts([AccountType::REVENUE]);
+        }
+
+        // search for asset accounts.
+        if ('asset-accounts' === $subject) {
+            $unfiltered = $this->getAccounts([AccountType::ASSET, AccountType::DEFAULT]);
+        }
+
+        // search for categories.
+        if ('categories' === $subject) {
+            $unfiltered = $this->getCategories();
+        }
+
+        // search for budgets.
+        if ('budgets' === $subject) {
+            $unfiltered = $this->getBudgets();
+        }
+
+        // search for tags
+        if ('tags' === $subject) {
+            $unfiltered = $this->getTags();
+        }
+
+        // search for bills
+        if ('bills' === $subject) {
+            $unfiltered = $this->getBills();
+        }
+        // search for currency names.
+        if ('currency-names' === $subject) {
+            $unfiltered = $this->getCurrencyNames();
+        }
+        if ('transaction_types' === $subject) {
+            $unfiltered = $this->getTransactionTypes();
+        }
+        if ('transaction-types' === $subject) {
+            $unfiltered = $this->getTransactionTypes();
+        }
+
+        // filter results
+        $filtered = $this->filterResult($unfiltered, $search);
+
+        if (null === $filtered) {
+            throw new FireflyException(sprintf('Auto complete handler cannot handle "%s"', $subject)); // @codeCoverageIgnore
+        }
+
+        return response()->json($filtered);
     }
-
-    /**
-     * List of budgets.
-     *
-     * @param BudgetRepositoryInterface $repository
-     *
-     * @return JsonResponse
-     */
-    public function budgets(BudgetRepositoryInterface $repository): JsonResponse
-    {
-        $return = array_unique($repository->getBudgets()->pluck('name')->toArray());
-        sort($return);
-
-        return response()->json($return);
-    }
-
-    /**
-     * Returns a list of categories.
-     *
-     * @param CategoryRepositoryInterface $repository
-     *
-     * @return JsonResponse
-     */
-    public function categories(CategoryRepositoryInterface $repository): JsonResponse
-    {
-        $return = array_unique($repository->getCategories()->pluck('name')->toArray());
-        sort($return);
-
-        return response()->json($return);
-    }
-
-    /**
-     * List of currency names.
-     *
-     * @param CurrencyRepositoryInterface $repository
-     *
-     * @return JsonResponse
-     */
-    public function currencyNames(CurrencyRepositoryInterface $repository): JsonResponse
-    {
-        $return = $repository->get()->pluck('name')->toArray();
-        sort($return);
-
-        return response()->json($return);
-    }
-
-    /**
-     * Returns a JSON list of all beneficiaries.
-     *
-     * @param AccountRepositoryInterface $repository
-     *
-     * @return JsonResponse
-     */
-    public function expenseAccounts(AccountRepositoryInterface $repository): JsonResponse
-    {
-        $set      = $repository->getAccountsByType([AccountType::EXPENSE, AccountType::BENEFICIARY]);
-        $filtered = $set->filter(
-            function (Account $account) {
-                if (true === $account->active) {
-                    return $account;
-                }
-
-                return false;
-            }
-        );
-        $return   = array_unique($filtered->pluck('name')->toArray());
-
-        sort($return);
-
-        return response()->json($return);
-    }
-
 
     /**
      * List of journals with their ID.
      *
-     * @param JournalCollectorInterface $collector
-     * @param TransactionJournal        $except
+     * @param Request                       $request
+     * @param TransactionCollectorInterface $collector
+     * @param TransactionJournal            $except
      *
      * @return JsonResponse
      */
-    public function journalsWithId(JournalCollectorInterface $collector, TransactionJournal $except): JsonResponse
+    public function journalsWithId(Request $request, TransactionCollectorInterface $collector, TransactionJournal $except): JsonResponse
     {
-        $cache = new CacheProperties;
-        $cache->addProperty('recent-journals-id');
-
+        $search = (string)$request->get('search');
+        $cache  = new CacheProperties;
+        $cache->addProperty('ac-expense-accounts');
+        // very unlikely a user will actually search for this string.
+        $key = '' === $search ? 'skjf0893j89fj2398hd89dh289h2398hr7isd8900828u209ujnxs88929282u' : $search;
+        $cache->addProperty($key);
         if ($cache->has()) {
             return response()->json($cache->get()); // @codeCoverageIgnore
         }
-
+        // find everything:
         $collector->setLimit(400)->setPage(1);
-        $set    = $collector->getJournals()->pluck('description', 'journal_id')->toArray();
+        $set    = $collector->getTransactions()->pluck('description', 'journal_id')->toArray();
         $return = [];
         foreach ($set as $id => $description) {
             $id = (int)$id;
@@ -200,47 +197,19 @@ class AutoCompleteController extends Controller
             }
         }
 
-        $cache->store($return);
+        sort($return);
 
-        return response()->json($return);
-    }
-
-    /**
-     * List of revenue accounts.
-     *
-     * @param AccountRepositoryInterface $repository
-     *
-     * @return JsonResponse
-     */
-    public function revenueAccounts(AccountRepositoryInterface $repository): JsonResponse
-    {
-        $set      = $repository->getAccountsByType([AccountType::REVENUE]);
-        $filtered = $set->filter(
-            function (Account $account) {
-                if (true === $account->active) {
-                    return $account;
-                }
-
-                return false;
+        if ('' !== $search) {
+            $return = array_filter(
+                $return, function (array $array) use ($search) {
+                $haystack = $array['name'];
+                $result = stripos($haystack, $search);
+                return !(false === $result);
             }
-        );
-        $return   = array_unique($filtered->pluck('name')->toArray());
-        sort($return);
+            );
 
-        return response()->json($return);
-    }
-
-    /**
-     * Returns a JSON list of all beneficiaries.
-     *
-     * @param TagRepositoryInterface $tagRepository
-     *
-     * @return JsonResponse
-     */
-    public function tags(TagRepositoryInterface $tagRepository): JsonResponse
-    {
-        $return = array_unique($tagRepository->get()->pluck('tag')->toArray());
-        sort($return);
+        }
+        $cache->store($return);
 
         return response()->json($return);
     }
@@ -248,35 +217,161 @@ class AutoCompleteController extends Controller
     /**
      * List of journals by type.
      *
-     * @param JournalCollectorInterface $collector
-     * @param string                    $what
+     * @param Request                       $request
+     * @param TransactionCollectorInterface $collector
+     * @param string                        $what
      *
      * @return JsonResponse
      */
-    public function transactionJournals(JournalCollectorInterface $collector, string $what): JsonResponse
+    public function transactionJournals(Request $request, TransactionCollectorInterface $collector, string $what): JsonResponse
     {
+        $search = (string)$request->get('search');
+        $cache  = new CacheProperties;
+        $cache->addProperty('ac-revenue-accounts');
+        // very unlikely a user will actually search for this string.
+        $key = '' === $search ? 'skjf0893j89fj2398hd89dh289h2398hr7isd8900828u209ujnxs88929282u' : $search;
+        $cache->addProperty($key);
+        if ($cache->has()) {
+            return response()->json($cache->get()); // @codeCoverageIgnore
+        }
+        // find everything:
         $type  = config('firefly.transactionTypesByWhat.' . $what);
         $types = [$type];
 
         $collector->setTypes($types)->setLimit(250)->setPage(1);
-        $return = array_unique($collector->getJournals()->pluck('description')->toArray());
+        $return = array_unique($collector->getTransactions()->pluck('description')->toArray());
         sort($return);
+
+        if ('' !== $search) {
+            $return = array_values(
+                array_unique(
+                    array_filter(
+                        $return, function (string $value) use ($search) {
+                        return !(false === stripos($value, $search));
+                    }, ARRAY_FILTER_USE_BOTH
+                    )
+                )
+            );
+        }
+        $cache->store($return);
 
         return response()->json($return);
     }
 
     /**
-     * List if transaction types.
+     * @param array  $unfiltered
+     * @param string $query
      *
-     * @param JournalRepositoryInterface $repository
-     *
-     * @return JsonResponse
+     * @return array|null
      */
-    public function transactionTypes(JournalRepositoryInterface $repository): JsonResponse
+    private function filterResult(?array $unfiltered, string $query): ?array
     {
-        $return = array_unique($repository->getTransactionTypes()->pluck('type')->toArray());
+        if (null === $unfiltered) {
+            return null; // @codeCoverageIgnore
+        }
+        if ('' === $query) {
+            sort($unfiltered);
+
+            return $unfiltered;
+        }
+        $return = [];
+        if ('' !== $query) {
+            $return = array_values(
+                array_filter(
+                    $unfiltered, function (string $value) use ($query) {
+                    return !(false === stripos($value, $query));
+                }, ARRAY_FILTER_USE_BOTH
+                )
+            );
+        }
         sort($return);
 
-        return response()->json($return);
+
+        return $return;
+    }
+
+    /**
+     * @param string $query
+     * @param array  $types
+     *
+     * @return array
+     */
+    private function getAccounts(array $types): array
+    {
+        $repository = app(AccountRepositoryInterface::class);
+        // find everything:
+        /** @var Collection $collection */
+        $collection = $repository->getAccountsByType($types);
+        $filtered   = $collection->filter(
+            function (Account $account) {
+                return $account->active === true;
+            }
+        );
+        $return     = array_values(array_unique($filtered->pluck('name')->toArray()));
+
+        return $return;
+
+    }
+
+    /**
+     * @return array
+     */
+    private function getBills(): array
+    {
+        $repository = app(BillRepositoryInterface::class);
+
+        return array_unique($repository->getActiveBills()->pluck('name')->toArray());
+    }
+
+    /**
+     * @return array
+     */
+    private function getBudgets(): array
+    {
+        $repository = app(BudgetRepositoryInterface::class);
+
+        return array_unique($repository->getBudgets()->pluck('name')->toArray());
+    }
+
+    /**
+     * @return array
+     */
+    private function getCategories(): array
+    {
+        $repository = app(CategoryRepositoryInterface::class);
+
+        return array_unique($repository->getCategories()->pluck('name')->toArray());
+    }
+
+    /**
+     * @return array
+     */
+    private function getCurrencyNames(): array
+    {
+        /** @var CurrencyRepositoryInterface $repository */
+        $repository = app(CurrencyRepositoryInterface::class);
+
+        return $repository->get()->pluck('name')->toArray();
+    }
+
+    /**
+     * @return array
+     */
+    private function getTags(): array
+    {
+        /** @var TagRepositoryInterface $repository */
+        $repository = app(TagRepositoryInterface::class);
+
+        return array_unique($repository->get()->pluck('tag')->toArray());
+    }
+
+    /**
+     * @return array
+     */
+    private function getTransactionTypes(): array
+    {
+        $repository = app(JournalRepositoryInterface::class);
+
+        return array_unique($repository->getTransactionTypes()->pluck('type')->toArray());
     }
 }

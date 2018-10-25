@@ -44,12 +44,22 @@ use Mockery;
 use Preferences;
 use Tests\Object\FakeApiContext;
 use Tests\TestCase;
+use Log;
 
 /**
  * Class StageNewHandlerTest
  */
 class StageNewHandlerTest extends TestCase
 {
+    /**
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
     /**
      * @covers \FireflyIII\Support\Import\Routine\Bunq\StageNewHandler
      */
@@ -97,6 +107,7 @@ class StageNewHandlerTest extends TestCase
                     'balance'       => null,
                     'status'        => null,
                     'type'          => 'MonetaryAccountBank',
+                    'iban'          => 'SM72C9584723533916792029340',
                     'aliases'       => [
                         [
                             'name'  => $alias->getName(),
@@ -124,8 +135,8 @@ class StageNewHandlerTest extends TestCase
         $repository->shouldReceive('setUser')->once();
         $mAccount->shouldReceive('listing')->andReturn($list)->once();
         $repository->shouldReceive('getConfiguration')->once()->andReturn([]);
-        $repository->shouldReceive('setConfiguration')->once()->withArgs([Mockery::any(), $expectedConfig]);
 
+        $repository->shouldReceive('setConfiguration')->once()->withArgs([Mockery::any(), $expectedConfig]);
 
         $handler = new StageNewHandler;
         $handler->setImportJob($job);

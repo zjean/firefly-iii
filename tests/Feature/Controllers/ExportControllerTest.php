@@ -30,8 +30,10 @@ use FireflyIII\Models\TransactionJournal;
 use FireflyIII\Repositories\Account\AccountRepositoryInterface;
 use FireflyIII\Repositories\ExportJob\ExportJobRepositoryInterface;
 use FireflyIII\Repositories\Journal\JournalRepositoryInterface;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Illuminate\Support\Collection;
 use Log;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -46,21 +48,26 @@ class ExportControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ExportController::download
+     * @covers \FireflyIII\Http\Controllers\ExportController
      */
     public function testDownload(): void
     {
         // mock stuff
         $repository   = $this->mock(ExportJobRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
+        $repository->shouldReceive('changeStatus')->once();
+
 
         $repository->shouldReceive('exists')->once()->andReturn(true);
         $repository->shouldReceive('getContent')->once()->andReturn('Some content beep boop');
@@ -71,17 +78,18 @@ class ExportControllerTest extends TestCase
     }
 
     /**
-     * @covers                   \FireflyIII\Http\Controllers\ExportController::download
-     * @expectedExceptionMessage Against all expectations
+     * @covers                   \FireflyIII\Http\Controllers\ExportController
      */
     public function testDownloadFailed(): void
     {
         // mock stuff
         $repository   = $this->mock(ExportJobRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
-        $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
 
-        $repository->shouldReceive('exists')->once()->andReturn(false);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
+        $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
+        $repository->shouldReceive('exists')->andReturn(false);
 
         $this->be($this->user());
         $response = $this->get(route('export.download', ['testExport']));
@@ -89,12 +97,16 @@ class ExportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ExportController::getStatus
+     * @covers \FireflyIII\Http\Controllers\ExportController
      */
     public function testGetStatus(): void
     {
         // mock stuff
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
+
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
 
         $this->be($this->user());
@@ -103,8 +115,8 @@ class ExportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ExportController::index
-     * @covers \FireflyIII\Http\Controllers\ExportController::__construct
+     * @covers \FireflyIII\Http\Controllers\ExportController
+     * @covers \FireflyIII\Http\Controllers\ExportController
      */
     public function testIndex(): void
     {
@@ -112,6 +124,11 @@ class ExportControllerTest extends TestCase
         $repository   = $this->mock(ExportJobRepositoryInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->atLeast()->once()->andReturn(true);
+
+
         $job          = ExportJob::first();
         $journalRepos->shouldReceive('firstNull')->once()->andReturn(new TransactionJournal);
         $repository->shouldReceive('create')->andReturn($job);
@@ -127,7 +144,7 @@ class ExportControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\ExportController::postIndex
+     * @covers \FireflyIII\Http\Controllers\ExportController
      * @covers \FireflyIII\Http\Requests\ExportFormRequest
      */
     public function testPostIndex(): void
@@ -137,7 +154,10 @@ class ExportControllerTest extends TestCase
         $processor    = $this->mock(ProcessorInterface::class);
         $accountRepos = $this->mock(AccountRepositoryInterface::class);
         $journalRepos = $this->mock(JournalRepositoryInterface::class);
+        $userRepos    = $this->mock(UserRepositoryInterface::class);
+
         $journalRepos->shouldReceive('firstNull')->andReturn(new TransactionJournal);
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->atLeast()->once()->andReturn(false);
 
         $this->session(
             ['first' => new Carbon('2014-01-01')]

@@ -43,7 +43,7 @@ class CategoryControllerTest extends TestCase
     {
         parent::setUp();
         Passport::actingAs($this->user());
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
@@ -115,6 +115,7 @@ class CategoryControllerTest extends TestCase
      * Store a new category.
      *
      * @covers \FireflyIII\Api\V1\Controllers\CategoryController
+     * @covers \FireflyIII\Api\V1\Requests\CategoryRequest
      */
     public function testStore(): void
     {
@@ -146,6 +147,7 @@ class CategoryControllerTest extends TestCase
      * Update a category.
      *
      * @covers \FireflyIII\Api\V1\Controllers\CategoryController
+     * @covers \FireflyIII\Api\V1\Requests\CategoryRequest
      */
     public function testUpdate(): void
     {

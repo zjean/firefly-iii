@@ -25,16 +25,18 @@ namespace FireflyIII\Helpers\Report;
 use Carbon\Carbon;
 use FireflyIII\Helpers\Collection\Bill as BillCollection;
 use FireflyIII\Helpers\Collection\BillLine;
-use FireflyIII\Helpers\Collector\JournalCollectorInterface;
+use FireflyIII\Helpers\Collector\TransactionCollectorInterface;
 use FireflyIII\Helpers\FiscalHelperInterface;
 use FireflyIII\Models\Bill;
 use FireflyIII\Models\Transaction;
 use FireflyIII\Repositories\Bill\BillRepositoryInterface;
 use FireflyIII\Repositories\Budget\BudgetRepositoryInterface;
 use Illuminate\Support\Collection;
-
+use Log;
 /**
  * Class ReportHelper.
+ *
+ * @codeCoverageIgnore
  */
 class ReportHelper implements ReportHelperInterface
 {
@@ -50,6 +52,12 @@ class ReportHelper implements ReportHelperInterface
     public function __construct(BudgetRepositoryInterface $budgetRepository)
     {
         $this->budgetRepository = $budgetRepository;
+
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+
+
     }
 
     /**
@@ -83,19 +91,20 @@ class ReportHelper implements ReportHelperInterface
             foreach ($expectedDates as $payDate) {
                 $endOfPayPeriod = app('navigation')->endOfX($payDate, $bill->repeat_freq, null);
 
-                /** @var JournalCollectorInterface $collector */
-                $collector = app(JournalCollectorInterface::class);
+                /** @var TransactionCollectorInterface $collector */
+                $collector = app(TransactionCollectorInterface::class);
                 $collector->setAccounts($accounts)->setRange($payDate, $endOfPayPeriod)->setBills($bills);
-                $journals = $collector->getJournals();
+                $transactions = $collector->getTransactions();
 
                 $billLine = new BillLine;
                 $billLine->setBill($bill);
+                $billLine->setCurrency($bill->transactionCurrency);
                 $billLine->setPayDate($payDate);
                 $billLine->setEndOfPayDate($endOfPayPeriod);
                 $billLine->setMin((string)$bill->amount_min);
                 $billLine->setMax((string)$bill->amount_max);
                 $billLine->setHit(false);
-                $entry = $journals->filter(
+                $entry = $transactions->filter(
                     function (Transaction $transaction) use ($bill) {
                         return $transaction->bill_id === $bill->id;
                     }

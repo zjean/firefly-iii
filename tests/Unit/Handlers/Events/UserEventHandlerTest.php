@@ -34,7 +34,9 @@ use FireflyIII\Models\Role;
 use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Mail;
+use Log;
 use Mockery;
+use Preferences;
 use Tests\TestCase;
 
 /**
@@ -47,7 +49,16 @@ use Tests\TestCase;
 class UserEventHandlerTest extends TestCase
 {
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::attachUserRole
+     *
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Log::info(sprintf('Now in %s.', \get_class($this)));
+    }
+
+    /**
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      * @covers \FireflyIII\Events\RegisteredUser
      */
     public function testAttachUserRole(): void
@@ -64,13 +75,13 @@ class UserEventHandlerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::checkSingleUserIsAdmin
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      */
     public function testCheckSingleUserIsAdminMulti(): void
     {
         $repository = $this->mock(UserRepositoryInterface::class);
         $user       = $this->user();
-        $event      = new Login($user, true);
+        $event      = new Login(null, $user, true);
         $listener   = new UserEventHandler();
 
         // mock stuff
@@ -82,13 +93,13 @@ class UserEventHandlerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::checkSingleUserIsAdmin
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      */
     public function testCheckSingleUserIsAdminNoRole(): void
     {
         $repository = $this->mock(UserRepositoryInterface::class);
         $user       = $this->emptyUser();
-        $event      = new Login($user, true);
+        $event      = new Login(null, $user, true);
         $listener   = new UserEventHandler();
 
         // mock stuff
@@ -104,13 +115,13 @@ class UserEventHandlerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::checkSingleUserIsAdmin
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      */
     public function testCheckSingleUserIsAdminNotAdmin(): void
     {
         $repository = $this->mock(UserRepositoryInterface::class);
         $user       = $this->emptyUser();
-        $event      = new Login($user, true);
+        $event      = new Login(null, $user, true);
         $listener   = new UserEventHandler();
 
         // mock stuff
@@ -124,13 +135,13 @@ class UserEventHandlerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::checkSingleUserIsAdmin
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      */
     public function testCheckSingleUserIsAdminSingle(): void
     {
         $repository = $this->mock(UserRepositoryInterface::class);
         $user       = $this->user();
-        $event      = new Login($user, true);
+        $event      = new Login(null, $user, true);
         $listener   = new UserEventHandler();
 
         // mock stuff
@@ -142,7 +153,27 @@ class UserEventHandlerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::sendEmailChangeConfirmMail
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
+     */
+    public function testDemoUserBackToEnglish(): void
+    {
+        $repository = $this->mock(UserRepositoryInterface::class);
+        $user       = $this->emptyUser();
+        $event      = new Login(null, $user, true);
+        $listener   = new UserEventHandler();
+
+        // mock stuff
+        $repository->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->once()->andReturn(true);
+
+        Preferences::shouldReceive('setForUser')->withArgs([Mockery::any(), 'language', 'en_US'])->once();
+        Preferences::shouldReceive('mark')->once();
+
+        $listener->demoUserBackToEnglish($event);
+        $this->assertTrue(true);
+    }
+
+    /**
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      * @covers \FireflyIII\Events\UserChangedEmail
      */
     public function testSendEmailChangeConfirmMail(): void
@@ -165,7 +196,7 @@ class UserEventHandlerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::sendEmailChangeUndoMail
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      * @covers \FireflyIII\Events\UserChangedEmail
      */
     public function testSendEmailChangeUndoMail(): void
@@ -189,7 +220,7 @@ class UserEventHandlerTest extends TestCase
 
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::sendNewPassword
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      * @covers \FireflyIII\Events\RequestedNewPassword
      */
     public function testSendNewPassword(): void
@@ -212,7 +243,7 @@ class UserEventHandlerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Handlers\Events\UserEventHandler::sendRegistrationMail
+     * @covers \FireflyIII\Handlers\Events\UserEventHandler
      * @covers \FireflyIII\Events\RegisteredUser
      */
     public function testSendRegistrationMail(): void

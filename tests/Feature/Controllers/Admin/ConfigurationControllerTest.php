@@ -24,7 +24,9 @@ namespace Tests\Feature\Controllers\Admin;
 
 use FireflyConfig;
 use FireflyIII\Models\Configuration;
+use FireflyIII\Repositories\User\UserRepositoryInterface;
 use Log;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -35,20 +37,23 @@ class ConfigurationControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController::index
-     * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController::__construct
+     * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController
+     * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController
      */
     public function testIndex(): void
     {
-        $this->be($this->user());
+        $userRepos = $this->mock(UserRepositoryInterface::class);
 
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->andReturn(true)->atLeast()->once();
+
+        $this->be($this->user());
         $falseConfig       = new Configuration;
         $falseConfig->data = false;
 
@@ -66,10 +71,15 @@ class ConfigurationControllerTest extends TestCase
     }
 
     /**
-     * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController::postIndex
+     * @covers \FireflyIII\Http\Controllers\Admin\ConfigurationController
      */
     public function testPostIndex(): void
     {
+        $userRepos = $this->mock(UserRepositoryInterface::class);
+
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'owner'])->andReturn(true)->atLeast()->once();
+        $userRepos->shouldReceive('hasRole')->withArgs([Mockery::any(), 'demo'])->andReturn(false)->atLeast()->once();
+
         $falseConfig       = new Configuration;
         $falseConfig->data = false;
 

@@ -34,7 +34,15 @@ use Log;
  */
 class AccountMetaFactory
 {
-
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        if ('testing' === env('APP_ENV')) {
+            Log::warning(sprintf('%s should not be instantiated in the TEST environment!', \get_class($this)));
+        }
+    }
     /**
      * @param array $data
      *
@@ -65,7 +73,7 @@ class AccountMetaFactory
             // if $data has field and $entry is null, create new one:
             if (null === $entry) {
                 Log::debug(sprintf('Created meta-field "%s":"%s" for account #%d ("%s") ', $field, $value, $account->id, $account->name));
-                $this->create(['account_id' => $account->id, 'name' => $field, 'data' => $value]);
+                return $this->create(['account_id' => $account->id, 'name' => $field, 'data' => $value]);
             }
 
             // if $data has field and $entry is not null, update $entry:
@@ -75,12 +83,13 @@ class AccountMetaFactory
                 Log::debug(sprintf('Updated meta-field "%s":"%s" for #%d ("%s") ', $field, $value, $account->id, $account->name));
             }
         }
-        if ('' === $value && null !== $entry && isset($data[$field])) {
+        if ('' === $value && null !== $entry) {
             try {
                 $entry->delete();
-            } catch (Exception $e) {
-                Log::debug(sprintf('Could not delete entry: %s', $e->getMessage()));
+            } catch (Exception $e) { // @codeCoverageIgnore
+                Log::debug(sprintf('Could not delete entry: %s', $e->getMessage())); // @codeCoverageIgnore
             }
+            return null;
         }
 
         return $entry;

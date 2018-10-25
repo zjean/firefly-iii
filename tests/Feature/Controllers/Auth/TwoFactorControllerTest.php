@@ -36,10 +36,10 @@ class TwoFactorControllerTest extends TestCase
     /**
      *
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-        Log::debug(sprintf('Now in %s.', \get_class($this)));
+        Log::info(sprintf('Now in %s.', \get_class($this)));
     }
 
     /**
@@ -74,8 +74,8 @@ class TwoFactorControllerTest extends TestCase
 
         $falsePreference       = new Preference;
         $falsePreference->data = false;
-        $langPreference         = new Preference;
-        $langPreference->data   = 'en_US';
+        $langPreference        = new Preference;
+        $langPreference->data  = 'en_US';
 
         Preferences::shouldReceive('get')->withArgs(['twoFactorAuthEnabled', false])->andReturn($falsePreference)->twice();
         Preferences::shouldReceive('get')->withArgs(['twoFactorAuthSecret', null])->andReturn(null)->once();
@@ -89,7 +89,6 @@ class TwoFactorControllerTest extends TestCase
 
     /**
      * @covers                   \FireflyIII\Http\Controllers\Auth\TwoFactorController
-     * @expectedExceptionMessage Your two factor authentication secret is empty
      */
     public function testIndexNoSecret(): void
     {
